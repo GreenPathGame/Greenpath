@@ -42,7 +42,7 @@ function useIsMobile() {
 }
 
 /* ═══════════════════════════════════════════════════
-   ACCOUNTS — Firebase Auth + Firestore, so a username is
+   ACCOUNTS: Firebase Auth + Firestore, so a username is
    unique across every device, not just one browser. Auth
    needs an email, so usernames are mapped to a fake
    "@gardenquest.local" address under the hood; the UI
@@ -58,7 +58,7 @@ function friendlyAuthError(err) {
     case "auth/wrong-password":
     case "auth/user-not-found": return "Incorrect username or password.";
     case "auth/weak-password": return "Password must be at least 6 characters.";
-    case "auth/network-request-failed": return "No internet connection — please try again.";
+    case "auth/network-request-failed": return "No internet connection. Please try again.";
     default: return "Something went wrong. Please try again.";
   }
 }
@@ -120,6 +120,7 @@ const CHARACTERS = [
 
 
 const MODULES = [
+  // Topics 1-2 on the list: CZ Practice 1 (Forest-inspired edible wildlife gardens) + CZ Practice 2 (Traditional Seeds)
   {
     id: 1,
     title: "Wildlife Gardens",
@@ -127,20 +128,26 @@ const MODULES = [
     color: "#f59e0b",
     info: "Wildlife gardens are natural or semi-natural spaces where edible plants grow in harmony with local ecosystems, mimicking the layers and biodiversity of a forest with minimal human intervention. Traditional seeds are the hidden power behind these gardens saving, exchanging, and growing diverse local varieties preserves cultural heritage and strengthens climate resilience for generations to come."
   },
+  // Topics 3 & 7 on the list: IT Practice 1 (Handmade Sustainable Greenhouses) + IT Practice 2 (biological control against the Woolly aphid)
+  // Title/icon/info confirmed against the manager's official info papers ("THEMATIC AREA: Seasonal agriculture
+  // & Climate Resilience" / "MODULE TOPIC: Traditional agricultural practices and agroecology"): this used to
+  // incorrectly say "Native Pollinators & Wildflowers"; swapped with Module 7 below, which had this title.
   {
     id: 2,
+    title: "Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology",
+    icon: "💧",
+    color: "#06b6d4",
+    info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides."
+  },
+  // Topics 5-6 on the list: RO Practice 2 (Companion planting) + RO Practice 1 (Homemade natural pest control)
+  {
+    id: 3,
     title: "ORGANIC PEST CONTROL AND COMPANION PLANTING",
     icon: "🌿",
     color: "#22c55e",
     info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are enviromentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices."
   },
-  {
-    id: 3,
-    title: "Reducing Food Waste",
-    icon: "🦋",
-    color: "#3b82f6",
-    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. Leftover citrus peels get a second life too: steeped in vinegar for about two weeks, they become a fragrant, all-purpose cleaner that replaces synthetic chemical products."
-  },
+  // Topics 8 & 11 on the list: GR clay pot crafting + stitching reusable bags from old fabrics
   {
     id: 4,
     title: "Reusable Alternatives for a Plastic-Free Kitchen",
@@ -148,28 +155,34 @@ const MODULES = [
     color: "#10b981",
     info: "Clay pot crafting revives the ancient art of shaping terracotta vessels for food storage durable, breathable containers for grains, legumes and pickles that keep food fresh for longer without a single scrap of plastic. Old clothes and linen scraps get a second life too, stitched into sturdy reusable bags for shopping, produce and bread reviving traditional sewing skills while replacing single-use plastic."
   },
-  // NEW — placeholder modules, questions to be refined later
+  // Topic 9 on the list: GR Traditional food pickling, sun-drying, and oil-based methods
   {
     id: 5,
-    title: "Composting & Soil Health",
-    icon: "🍂",
-    color: "#8b5cf6",
-    info: "Composting turns kitchen scraps and garden waste into rich, dark soil food instead of landfill methane. Layering nitrogen-rich \"greens\" like vegetable peels with carbon-rich \"browns\" like dry leaves feeds the microbes that build healthy, fertile soil and reduce the need for chemical fertilisers."
+    title: "Reducing Food Waste",
+    icon: "🦋",
+    color: "#3b82f6",
+    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. Leftover citrus peels get a second life too: steeped in vinegar for about two weeks, they become a fragrant, all-purpose cleaner that replaces synthetic chemical products."
   },
+  // Topic 10 on the list: GR Making kitchen cleaners from citrus peels and vinegar
+  // NOTE: title "Cultural Exchange and Culinary Traditions" doesn't match this topic's actual content either.
   {
     id: 6,
-    title: "Water-Wise Gardening",
-    icon: "💧",
-    color: "#06b6d4",
-    info: "Small habits like watering in the cool of morning or evening, mulching around plants, and collecting rainwater in a barrel can dramatically cut how much water a garden needs. These traditional water-wise techniques help gardens stay resilient through dry spells and droughts."
+    title: "Cultural Exchange and Culinary Traditions",
+    icon: "🍂",
+    color: "#8b5cf6",
+    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost."
   },
+  // Topic 4 on the list (CZ Practice LTTA Romania - Water Irrigation / Greywater Reuse) is merged into this
+  // module. Its packaging/greenwashing content isn't one of the 11 listed topics. Title below is a best-effort
+  // placeholder covering both sub-topics: not confirmed by the manager yet; worth double-checking with her.
   {
     id: 7,
-    title: "Native Pollinators & Wildflowers",
-    icon: "🐝",
-    color: "#eab308",
-    info: "Bees, butterflies and other pollinators rely on native wildflowers they've adapted to over generations. Planting a mix of flowers that bloom at different times throughout the season gives pollinators a steady food source and helps them thrive alongside our gardens."
+    title: "Sustainable Packaging & Water Reuse",
+    icon: "♻️",
+    color: "#0ea5e9",
+    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint."
   },
+  // NOT on the list either (seasonal/local eating); kept, moved to the end.
   {
     id: 8,
     title: "Seasonal & Local Eating",
@@ -180,41 +193,7 @@ const MODULES = [
 ];
 
 const QUESTIONS = [
-  // MODULE 2: ORGANIC PEST CONTROL AND COMPANION PLANTING
-  {
-    id: 1,
-    module: 2,
-    text: "Which of the following substances in our kitchen can help us eliminate pests in the garden?",
-    options: ["Soap", "Sugar", "Flour", "Pepper"],
-    answer: 0,
-    explanation: "In both the Carpathian and Mediterranean regions, a soft soap solution is used to repel aphids — while nettle and garlic solutions serve the same purpose in other areas."
-  },
-  {
-    id: 2,
-    module: 2,
-    text: "Is it TRUE OR FALSE that homemade natural pest-control methods completely replace chemical pesticides?",
-    options: ["True", "False"],
-    answer: 1,
-    explanation: "Homemade natural pest control uses plant-based preparations and natural ingredients like garlic, nettles, and soap solutions instead of synthetic chemicals. It's affordable and biodegradable, but it supports sustainable gardening alongside other practices rather than replacing every chemical intervention outright."
-  },
-  {
-    id: 3,
-    module: 2,
-    text: "Which companion plants also contribute to improving the taste of the plants they accompany?",
-    options: ["BASIL", "MARIGOLD", "GARLIC", "NASTURTIUM"],
-    answer: 0,
-    explanation: "Companion planting pairs crops that protect and enhance one another. The classic combination of tomatoes with basil improves both resilience and flavour."
-  },
-  {
-    id: 4,
-    module: 2,
-    text: "Is it TRUE OR FALSE that carrots make a good pair with onions?",
-    options: ["True", "False"],
-    answer: 0,
-    explanation: "Garlic or onions planted near carrots and cabbage have a strong scent that deters carrot flies, cabbage pests, and aphids, reducing pest damage naturally."
-  },
-
-  // MODULE 1: FOREST-INSPIRED EDIBLE WILDLIFE GARDENS
+  // MODULE 1: topics 1-2: CZ Forest-inspired edible wildlife gardens / Traditional Seeds
   {
     id: 5,
     module: 1,
@@ -250,41 +229,76 @@ const QUESTIONS = [
     explanation: "Traditional seeds preserve local plant varieties, protect cultural heritage, and strengthen climate resilience by conserving varieties naturally adapted to local climates and changing environmental conditions."
   },
 
-  // MODULE 3: Reducing Food Waste
+  // MODULE 2: topics 3 & 7: IT Handmade Sustainable Greenhouses / biological control against the Woolly aphid
   {
-    id: 8,
-    module: 3,
-    text: "Which of these is a traditional way to preserve food without a fridge?",
-    options: ["Sun-drying", "Microwaving", "Vacuum freezing", "Plastic wrapping"],
-    answer: 0,
-    explanation: "Sun-drying uses free solar energy instead of electric dryers or freezers, avoiding wasteful fossil-fuel emissions."
+    id: 23,
+    module: 2,
+    text: "Which mini-greenhouse grows plants without soil?",
+    options: ["Tunnel greenhouse", "Vertical greenhouse", "Passive solar greenhouse", "Hydroponic greenhouse"],
+    answer: 3,
+    explanation: "Hydroponic greenhouses grow plants without soil. They use water and nutrients to support plant growth. This system can help save water and resources."
   },
   {
-    id: 9,
-    module: 3,
-    text: "Is it TRUE OR FALSE that Europe wastes around 88 million tonnes of food each year?",
+    id: 24,
+    module: 2,
+    text: "Is it TRUE OR FALSE that vertical greenhouses are useful in cities and small spaces.",
     options: ["True", "False"],
     answer: 0,
-    explanation: "Europe wastes around 88 million tonnes of food every year."
+    explanation: "Vertical greenhouses are useful when space is limited. They allow plants to grow upwards instead of spreading horizontally. This makes them suitable for cities, schools and small areas."
   },
   {
-    id: 10,
-    module: 3,
-    text: "What two main ingredients make this natural kitchen cleaner?",
-    options: ["Bleach and water", "Citrus peels and vinegar", "Soap and oil", "Salt and sugar"],
-    answer: 1,
-    explanation: "Leftover orange and lemon peels are steeped in vinegar for about two weeks to create a fragrant, all-purpose spray that replaces synthetic chemical cleaning products."
+    id: 26,
+    module: 2,
+    text: "What does Eriosoma lanigerum look like on trees?",
+    options: ["Black spots on fruit", "Yellow dry leaves", "White cotton-like clusters", "Red marks on roots"],
+    images: [asset("fruits.png"), asset("leaves.png"), asset("cotton.png"), asset("roots.png")],
+    answer: 2,
+    explanation: "Eriosoma lanigerum appears as small white cotton-like clusters. These clusters can be found on branches and leaves. Recognising them early helps detect infestations."
   },
   {
-    id: 11,
-    module: 3,
-    text: "Why is reusing citrus peels good for the climate?",
-    options: ["It creates more plastic", "It keeps scraps out of methane-producing landfill", "It uses more energy", "It needs refrigeration"],
-    answer: 1,
-    explanation: "Reusing citrus peels keeps valuable food scraps out of landfill, where they slowly rot and release harmful methane."
+    id: 27,
+    module: 2,
+    text: "Is it TRUE OR FALSE that biological control uses beneficial insects to reduce pest populations.",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "Biological control uses natural enemies of pests. Ladybirds, lacewings and parasitoid wasps can reduce aphid populations. This helps protect crops without relying mainly on chemicals."
   },
 
-  // MODULE 4: Reusable Alternatives for a Plastic-Free Kitchen
+  // MODULE 3: topics 5-6: RO Companion planting / Homemade natural solutions to control plant pests
+  {
+    id: 1,
+    module: 3,
+    text: "Which of the following substances in our kitchen can help us eliminate pests in the garden?",
+    options: ["Soap", "Sugar", "Flour", "Pepper"],
+    answer: 0,
+    explanation: "In both the Carpathian and Mediterranean regions, a soft soap solution is used to repel aphids, while nettle and garlic solutions serve the same purpose in other areas."
+  },
+  {
+    id: 2,
+    module: 3,
+    text: "Is it TRUE OR FALSE that homemade natural pest-control methods completely replace chemical pesticides?",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "Homemade natural pest control uses plant-based preparations and natural ingredients like garlic, nettles, and soap solutions instead of synthetic chemicals. It's affordable and biodegradable, but it supports sustainable gardening alongside other practices rather than replacing every chemical intervention outright."
+  },
+  {
+    id: 3,
+    module: 3,
+    text: "Which companion plants also contribute to improving the taste of the plants they accompany?",
+    options: ["Basil", "Marigold", "Garlic", "Nastutium"],
+    answer: 0,
+    explanation: "Companion planting pairs crops that protect and enhance one another. The classic combination of tomatoes with basil improves both resilience and flavour."
+  },
+  {
+    id: 4,
+    module: 3,
+    text: "Is it TRUE OR FALSE that carrots make a good pair with onions?",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "Garlic or onions planted near carrots and cabbage have a strong scent that deters carrot flies, cabbage pests, and aphids, reducing pest damage naturally."
+  },
+
+  // MODULE 4: topics 8 & 11: GR Clay pot crafting for food storage / Stitching reusable bags from old fabrics
   {
     id: 12,
     module: 4,
@@ -318,109 +332,156 @@ const QUESTIONS = [
     explanation: "Stitching reusable bags turns worn clothes, linen scraps and leftover textiles into sturdy bags for shopping, produce and bread. This simple upcycling craft revives traditional sewing skills and replaces single-use plastic bags with washable, long-lasting cloth."
   },
 
-  // NEW — placeholder questions, to be refined later
-  // MODULE 5: Composting & Soil Health
+  // MODULE 5: topic 9: GR Traditional food pickling, sun-drying, and oil-based methods
+  // id30/31 (pickling & oil preservation) are AI-drafted to fill the topic's gap after id10/11 moved to
+  // Module 6: not sourced from the manager's info papers. Flag for her review/replacement.
+  {
+    id: 8,
+    module: 5,
+    text: "Which of these is a traditional way to preserve food without a fridge?",
+    options: ["Sun-drying", "Microwaving", "Vacuum freezing", "Plastic wrapping"],
+    answer: 0,
+    explanation: "Sun-drying uses free solar energy instead of electric dryers or freezers, avoiding wasteful fossil-fuel emissions."
+  },
+  {
+    id: 9,
+    module: 5,
+    text: "Is it TRUE OR FALSE that Europe wastes around 88 million tonnes of food each year?",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "Europe wastes around 88 million tonnes of food every year."
+  },
+  {
+    id: 30,
+    module: 5,
+    text: "Which liquid is traditionally used to pickle vegetables for long-term storage?",
+    options: ["Vinegar brine", "Fresh milk", "Plain water", "Fruit juice"],
+    answer: 0,
+    explanation: "Pickling vegetables in a vinegar brine creates an acidic environment that stops harmful bacteria from growing, allowing vegetables to be safely stored for months without refrigeration."
+  },
+  {
+    id: 31,
+    module: 5,
+    text: "Why were olives traditionally stored submerged in oil?",
+    options: ["Oil adds sweetness", "Oil blocks the air and moisture that cause spoilage", "Oil makes olives ripen faster", "It was required by law"],
+    answer: 1,
+    explanation: "Submerging olives in oil creates a barrier that keeps out air and moisture, the two main causes of spoilage, letting them be preserved for long periods without refrigeration."
+  },
+
+  // MODULE 6: topic 10: GR Making kitchen cleaners from citrus peels and vinegar
+  // id10/11 moved here from Module 5 per the manager's material. id17/18's explanations below are AI-drafted
+  // (the manager's reply didn't cover these two): flag for her to confirm or replace.
+  {
+    id: 10,
+    module: 6,
+    text: "What two main ingredients make this natural kitchen cleaner?",
+    options: ["Bleach and water", "Citrus peels and vinegar", "Soap and oil", "Salt and sugar"],
+    answer: 1,
+    explanation: "Leftover orange and lemon peels are steeped in vinegar for about two weeks to create a fragrant, all-purpose spray that replaces synthetic chemical cleaning products."
+  },
+  {
+    id: 11,
+    module: 6,
+    text: "Why is reusing citrus peels good for the climate?",
+    options: ["It creates more plastic", "It keeps scraps out of methane-producing landfill", "It uses more energy", "It needs refrigeration"],
+    answer: 1,
+    explanation: "Reusing citrus peels keeps valuable food scraps out of landfill, where they slowly rot and release harmful methane."
+  },
   {
     id: 17,
-    module: 5,
-    text: "What is compost mainly made from?",
-    options: ["Kitchen scraps and garden waste", "Plastic and metal", "Only chemical fertiliser", "Sand and gravel"],
-    answer: 0,
-    explanation: "Composting turns everyday food scraps and yard waste into rich, fertile soil, keeping them out of landfill where they'd otherwise produce methane."
+    module: 6,
+    text: "Which natural substance in citrus peel cuts through grease?",
+    options: [" Chlorine", "D-limonene", "Baking powder", "Sugar"],
+    answer: 1,
+    explanation: "D-limonene is a natural oil found in citrus peel that dissolves grease and grime effectively, which is why citrus-based cleaners work so well without synthetic degreasers."
   },
   {
     id: 18,
-    module: 5,
-    text: "Is it TRUE OR FALSE that a healthy compost pile needs both nitrogen-rich \"greens\" and carbon-rich \"browns\"?",
-    options: ["True", "False"],
-    answer: 0,
-    explanation: "Balancing nitrogen-rich greens (like vegetable peels) with carbon-rich browns (like dry leaves) feeds the microbes that break material down into healthy soil."
-  },
-  {
-    id: 19,
-    module: 5,
-    text: "Which of these should NOT go into a home compost bin?",
-    options: ["Vegetable peels", "Coffee grounds", "Meat and dairy", "Dry leaves"],
+    module: 6,
+    text: "Turning citrus peels and vinegar into a kitchen cleaner is an example of what?",
+    options: ["Landfilling food waste", "Incinerating food waste", "Circular, zero-waste reuse", "Single-use consumption"],
     answer: 2,
-    explanation: "Meat and dairy attract pests and break down poorly in a home compost pile, so traditional composting sticks to plant-based scraps and yard waste."
+    explanation: "Instead of throwing citrus peels away, steeping them in vinegar turns a food scrap into a useful household product, a simple example of circular, zero-waste reuse that keeps waste out of landfill."
   },
 
-  // MODULE 6: Water-Wise Gardening
+  // MODULE 7: topic 4 (CZ Water Irrigation / Greywater Reuse) merged in below; the greenwashing/packaging
+  // questions that were already here aren't one of the 11 listed topics.
   {
     id: 20,
-    module: 6,
-    text: "Which watering time helps plants absorb water best and reduces evaporation?",
-    options: ["Midday", "Early morning or evening", "Right after rain", "Only at night"],
+    module: 7,
+    text: "What should consumers check to avoid greenwashing?",
+    options: ["Attractive colours", "Official certifications", "Generic green words", "Product size"],
+    images: [asset("Attractive_colours.png"), asset("Official_certifications.png"), asset("Generic_green_words.png"), asset("Product_Size.png")],
     answer: 1,
-    explanation: "Watering in the cool of morning or evening means less moisture is lost to evaporation from the midday sun, so more of it reaches the roots."
+    explanation: "Not every “green” claim is reliable. Consumers should check official certifications instead of marketing words. Recognised labels help build transparency and trust."
   },
   {
     id: 21,
-    module: 6,
-    text: "Is it TRUE OR FALSE that mulching around plants helps the soil retain moisture?",
-    options: ["True", "False"],
-    answer: 0,
-    explanation: "A layer of mulch shields soil from the sun and slows evaporation, keeping the ground moist for longer between waterings."
-  },
-  {
-    id: 22,
-    module: 6,
-    text: "What is a simple way to reuse water at home for the garden?",
-    options: ["Collecting rainwater in a barrel", "Running the tap constantly", "Using bottled water only", "Watering with soda"],
-    answer: 0,
-    explanation: "A rain barrel captures free rainwater from the roof, cutting down on tap water use and giving plants water naturally free of chlorine."
-  },
-
-  // MODULE 7: Native Pollinators & Wildflowers
-  {
-    id: 23,
     module: 7,
-    text: "Why are native wildflowers important for local pollinators?",
-    options: ["They provide familiar food sources bees and butterflies have adapted to", "They repel all insects", "They only grow in greenhouses", "They require pesticides to survive"],
-    answer: 0,
-    explanation: "Local bees and butterflies have evolved alongside native wildflowers, so these plants are the food sources pollinators recognise and rely on most."
-  },
-  {
-    id: 24,
-    module: 7,
-    text: "Is it TRUE OR FALSE that planting flowers that bloom at different times helps pollinators all season long?",
+    text: "TRUE or FALSE: The Green Dot always means that packaging is recyclable.",
     options: ["True", "False"],
-    answer: 0,
-    explanation: "Staggering bloom times means there's always something flowering, giving pollinators a steady source of nectar and pollen from spring through autumn."
-  },
-  {
-    id: 25,
-    module: 7,
-    text: "Which of these is a pollinator?",
-    options: ["Bee", "Earthworm", "Snail", "Mole"],
-    answer: 0,
-    explanation: "Bees carry pollen from flower to flower as they feed, making them one of the most important pollinators for gardens and food crops alike."
-  },
-
-  // MODULE 8: Seasonal & Local Eating
-  {
-    id: 26,
-    module: 8,
-    text: "What is a key benefit of eating fruits and vegetables that are in season and grown locally?",
-    options: ["They usually taste better and need less transport", "They are always more expensive", "They must be imported from far away", "They have no nutritional value"],
-    answer: 0,
-    explanation: "Local, in-season produce travels a shorter distance and is often picked closer to ripeness, meaning fresher flavour and a smaller transport footprint."
-  },
-  {
-    id: 27,
-    module: 8,
-    text: "Is it TRUE OR FALSE that a seasonal, local diet generally has a lower carbon footprint than one based on imported, out-of-season produce?",
-    options: ["True", "False"],
-    answer: 0,
-    explanation: "Imported, out-of-season produce often needs energy-intensive transport, cold storage or greenhouse heating, all of which add to its carbon footprint."
+    answer: 1,
+    explanation: "The Green Dot does not always mean packaging is recyclable. It shows that the producer contributes to a recovery system. Consumers should still verify the actual recycling information."
   },
   {
     id: 28,
-    module: 8,
-    text: "Which is an example of eating seasonally in most temperate climates?",
-    options: ["Eating strawberries grown locally in summer", "Demanding fresh strawberries flown in during winter", "Eating only canned food year-round", "Avoiding fruits and vegetables entirely"],
+    module: 7,
+    text: "Which home uses water more sustainably?",
+    options: [
+      "Uses drinking water for every purpose and sends all used water directly away.",
+      "Leaves several taps running unnecessarily.",
+      "Collects and appropriately treats greywater and reuses it for toilet flushing."
+    ],
+    images: [asset("1.png"), asset("2.png"), asset("3.png")],
     answer: 0,
-    explanation: "Enjoying strawberries when they naturally ripen locally in summer avoids the emissions and cost of flying out-of-season fruit in from afar."
+    explanation: "Reusing appropriately treated greywater for suitable non-drinking purposes can reduce drinking-water consumption and support more sustainable water management."
+  },
+  {
+    id: 29,
+    module: 7,
+    text: "What Is Greywater?",
+    options: [
+      "Clean drinking water from the tap that is safe for drinking, cooking, and other everyday household uses.",
+      "Household wastewater from washing fruits and vegetables, showers, baths, sinks, and similar sources that may be reused after appropriate treatment.",
+      "Wastewater containing toilet sewage."
+    ],
+    answer: 1,
+    explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
+  },
+
+  // MODULE 8: not on the list: Seasonal & Local Eating.
+  // AI-drafted from scratch (no source material existed for this module): flag for the manager to review.
+  {
+    id: 32,
+    module: 8,
+    text: "Which of these has the lowest carbon footprint?",
+    options: ["Berries flown in from overseas in winter", "Local, in-season vegetables from a nearby farm", "Vegetables grown in a heated greenhouse out of season", "Canned imported fruit"],
+    answer: 1,
+    explanation: "Local, in-season produce travels short distances and needs no extra heating or long-term refrigerated storage, so it has a much smaller carbon footprint than food that's imported or grown out of season."
+  },
+  {
+    id: 33,
+    module: 8,
+    text: "Is it TRUE OR FALSE that buying imported fruit year-round is more sustainable than buying local fruit only when it's in season?",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "Imported, out-of-season fruit usually requires long-distance transport, refrigeration or energy-intensive greenhouse growing, all of which increase emissions compared to eating what's locally in season."
+  },
+  {
+    id: 34,
+    module: 8,
+    text: "What is one benefit of eating seasonally?",
+    options: ["Food is always more expensive", "Produce is fresher and often more nutritious", "It requires more packaging", "It increases food miles"],
+    answer: 1,
+    explanation: "Seasonal produce is usually harvested closer to when it's eaten, so it retains more nutrients and flavour than food that's been stored or shipped long distances."
+  },
+  {
+    id: 35,
+    module: 8,
+    text: "Which shopping habit best supports local, seasonal eating?",
+    options: ["Shopping at a farmers' market for what's currently in season", "Buying whatever fruit you want regardless of season", "Choosing pre-packaged imported produce", "Always picking the cheapest option regardless of origin"],
+    answer: 0,
+    explanation: "Farmers' markets typically sell what's currently in season and grown nearby, making it easy to shop in line with local, low-carbon eating."
   },
 ];
 
@@ -778,7 +839,7 @@ function AuthScreen({ onAuth }) {
         </div>
 
         <p style={{ marginTop:18, color:"#475569", fontSize:11, textAlign:"center", lineHeight:1.5 }}>
-          Your account works on any device — just log in with the same username and password.
+          Your account works on any device: just log in with the same username and password.
         </p>
       </Panel>
     </GardenWrap>
@@ -1154,7 +1215,7 @@ function CharacterScreen({ language, onSelect, onBack }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   MAP SVG — rich garden with river + bridge
+   MAP SVG: rich garden with river + bridge
 ═══════════════════════════════════════════════════ */
 function MapSVG({ completedModules }) {
   return (
@@ -1261,7 +1322,7 @@ function MapSVG({ completedModules }) {
       ))}
       {/* Arch under bridge */}
       <path d="M40 59.5 Q46 62 52 59.5" stroke="#7a6040" strokeWidth="1.2" fill="none" opacity="0.7"/>
-      {/* Bridge stones — decorative */}
+      {/* Bridge stones: decorative */}
       <ellipse cx="46" cy="57.5" rx="7.5" ry="1.8" fill="#c9ad80" opacity="0.15"/>
       {/* Moss/vine on bridge */}
       <text x="37" y="60" fontSize="2.5" style={{ userSelect:"none" }}>🌿</text>
@@ -1634,7 +1695,7 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
         <div style={{ padding:"10px 20px",borderTop:"1px solid rgba(74,222,128,0.12)",textAlign:"center" }}>
           <p style={{ color:"#6b7280", fontSize:12 }}>
             {isWalking&&`${character.name} is walking through the garden…`}
-            {!isWalking&&completedModules===0&&"👆 Tap Module 1 to begin — the Aristotle is waiting!"}
+            {!isWalking&&completedModules===0&&"👆 Tap Module 1 to begin, the Aristotle is waiting!"}
             {!isWalking&&completedModules>0&&completedModules<MODULES.length&&"The Aristotle awaits your next lesson! 👆"}
             {!isWalking&&completedModules===MODULES.length&&"🏆 You've mastered the entire garden journey!"}
           </p>
@@ -1686,7 +1747,7 @@ function MapNode({ mod, node, done, current, locked, onClick }) {
   );
 }
 /* ═══════════════════════════════════════════════════
-   GAME SCREEN — cinematic encounter + quiz
+   GAME SCREEN: cinematic encounter + quiz
 ═══════════════════════════════════════════════════ */
 function GameScreen({ mod, character, questions, onFinish }) {
   const isMobile = useIsMobile();
@@ -1754,7 +1815,7 @@ function handleNext() {
   if (idx===total-1) { onFinish(score); return; }
   setIdx(i=>i+1);
   setSelected(null); setCorrect(false); setShowCoin(false); setShowPocket(false);
-  setPhase("question"); // skip the arrival cinematic — thexy already arrived, Aristotle just asks
+  setPhase("question"); // skip the arrival cinematic: thexy already arrived, Aristotle just asks
 }
 
   const AristotleImg = phase==="feedback"
@@ -2084,7 +2145,7 @@ function handleNext() {
         boxShadow:`0 2px 10px ${character.color}88` }}>{character.name}</div>
     </div>
 
-    {/* ── Question cloud — centered above both characters ── */}
+    {/* ── Question cloud: centered above both characters ── */}
       {showCloud&&(
         <div style={{
           position:"absolute",
@@ -2213,22 +2274,24 @@ function handleNext() {
 
             {q.images ? (
               <div style={{ display:"grid",
-                gridTemplateColumns:isMobile
-                  ?`repeat(${Math.min(q.images.length,2)}, minmax(0,1fr))`
-                  :`repeat(${q.images.length}, 1fr)`,
-                gap:isMobile?10:8,
-                flex:1,alignContent:"center",maxHeight:"100%",overflow:isMobile?"auto":"hidden" }}>
+                gridTemplateColumns:`repeat(${Math.min(q.images.length,2)}, minmax(0,auto))`,
+                gap:isMobile?8:10,justifyContent:"center",
+                flex:1,alignContent:"center",maxHeight:"100%",overflow:"auto" }}>
                 {q.images.map((img,i)=>(
                   <div key={i} onClick={()=>handleAnswer(i)}
-                    style={{ borderRadius:14,overflow:"hidden",cursor:"pointer",
+                    style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",
                       border:"1.5px solid rgba(74,222,128,0.18)",transition:"all 0.15s",
-                      background:"rgba(10,25,10,0.4)",aspectRatio:"4 / 3",
-                      height:isMobile?"auto":"min(22vh,150px)" }}
+                      background:"rgba(10,25,10,0.4)",display:"flex",flexDirection:"column",
+                      width:"clamp(100px, 15vw, 190px)" }}
                     onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.03)"; e.currentTarget.style.borderColor="#22c55e88"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; }}
                   >
                     <img src={img} alt={q.options[i]} style={{
-                      width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
+                      width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block" }}/>
+                    <div style={{ fontSize:"clamp(9px, 1.1vw, 12px)",fontWeight:700,color:"#e2e8f0",
+                      textAlign:"center",padding:"3px 4px",lineHeight:1.2 }}>
+                      {q.options[i]}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -2339,26 +2402,32 @@ function handleNext() {
 
             {q.images ? (
               <div style={{ display:"grid",
-                gridTemplateColumns:isMobile
-                  ?`repeat(${Math.min(q.images.length,2)}, minmax(0,1fr))`
-                  :`repeat(${q.images.length}, 1fr)`,
-                gap:isMobile?10:8 }}>
+                gridTemplateColumns:`repeat(${Math.min(q.images.length,2)}, minmax(0,auto))`,
+                gap:isMobile?8:10,justifyContent:"center" }}>
                 {q.images.map((img,i)=>{
                   let border="2px solid transparent";
                   if (i===q.answer)      border="2px solid #22c55e";
                   else if (i===selected) border="2px solid #ef4444";
+                  const labelBg = i===q.answer?"rgba(22,101,52,0.55)":i===selected?"rgba(127,29,29,0.55)":"rgba(10,25,10,0.5)";
+                  const labelCol = i===q.answer?"#bbf7d0":i===selected?"#fecaca":"#94a3b8";
                   return (
-                    <div key={i} style={{ position:"relative",borderRadius:14,overflow:"hidden",
-                      border,aspectRatio:"4 / 3",height:isMobile?"auto":"min(18vh,120px)" }}>
-                      <img src={img} alt={q.options[i]} style={{
-                        width:"100%",height:"100%",objectFit:"cover",display:"block",
-                        opacity:(i===q.answer||i===selected)?1:0.5 }}/>
-                      {(i===q.answer||i===selected)&&(
-                        <div style={{ position:"absolute",top:6,right:6,fontSize:18,
-                          filter:"drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}>
-                          {i===q.answer?"✅":"❌"}
-                        </div>
-                      )}
+                    <div key={i} style={{ borderRadius:12,overflow:"hidden",border,
+                      display:"flex",flexDirection:"column",width:"clamp(85px, 12vw, 160px)" }}>
+                      <div style={{ position:"relative" }}>
+                        <img src={img} alt={q.options[i]} style={{
+                          width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block",
+                          opacity:(i===q.answer||i===selected)?1:0.5 }}/>
+                        {(i===q.answer||i===selected)&&(
+                          <div style={{ position:"absolute",top:4,right:4,fontSize:15,
+                            filter:"drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}>
+                            {i===q.answer?"✅":"❌"}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontSize:"clamp(9px, 1vw, 11px)",fontWeight:700,textAlign:"center",
+                        padding:"3px 4px",lineHeight:1.2,color:labelCol,background:labelBg }}>
+                        {q.options[i]}
+                      </div>
                     </div>
                   );
                 })}
@@ -2490,6 +2559,7 @@ function CertificateScreen({ user, language, onBack }) {
     const GREEN = "#166534", GREEN_LIGHT = "#4ade80";
     const GOLD = "#c9a227", GOLD_LIGHT = "#f4d160", GOLD_DARK = "#8a6d1a";
     const INK = "#1f2937", GRAY = "#57606f";
+    const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
 
     // Arcs text along a circle, centred on the current (translated) origin.
     function arcText(text, radius, font, color, stepDeg) {
@@ -2504,32 +2574,69 @@ function CertificateScreen({ user, language, onBack }) {
       }
       ctx.restore();
     }
+    // Draws letter-spaced small-caps-style text centred at x; returns its total width.
+    // Saves/restores canvas state so callers' font/align/baseline are untouched.
+    function spacedText(text, x, y, font, color, spacing) {
+      ctx.save();
+      ctx.font = font; ctx.fillStyle = color;
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      const chars = text.split("");
+      const widths = chars.map(c=>ctx.measureText(c).width);
+      const total = widths.reduce((a,b)=>a+b,0) + spacing*(chars.length-1);
+      let px = x - total/2;
+      chars.forEach((c,i)=>{ ctx.fillText(c,px,y); px += widths[i]+spacing; });
+      ctx.restore();
+      return total;
+    }
     function ribbonTail(x, y, angleDeg, color) {
       ctx.save();
       ctx.translate(x,y); ctx.rotate(angleDeg*Math.PI/180);
-      const w=28, len=92, notch=22;
+      const w=24, len=78, notch=18;
       ctx.beginPath();
       ctx.moveTo(-w/2,0); ctx.lineTo(w/2,0); ctx.lineTo(w/2,len);
       ctx.lineTo(0,len-notch); ctx.lineTo(-w/2,len); ctx.closePath();
       ctx.fillStyle = color; ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,0.16)";
-      ctx.fillRect(-4,4,8,len-notch-8);
+      ctx.fillStyle = "rgba(255,255,255,0.14)";
+      ctx.fillRect(-3,4,6,len-notch-8);
       ctx.restore();
     }
-    function laurelSprig(x, y, mirror) {
+    // A single laurel leaf, used to build sprigs and the small wordmark flourish.
+    function leaf(x, y, angleDeg, size, color) {
       ctx.save();
-      ctx.translate(x,y); ctx.scale(mirror,1);
-      for (let i=0;i<6;i++) {
-        const t = i/5;
-        ctx.save();
-        ctx.translate(8+t*44, -t*66);
-        ctx.rotate(-0.85+t*0.45);
-        ctx.beginPath(); ctx.ellipse(0,0,9,4,0,0,Math.PI*2);
-        ctx.fillStyle = i%2===0?GREEN_LIGHT:GREEN;
-        ctx.fill();
-        ctx.restore();
+      ctx.translate(x,y); ctx.rotate(angleDeg*Math.PI/180);
+      ctx.beginPath(); ctx.ellipse(0,0,size,size*0.4,0,0,Math.PI*2);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.restore();
+    }
+    // A laurel branch curling up one side of a circle of the given radius, centred
+    // at (x,y). mirror=+1 hugs the right side, -1 the left — call both to wrap a
+    // medallion in a wreath that converges at the bottom, open at the top.
+    function laurelSprig(x, y, mirror, radius, count=9) {
+      ctx.save();
+      ctx.translate(x,y);
+      for (let i=0;i<count;i++) {
+        const t = i/(count-1);
+        const beta = t*2.36; // 0 = bottom, sweeping up to ~135°
+        const r = radius*0.3 + t*radius*1.05;
+        const lx = mirror * r*Math.sin(beta);
+        const ly = r*Math.cos(beta);
+        leaf(lx, ly, mirror*(beta*180/Math.PI+90), 11-t*4, i%2===0?GREEN_LIGHT:GREEN);
       }
+      ctx.restore();
+    }
+    // Five-point star, used for the medallion emblem instead of an emoji glyph.
+    function star(x, y, outerR, innerR, color) {
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.beginPath();
+      ctx.moveTo(0,-outerR);
+      for (let i=0;i<5;i++) {
+        ctx.rotate(Math.PI/5); ctx.lineTo(0,-innerR);
+        ctx.rotate(Math.PI/5); ctx.lineTo(0,-outerR);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color; ctx.fill();
       ctx.restore();
     }
     function cornerFlourish(x, y, rotDeg) {
@@ -2547,6 +2654,22 @@ function CertificateScreen({ user, language, onBack }) {
       ctx.beginPath(); ctx.moveTo(cx+9,y); ctx.lineTo(cx+w/2,y); ctx.stroke();
       ctx.save(); ctx.translate(cx,y); ctx.rotate(Math.PI/4);
       ctx.fillStyle = GOLD; ctx.fillRect(-4,-4,8,8); ctx.restore();
+    }
+    // A signature block: a value (signature or date) above a hairline rule, with a
+    // small-caps caption below it — the classic bottom-of-diploma layout.
+    function signatureBlock(x, valueText, valueFont, caption, align) {
+      ctx.save();
+      const lineW = 230;
+      const lineX0 = align==="left" ? x : x - lineW;
+      const lineX1 = align==="left" ? x + lineW : x;
+      const textX  = (lineX0+lineX1)/2;
+      ctx.textAlign = "center";
+      ctx.fillStyle = INK; ctx.font = valueFont;
+      ctx.fillText(valueText, textX, 704);
+      ctx.strokeStyle = "rgba(201,162,39,0.55)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lineX0,720); ctx.lineTo(lineX1,720); ctx.stroke();
+      ctx.restore();
+      spacedText(caption, textX, 738, "700 11px Georgia", GOLD_DARK, 1.6);
     }
 
     /* ── Background ── */
@@ -2576,10 +2699,13 @@ function CertificateScreen({ user, language, onBack }) {
 
     ctx.textAlign = "center";
 
-    /* ── Logo ── */
-    ctx.fillStyle = GREEN; ctx.font = "700 24px Georgia";
-    ctx.fillText("🌿 GARDEN QUEST 🌿", cx, 96);
-    divider(114, 170);
+    /* ── Wordmark ── */
+    const wmWidth = spacedText("GARDEN QUEST", cx, 96, "700 22px Georgia", GREEN, 4);
+    leaf(cx-wmWidth/2-22, 94, 200, 8, GREEN_LIGHT);
+    leaf(cx-wmWidth/2-34, 98, 195, 6, GREEN);
+    leaf(cx+wmWidth/2+22, 94, 20, 8, GREEN_LIGHT);
+    leaf(cx+wmWidth/2+34, 98, 15, 6, GREEN);
+    divider(122, 170);
 
     /* ── Title ── */
     ctx.fillStyle = "rgba(15,23,42,0.12)"; ctx.font = "700 46px Georgia";
@@ -2600,31 +2726,33 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.fillStyle = GRAY; ctx.font = "21px Georgia";
     ctx.fillText(`has successfully completed all ${MODULES.length} modules of Garden Quest`, cx, 374);
     ctx.font = "italic 21px Georgia";
-    ctx.fillText(`in ${language.flag} ${language.label}`, cx, 402);
+    ctx.fillText(`in ${language.label}`, cx, 402);
 
     /* ── Module badges ── */
-    ctx.fillStyle = GOLD_DARK; ctx.font = "700 13px Georgia";
-    ctx.fillText("· MODULES COMPLETED ·", cx, 440);
+    spacedText("MODULES COMPLETED", cx, 440, "700 12px Georgia", GOLD_DARK, 2);
     const R = 19, GAP = 13;
     const total = MODULES.length*(2*R) + (MODULES.length-1)*GAP;
     const startX = cx - total/2 + R;
+    ctx.save();
+    ctx.textBaseline = "middle";
     MODULES.forEach((m,i)=>{
       const x = startX + i*(2*R+GAP), y = 472;
       ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2);
-      ctx.fillStyle = `${m.color}22`; ctx.fill();
+      ctx.fillStyle = `${m.color}18`; ctx.fill();
       ctx.strokeStyle = m.color; ctx.lineWidth = 1.6; ctx.stroke();
-      ctx.font = "16px sans-serif"; ctx.fillStyle = INK;
-      ctx.fillText(m.icon, x, y+1);
+      ctx.font = "700 13px Georgia"; ctx.fillStyle = INK;
+      ctx.fillText(ROMAN[i]||String(i+1), x, y+1);
     });
+    ctx.restore();
 
     /* ── Seal ── */
-    const sealY = 588, sealR = 52;
-    ribbonTail(cx-13, sealY, -9, GREEN);
-    ribbonTail(cx+13, sealY, 9, "#15803d");
-    laurelSprig(cx-sealR-4, sealY+30, -1);
-    laurelSprig(cx+sealR+4, sealY+30, 1);
+    const sealY = 578, sealR = 48;
+    ribbonTail(cx-12, sealY, -9, GREEN);
+    ribbonTail(cx+12, sealY, 9, "#15803d");
+    laurelSprig(cx, sealY, -1, sealR);
+    laurelSprig(cx, sealY, 1, sealR);
 
-    const sealGrad = ctx.createRadialGradient(cx-15,sealY-15,4,cx,sealY,sealR);
+    const sealGrad = ctx.createRadialGradient(cx-14,sealY-14,4,cx,sealY,sealR);
     sealGrad.addColorStop(0, GOLD_LIGHT); sealGrad.addColorStop(0.55, GOLD); sealGrad.addColorStop(1, GOLD_DARK);
     ctx.beginPath(); ctx.arc(cx,sealY,sealR,0,Math.PI*2);
     ctx.fillStyle = sealGrad; ctx.fill();
@@ -2633,23 +2761,16 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
 
     ctx.save(); ctx.translate(cx,sealY);
-    arcText("★ GARDEN QUEST ★", sealR-14, "700 11px Georgia", "#5c3d0a", 15);
+    arcText("GARDEN QUEST", sealR-13, "700 10px Georgia", "#5c3d0a", 16);
     ctx.restore();
-    ctx.font = "26px sans-serif"; ctx.fillStyle = "#5c3d0a";
-    ctx.fillText("🏆", cx, sealY+16);
+    star(cx, sealY+3, 15, 6.5, "#5c3d0a");
 
     /* ── Footer ── */
-    ctx.strokeStyle = "rgba(201,162,39,0.4)"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(90,732); ctx.lineTo(W-90,732); ctx.stroke();
-
     const dateStr = new Date().toLocaleDateString(undefined, {
       year:"numeric", month:"long", day:"numeric"
     });
-    ctx.font = "italic 15px Georgia"; ctx.fillStyle = GRAY;
-    ctx.textAlign = "left";
-    ctx.fillText("📜 Certified by Aristotle, Garden Guide", 90, 762);
-    ctx.textAlign = "right";
-    ctx.fillText(`Awarded on ${dateStr}`, W-90, 762);
+    signatureBlock(90, "Garden Quest", "italic 26px Georgia", "PROGRAMME DIRECTOR", "left");
+    signatureBlock(W-90, dateStr, "italic 20px Georgia", "DATE OF COMPLETION", "right");
     ctx.textAlign = "center";
   }, [user, language]);
 
@@ -2665,12 +2786,11 @@ function CertificateScreen({ user, language, onBack }) {
     <GardenWrap>
       <Panel style={{ maxWidth: 620 }}>
         <div style={{ textAlign:"center", marginBottom:16 }}>
-          <div style={{ fontSize:50 }}>🏆</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
-            Congratulations, {user.fullName}!
+            Certificate of Achievement
           </h1>
           <p style={{ color:"#86efac", fontSize:13 }}>
-            You've completed the entire Garden Quest journey.
+            {user.fullName} has completed the Garden Quest programme.
           </p>
         </div>
 
@@ -2680,10 +2800,10 @@ function CertificateScreen({ user, language, onBack }) {
 
         <div style={{ display:"flex", gap:10 }}>
           <Btn onClick={download} style={{ flex:1 }} color="#fbbf24">
-            ⬇️ Download Certificate
+            Download Certificate
           </Btn>
           <Btn onClick={onBack} style={{ flex:1 }} color="#22c55e">
-            🗺️ Back to Map
+            Back to Map
           </Btn>
         </div>
       </Panel>
@@ -2732,7 +2852,7 @@ export default function App() {
   }
 
   // Auto-resume a signed-in session (e.g. reopening the app on the same device)
-  // without jumping straight past the loading splash — the screen switch waits
+  // without jumping straight past the loading splash: the screen switch waits
   // for whichever of {loading animation, auth check} finishes last.
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
