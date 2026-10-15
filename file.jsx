@@ -427,10 +427,10 @@ const QUESTIONS = [
     id: 28,
     module: 7,
     text: "Which home uses water more sustainably?",
-    options: [
-      "Uses drinking water for every purpose and sends all used water directly away.",
+    options: [     
+      "Collects and appropriately treats greywater and reuses it for toilet flushing.",
       "Leaves several taps running unnecessarily.",
-      "Collects and appropriately treats greywater and reuses it for toilet flushing."
+      "Uses drinking water for every purpose and sends all used water directly away."
     ],
     images: [asset("1.png"), asset("2.png"), asset("3.png")],
     answer: 0,
