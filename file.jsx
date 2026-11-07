@@ -31,16 +31,21 @@ function asset(name) { return ASSET_BASE + name; }
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE HELPER
-   Tracks viewport width so layouts can adapt between
-   narrow phone screens and wider tablet/desktop screens.
+   "Mobile" = the stacked (one column) quiz layout. Used on
+   phones and on portrait tablets, where a side-by-side layout
+   would squeeze the question into a narrow, small-text column.
 ═══════════════════════════════════════════════════ */
 const MOBILE_BREAKPOINT = 640;
+const PORTRAIT_TABLET_MAX = 1024;
+function isStackedLayout() {
+  if (typeof window === "undefined") return false;
+  const w = window.innerWidth, h = window.innerHeight;
+  return w <= MOBILE_BREAKPOINT || (w <= PORTRAIT_TABLET_MAX && h > w);
+}
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
-  );
+  const [isMobile, setIsMobile] = useState(isStackedLayout);
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    const onResize = () => setIsMobile(isStackedLayout());
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -715,6 +720,8 @@ function GlobalStyles() {
       .gp-btn:focus-visible, .gp-opt:focus-visible, .gp-node:focus-visible {
         outline:3px solid #fde047; outline-offset:2px;
       }
+      /* Quiz columns scroll as a whole instead of squashing (and overlapping) their cards on short screens */
+      .gp-col > * { flex-shrink:0; }
       .gp-input:focus { border-color:#4ade80 !important; box-shadow:0 0 0 3px rgba(74,222,128,0.18); }
       .gp-input::placeholder { color:#86a993; }
       .gp-lang-chip { transition:transform 0.15s, background 0.15s, border-color 0.15s; }
@@ -1096,74 +1103,91 @@ function LoadingScreen({ onDone }) {
         }}>{e}</span>
       ))}
 
-      <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
-        <div style={{ fontSize:56, marginBottom:6, filter:"drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }}>🌿</div>
-        <h1 style={{ fontSize:38, fontWeight:900, color:"white",
-          textShadow:"0 3px 16px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.4)",
-          letterSpacing:-0.5, lineHeight:1.1, marginBottom:6 }}>GreenPath</h1>
-        <p style={{ color:"#f0fdf4", fontSize:13, fontWeight:800, opacity:0.9, marginBottom:4,
-          textShadow:"0 1px 6px rgba(0,0,0,0.35)" }}>
-          {t("brand.tagline")}
-        </p>
-        <p style={{ color:"#dcfce7", fontSize:14, fontWeight:600, opacity:0.85 }}>
-          {t("loading.tagline")}
-        </p>
-      </div>
+      {/* Soft light behind the centre so title and characters separate from the busy scenery */}
+      <div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none",
+        background:"radial-gradient(ellipse 60% 55% at 50% 50%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.18) 45%, transparent 75%)" }}/>
 
-      <div style={{
-        position:"relative",
-        zIndex:1,
-        display:"flex",
-        alignItems:"flex-end",
-        justifyContent:"center",
-        gap:"clamp(8px, 3vw, 30px)",
-        marginBottom:36,
-        padding:"0 8px",
-      }}>
-        {CHARACTERS.map((c, i) => (
-          <div key={c.id} style={{ textAlign:"center" }}>
-            <div style={{
-              background:`${c.color}20`,
-              border:`2px solid ${c.color}55`,
-              borderRadius:20,
-              padding:"clamp(6px, 2vw, 10px) clamp(6px, 2vw, 12px)",
-              marginBottom:6
-            }}>
-              <img
-                src={c.idle}
-                alt={c.name}
-                style={{
-                  width:"clamp(52px, 16vw, 80px)",
-                  height:"auto", aspectRatio:"80 / 107",
-                  objectFit:"contain",
-                  display:"block",
-                  animation:`charBob 2.2s ${i * 0.3}s ease-in-out infinite`,
-                  filter:`drop-shadow(0 6px 18px ${c.color}70)`
-                }}
-              />
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center",
+        gap:"clamp(12px, 3.2vh, 34px)", width:"100%", maxWidth:900, padding:"0 12px" }}>
+
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:"clamp(36px, min(7vw, 8vh), 64px)", lineHeight:1, marginBottom:4,
+            filter:"drop-shadow(0 4px 12px rgba(0,0,0,0.35))" }}>🌿</div>
+          <h1 style={{ fontSize:"clamp(32px, min(7vw, 8vh), 60px)", fontWeight:900, color:"white",
+            textShadow:"0 3px 0 #166534, 0 6px 22px rgba(0,0,0,0.45)",
+            letterSpacing:-0.5, lineHeight:1.05, marginBottom:"clamp(6px, 1.2vh, 10px)" }}>GreenPath</h1>
+          <p style={{ display:"inline-block", color:"#f0fdf4", fontSize:"clamp(12px, 1.6vw, 15px)", fontWeight:800,
+            background:"rgba(20,83,45,0.72)", borderRadius:999, padding:"4px 14px", marginBottom:6,
+            boxShadow:"0 4px 14px rgba(0,0,0,0.18)" }}>
+            {t("brand.tagline")}
+          </p>
+          <p style={{ color:"#14532d", fontSize:"clamp(12px, 1.5vw, 15px)", fontWeight:800,
+            textShadow:"0 1px 0 rgba(255,255,255,0.7)" }}>
+            {t("loading.tagline")}
+          </p>
+        </div>
+
+        {/* Characters on bright stage cards: sized from both the width and height of the screen */}
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:`repeat(${CHARACTERS.length}, minmax(0, clamp(70px, min(19vw, 17vh), 165px)))`,
+          justifyContent:"center",
+          gap:"clamp(8px, 2.4vw, 28px)",
+          width:"100%",
+        }}>
+          {CHARACTERS.map((c, i) => (
+            <div key={c.id} style={{ display:"flex", flexDirection:"column", alignItems:"center", minWidth:0 }}>
+              <div style={{
+                position:"relative", width:"100%",
+                background:"linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.72) 60%, rgba(240,253,244,0.85) 100%)",
+                border:`3px solid ${c.color}`,
+                borderRadius:"clamp(14px, 2vw, 22px)",
+                padding:"clamp(6px, 1.2vw, 12px) clamp(4px, 1vw, 10px) clamp(4px, 0.8vw, 8px)",
+                boxShadow:`0 10px 26px rgba(0,0,0,0.22), 0 0 0 4px ${c.color}33, inset 0 -18px 30px ${c.color}22`,
+                overflow:"hidden",
+              }}>
+                {/* ground shadow */}
+                <div style={{ position:"absolute", left:"18%", right:"18%", bottom:"6%", height:"7%",
+                  borderRadius:"50%", background:"rgba(0,0,0,0.18)", filter:"blur(3px)" }}/>
+                <img
+                  src={c.idle}
+                  alt={c.name}
+                  draggable={false}
+                  style={{
+                    position:"relative",
+                    width:"100%",
+                    height:"auto", aspectRatio:"2 / 3",
+                    objectFit:"contain",
+                    display:"block",
+                    animation:`charBob 2.2s ${i * 0.3}s ease-in-out infinite`,
+                    filter:"drop-shadow(0 4px 6px rgba(0,0,0,0.25))",
+                  }}
+                />
+              </div>
+              <div style={{
+                marginTop:"clamp(-12px, -1.2vw, -8px)", position:"relative",
+                color:"#fff", background:c.color,
+                fontWeight:900, fontSize:"clamp(11px, 1.5vw, 15px)",
+                borderRadius:999, padding:"3px clamp(10px, 1.6vw, 16px)",
+                boxShadow:"0 4px 12px rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.9)",
+                textShadow:"0 1px 2px rgba(0,0,0,0.35)", whiteSpace:"nowrap",
+              }}>
+                {c.name}
+              </div>
             </div>
+          ))}
+        </div>
 
-            <div style={{
-              color:c.color,
-              fontWeight:900,
-              fontSize:12,
-              background:"rgba(0,0,0,0.35)",
-              borderRadius:8,
-              padding:"2px 8px"
-            }}>
-              {c.name}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ position:"relative", zIndex:1, width:280, textAlign:"center" }}>
-        <div style={{ fontSize:12, color:"#a7f3d0", fontWeight:700, marginBottom:8, letterSpacing:1 }}>
+      <div style={{ width:"clamp(240px, 42vw, 400px)", textAlign:"center",
+        background:"rgba(255,255,255,0.78)", borderRadius:18, padding:"10px 16px 8px",
+        boxShadow:"0 8px 24px rgba(0,0,0,0.18)", border:"1px solid rgba(255,255,255,0.9)" }}>
+        <div style={{ fontSize:"clamp(11px, 1.3vw, 13px)", color:"#14532d", fontWeight:900, marginBottom:8, letterSpacing:1.5 }}>
           {t("loading.label")}
         </div>
         <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}
-          style={{ height:22, borderRadius:999,
-          background:"rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.35)",
+          style={{ height:"clamp(16px, 2.4vh, 22px)", borderRadius:999,
+          background:"rgba(20,83,45,0.45)", border:"2px solid rgba(255,255,255,0.8)",
+          boxShadow:"0 4px 14px rgba(0,0,0,0.18)",
           overflow:"hidden", position:"relative" }}>
           <div style={{
             position:"absolute", top:0, left:0, bottom:0,
@@ -1187,9 +1211,10 @@ function LoadingScreen({ onDone }) {
             backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(255,255,255,0.05) 14px,rgba(255,255,255,0.05) 28px)",
           }}/>
         </div>
-        <div style={{ color:"#bae6fd", fontSize:14, marginTop:8, fontWeight:800 }}>
+        <div style={{ color:"#14532d", fontSize:14, marginTop:8, fontWeight:900 }}>
           {Math.round(progress)}%
         </div>
+      </div>
       </div>
     </div>
   );
@@ -1419,9 +1444,10 @@ function CharacterScreen({ language, initialId, onSelect, onBack }) {
               :animDir==="right"?"slideInLeft 0.32s ease":"none",
           }}>
             <div style={{ background:`${c.color}12`, border:`2px solid ${c.color}50`, borderRadius:22, padding:"24px 20px" }}>
-              <img src={c.idle} alt={c.name} style={{
-                width:140, height:187, objectFit:"contain", display:"block", margin:"0 auto 14px",
-                filter:`drop-shadow(0 10px 28px ${c.color}90)`,
+              <img src={c.idle} alt={c.name} draggable={false} style={{
+                height:"clamp(170px, 30vh, 260px)", width:"auto", aspectRatio:"2 / 3",
+                objectFit:"contain", display:"block", margin:"0 auto 14px",
+                filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 10px 24px ${c.color}90)`,
                 animation:"charIdle 3s ease-in-out infinite",
               }}/>
               <div style={{ fontWeight:900, fontSize:20, color:"#f0fdf4", marginBottom:3 }}>{c.name}</div>
@@ -2151,12 +2177,13 @@ function handleNext() {
     <div style={{ position:"absolute",left:"8%",bottom:"32%",
       textAlign:"center",animation:"slideInLeft 0.5s ease" }}>
       <img src={character.idle} alt={character.name} style={{
-        width:90,height:120,objectFit:"contain",
-        filter:`drop-shadow(0 8px 24px ${character.color}aa)`,
+        height:"clamp(120px, 22vh, 220px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",display:"block",
+        filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 8px 20px ${character.color}aa)`,
         animation:"charIdle 3s ease-in-out infinite",
       }}/>
-      <div style={{ background:"white",color:"#0f172a",borderRadius:8,
-        padding:"3px 10px",fontSize:11,fontWeight:900,marginTop:4,
+      <div style={{ background:character.color,color:"#fff",borderRadius:999,border:"2px solid #fff",
+        padding:"3px 12px",fontSize:"clamp(11px, 1.3vw, 14px)",fontWeight:900,marginTop:4,display:"inline-block",
+        textShadow:"0 1px 2px rgba(0,0,0,0.3)",
         boxShadow:`0 2px 10px ${character.color}88` }}>{character.name}</div>
     </div>
 
@@ -2213,12 +2240,13 @@ function handleNext() {
       textAlign:"center",
     }}>
       <img src={asset("Aristotle.png")} alt="Aristotle" style={{
-        width:88,height:117,objectFit:"contain",
-        filter:"drop-shadow(0 8px 28px rgba(139,92,246,0.65))",
+        height:"clamp(120px, 22vh, 220px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",display:"block",
+        filter:"drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 8px 24px rgba(139,92,246,0.6))",
         animation:AristotleIn?"walkBob 0.55s ease-in-out infinite":"none",
       }}/>
-      <div style={{ color:"#c4b5fd",fontWeight:900,fontSize:11,marginTop:4,
-        background:"rgba(0,0,0,0.45)",borderRadius:8,padding:"2px 10px" }}>
+      <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.3vw, 14px)",marginTop:4,display:"inline-block",
+        background:"#7c3aed",borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+        textShadow:"0 1px 2px rgba(0,0,0,0.3)" }}>
         Aristotle
       </div>
     </div>
@@ -2240,25 +2268,29 @@ function handleNext() {
 {/* ═══ QUESTION PHASE ═══ */}
       {phase==="question"&&(
         <div style={{ position:"absolute",inset:0,display:"flex",
-          flexDirection:isMobile?"column":"row",alignItems:"stretch",
-          zIndex:10,padding:isMobile?"46px 10px 10px":"50px 12px 16px",gap:isMobile?8:0 }}>
+          flexDirection:isMobile?"column":"row",alignItems:"stretch",justifyContent:"center",
+          zIndex:10,padding:isMobile?"46px clamp(10px, 4vw, 40px) 10px":"clamp(50px, 7vh, 72px) clamp(12px, 3vw, 48px) 16px",
+          gap:isMobile?8:"clamp(8px, 2vw, 32px)",
+          maxWidth:1500,margin:"0 auto" }}>
           {/* Left: Character */}
-          <div style={{ width:isMobile?"100%":"28%",display:"flex",
+          <div style={{ width:isMobile?"100%":"clamp(150px, 24%, 340px)",display:"flex",
             flexDirection:isMobile?"row":"column",flexShrink:0,
             alignItems:"center",justifyContent:isMobile?"flex-start":"flex-end",
             gap:isMobile?10:0,paddingBottom:isMobile?0:12,
             animation:"slideInLeft 0.4s ease" }}>
             <img src={charImg} alt={character.name} style={{
-              width:isMobile?54:80,height:isMobile?72:107,objectFit:"contain",flexShrink:0,
-              filter:`drop-shadow(0 6px 18px ${character.color}99)`,
+              height:isMobile?"clamp(76px, 11vh, 100px)":"clamp(110px, 21vh, 200px)",width:"auto",aspectRatio:"2 / 3",
+              objectFit:"contain",flexShrink:0,
+              filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 6px 16px ${character.color}99)`,
               animation:"idleFloat 3s ease-in-out infinite",
             }}/>
             <div style={{ display:"flex",flexDirection:"column",
               alignItems:isMobile?"flex-start":"center" }}>
-              <div style={{ color:character.color,fontWeight:900,fontSize:11,
-                background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
+              <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.2vw, 14px)",
+                background:character.color,borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+                textShadow:"0 1px 2px rgba(0,0,0,0.3)",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
-              <div style={{ color:"#e2e8f0",fontSize:10,textAlign:isMobile?"left":"center",
+              <div style={{ color:"#e2e8f0",fontSize:"clamp(10px, 1vw, 12px)",textAlign:isMobile?"left":"center",
                 marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
                 background:"rgba(0,0,0,0.45)",borderRadius:8,
                 maxWidth:isMobile?180:undefined }}>
@@ -2268,20 +2300,20 @@ function handleNext() {
           </div>
 
           {/* Right: Q+A panel */}
-          <div style={{ flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8,
+          <div className="gp-col" style={{ flex:1,minWidth:0,maxWidth:isMobile?undefined:920,display:"flex",flexDirection:"column",gap:"clamp(8px, 1.2vh, 14px)",overflowY:"auto",
             animation:"slideInRight 0.4s ease" }}>
             <div style={{ background:"rgba(10,20,10,0.82)",backdropFilter:"blur(16px)",
               border:"1px solid rgba(74,222,128,0.22)",borderRadius:18,padding:"12px 14px" }}>
               <div style={{ display:"flex",gap:10,alignItems:"flex-start" }}>
                 <img src={asset("Aristotle.png")} alt="Aristotle" style={{
-                  width:44,height:59,objectFit:"contain",flexShrink:0,
+                  height:isMobile?59:"clamp(59px, 8vh, 86px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   animation:"idleFloat 3s ease-in-out infinite",
                   filter:"drop-shadow(0 4px 12px rgba(139,92,246,0.5))",
                 }}/>
                 <div>
-                  <div style={{ color:"#a78bfa",fontWeight:900,fontSize:10,
-                    marginBottom:5,letterSpacing:0.5,textTransform:"uppercase" }}>📜 {t("game.asksPanel")}</div>
-                  <div style={{ color:"#f0fdf4",fontWeight:800,fontSize:14,lineHeight:1.55 }}>
+                  <div style={{ color:"#a78bfa",fontWeight:900,
+                    marginBottom:5,letterSpacing:0.5,textTransform:"uppercase",fontSize:"clamp(10px, 0.9vw, 13px)" }}>📜 {t("game.asksPanel")}</div>
+                  <div style={{ color:"#f0fdf4",fontWeight:800,fontSize:"clamp(15px, 1.35vw, 22px)",lineHeight:1.5 }}>
                     {q.text}
                   </div>
                 </div>
@@ -2299,13 +2331,13 @@ function handleNext() {
                     style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",padding:0,color:"inherit",
                       border:"1.5px solid rgba(74,222,128,0.18)",transition:"all 0.15s",
                       background:"rgba(10,25,10,0.55)",display:"flex",flexDirection:"column",
-                      width:"clamp(110px, 15vw, 190px)" }}
+                      width:isMobile?"clamp(120px, 38vw, 220px)":"clamp(120px, 13vw, 240px)" }}
                     onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.03)"; e.currentTarget.style.borderColor="#22c55e88"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; }}
                   >
                     <img src={img} alt="" draggable={false} style={{
                       width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block" }}/>
-                    <div style={{ fontSize:"clamp(10px, 1.1vw, 12px)",fontWeight:700,color:"#e2e8f0",
+                    <div style={{ fontSize:"clamp(11px, 0.95vw, 15px)",fontWeight:700,color:"#e2e8f0",
                       textAlign:"center",padding:"4px 5px",lineHeight:1.25 }}>
                       {q.options[i]}
                     </div>
@@ -2320,7 +2352,7 @@ function handleNext() {
                       background:"rgba(10,25,10,0.78)",backdropFilter:"blur(12px)",
                       border:"1.5px solid rgba(74,222,128,0.18)",
                       borderRadius:13,padding:"11px 14px",cursor:"pointer",
-                      fontSize:13,fontWeight:700,color:"#e2e8f0",transition:"all 0.15s",
+                      fontSize:"clamp(13px, 1.1vw, 18px)",fontWeight:700,color:"#e2e8f0",transition:"all 0.15s",
                       display:"flex",alignItems:"center",gap:10 }}
                     onMouseEnter={e=>{ e.currentTarget.style.background="rgba(34,197,94,0.15)"; e.currentTarget.style.borderColor="#22c55e55"; e.currentTarget.style.transform="translateX(4px)"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.background="rgba(10,25,10,0.78)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; e.currentTarget.style.transform="translateX(0)"; }}
@@ -2343,10 +2375,12 @@ function handleNext() {
       {/* ═══ FEEDBACK PHASE ═══ */}
       {phase==="feedback"&&(
         <div style={{ position:"absolute",inset:0,display:"flex",
-          flexDirection:isMobile?"column":"row",alignItems:"stretch",
-          zIndex:10,padding:isMobile?"46px 10px 10px":"50px 12px 16px",gap:isMobile?8:0 }}>
+          flexDirection:isMobile?"column":"row",alignItems:"stretch",justifyContent:"center",
+          zIndex:10,padding:isMobile?"46px clamp(10px, 4vw, 40px) 10px":"clamp(50px, 7vh, 72px) clamp(12px, 3vw, 48px) 16px",
+          gap:isMobile?8:"clamp(8px, 2vw, 32px)",
+          maxWidth:1500,margin:"0 auto" }}>
           {/* Left: Character reacting */}
-          <div style={{ width:isMobile?"100%":"28%",display:"flex",
+          <div style={{ width:isMobile?"100%":"clamp(150px, 24%, 340px)",display:"flex",
             flexDirection:isMobile?"row":"column",flexShrink:0,
             alignItems:"center",justifyContent:isMobile?"flex-start":"flex-end",
             gap:isMobile?10:0,paddingBottom:isMobile?0:12,
@@ -2360,14 +2394,16 @@ function handleNext() {
             }}><CoinIcon size={24}/></div>
             )}
             <img key={animKey} src={charImg} alt={character.name} style={{
-              width:isMobile?56:82,height:isMobile?75:110,objectFit:"contain",flexShrink:0,
-              filter:`drop-shadow(0 6px 18px ${character.color}bb)`,
+              height:isMobile?"clamp(76px, 11vh, 100px)":"clamp(110px, 21vh, 200px)",width:"auto",aspectRatio:"2 / 3",
+              objectFit:"contain",flexShrink:0,
+              filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 6px 16px ${character.color}bb)`,
               animation:correct?"cBounce 0.65s ease":"cShake 0.5s ease",
             }}/>
             <div style={{ display:"flex",flexDirection:"column",
               alignItems:isMobile?"flex-start":"center" }}>
-              <div style={{ color:character.color,fontWeight:900,fontSize:11,
-                background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
+              <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.2vw, 14px)",
+                background:character.color,borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+                textShadow:"0 1px 2px rgba(0,0,0,0.3)",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
               <div style={{ color:correct?"#86efac":"#fca5a5",fontSize:10,textAlign:isMobile?"left":"center",
                 marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
@@ -2379,7 +2415,7 @@ function handleNext() {
           </div>
 
           {/* Right: Aristotle reaction + revealed answers */}
-<div style={{ flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8 }}>
+<div className="gp-col" style={{ flex:1,minWidth:0,maxWidth:isMobile?undefined:920,display:"flex",flexDirection:"column",gap:"clamp(8px, 1.2vh, 14px)",overflowY:"auto",paddingBottom:4 }}>
             <div style={{
               background:correct?"rgba(22,101,52,0.72)":"rgba(127,29,29,0.72)",
               backdropFilter:"blur(16px)",
@@ -2395,16 +2431,16 @@ function handleNext() {
               )}
               <div style={{ display:"flex",gap:10,alignItems:"center" }}>
                 <img src={AristotleImg} alt="Aristotle" style={{
-                  width:54,height:72,objectFit:"contain",flexShrink:0,
+                  height:isMobile?68:"clamp(68px, 9vh, 96px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   filter:`drop-shadow(0 4px 14px ${correct?"rgba(34,197,94,0.7)":"rgba(239,68,68,0.7)"})`,
                   animation:correct?"AristotleBounce 0.7s ease":"AristotleShake 0.6s ease",
                 }}/>
                 <div>
-                  <div style={{ fontWeight:900,fontSize:11,letterSpacing:0.5,
+                  <div style={{ fontWeight:900,fontSize:"clamp(11px, 0.95vw, 14px)",letterSpacing:0.5,
                     color:correct?"#4ade80":"#f87171",marginBottom:4 }}>
                     {correct?t("game.happy"):t("game.disappointed")}
                   </div>
-                  <div style={{ color:correct?"#bbf7d0":"#fecaca",fontSize:13,fontStyle:"italic" }}>
+                  <div style={{ color:correct?"#bbf7d0":"#fecaca",fontSize:"clamp(13px, 1.05vw, 17px)",fontStyle:"italic" }}>
                     {correct?t("game.praise"):t("game.notQuite")}
                   </div>
                   {correct&&(
@@ -2429,7 +2465,7 @@ function handleNext() {
                   const labelCol = i===q.answer?"#bbf7d0":i===selected?"#fecaca":"#94a3b8";
                   return (
                     <div key={i} style={{ borderRadius:12,overflow:"hidden",border,
-                      display:"flex",flexDirection:"column",width:"clamp(85px, 12vw, 160px)" }}>
+                      display:"flex",flexDirection:"column",width:isMobile?"clamp(95px, 28vw, 170px)":"clamp(95px, 10vw, 190px)" }}>
                       <div style={{ position:"relative" }}>
                         <img src={img} alt={q.options[i]} style={{
                           width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block",
@@ -2441,7 +2477,7 @@ function handleNext() {
                           </div>
                         )}
                       </div>
-                      <div style={{ fontSize:"clamp(9px, 1vw, 11px)",fontWeight:700,textAlign:"center",
+                      <div style={{ fontSize:"clamp(10px, 0.9vw, 14px)",fontWeight:700,textAlign:"center",
                         padding:"3px 4px",lineHeight:1.2,color:labelCol,background:labelBg }}>
                         {q.options[i]}
                       </div>
@@ -2459,7 +2495,7 @@ function handleNext() {
                   else if (i===selected) { bg="rgba(127,29,29,0.7)"; border="1px solid #ef444488"; col="#fecaca"; }
                   return (
                     <div key={i} style={{ background:bg,border,borderRadius:12,
-                      padding:"9px 13px",fontSize:12,fontWeight:700,color:col,
+                      padding:"9px 13px",fontSize:"clamp(12px, 1vw, 16px)",fontWeight:700,color:col,
                       display:"flex",alignItems:"center",gap:8 }}>
                       <span style={{ fontSize:14 }}>
                         {i===q.answer?"✅":i===selected?"❌":"  "}
@@ -2472,7 +2508,7 @@ function handleNext() {
             )}
 
             <div role="status" style={{ background:"rgba(255,251,235,0.96)",border:"1.5px solid #fbbf24",
-              borderRadius:12,padding:"10px 13px",fontSize:13,fontWeight:700,color:"#1e3a8a",lineHeight:1.55,
+              borderRadius:12,padding:"10px 13px",fontSize:"clamp(13px, 1.05vw, 17px)",fontWeight:700,color:"#1e3a8a",lineHeight:1.55,
               boxShadow:"0 6px 20px rgba(0,0,0,0.18)",maxHeight:isMobile?"30vh":undefined,overflowY:"auto" }}>
               💡 {q.explanation}
             </div>
