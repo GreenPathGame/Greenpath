@@ -22,18 +22,26 @@ export default {
       title: "Practici agricole tradiționale, grădinărit ecologic, agricultură și agroecologie",
       info: "Mini-serele sustenabile (tunel, hidroponice, solare pasive sau verticale) protejează plantele de frig, vânt, ploaie și stres climatic, ajutând la cultivarea hranei la nivel local cu materiale cu impact redus. Combaterea integrată și biologică, de exemplu prin încurajarea buburuzelor, a crisopelor și a viespilor parazitoide, ține sub control dăunători precum păduchele lânos (Eriosoma lanigerum) fără a depinde în principal de pesticide chimice.",
       facts: [
-        "Serele hidroponice cultivă plante fără pământ, folosind apă și substanțe nutritive.",
-        "Serele verticale lasă plantele să crească în sus, potrivite pentru orașe, școli și spații mici.",
-        "Buburuzele, crisopele și viespile parazitoide sunt dușmani naturali ai afidelor.",
+        "Cultivarea la scară mică poate reduce dependența de transportul pe distanțe lungi.",
+        "Materialele reutilizate fac serele mai ieftine și mai sustenabile.",
+        "Sistemele verticale și hidroponice sunt utile acolo unde terenul sau apa sunt puține.",
+        "Eriosoma lanigerum arată ca niște grupuri mici, albe, ca de vată, pe ramuri și frunze.",
+        "Eriosoma lanigerum slăbește copacii hrănindu-se cu seva lor.",
+        "Buburuzele, crisopele și viespile parazitoide ajută la controlul natural al afidelor.",
       ],
     },
     3: {
       title: "Combaterea ecologică a dăunătorilor și culturile asociate",
-      info: "Combaterea naturală a dăunătorilor, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic.",
+      info: "Combaterea naturală a dăunătorilor, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic. Culturile asociate completează aceste metode, împerechind plante care se protejează reciproc: crăițele, busuiocul, lavanda, arpagicul, usturoiul și condurul-doamnei îndepărtează insectele nedorite, iar combinații clasice precum roșii cu busuioc, morcovi cu ceapă și porumb cu fasole îmbunătățesc rezistența și productivitatea.",
       facts: [
-        "Atât în Carpați, cât și în zona mediteraneeană, o soluție de săpun moale este folosită pentru a îndepărta afidele.",
-        "Roșiile plantate lângă busuioc sunt mai rezistente și mai gustoase.",
-        "Mirosul puternic al cepei și al usturoiului alungă musca morcovului.",
+        "În zona Carpaților se folosește o soluție de urzică pentru a îndepărta afidele.",
+        "În regiunile mediteraneene se folosește o soluție pe bază de usturoi pentru a îndepărta afidele.",
+        "Atât în Carpați, cât și în zona mediteraneeană, se folosește o soluție de săpun moale pentru a îndepărta afidele.",
+        "În ambele regiuni, grădinarii atrag buburuze și crisope, dușmani naturali ai afidelor, plantând plante aromatice înflorite precum mărar, fenicul, coriandru și coada-șoricelului.",
+        "Porumbul, fasolea și dovleacul cresc bine împreună: porumbul susține fasolea urcătoare, fasolea îmbogățește solul cu azot, iar dovleacul acoperă solul, reducând evaporarea și buruienile (România).",
+        "Usturoiul sau ceapa plantate lângă morcovi și varză alungă prin mirosul lor puternic musca morcovului, dăunătorii verzei și afidele (România, Cehia).",
+        "Busuiocul plantat lângă roșii ajută la îndepărtarea muștelor albe și a tripșilor, atrage polenizatorii și poate îmbunătăți creșterea roșiilor (Italia, Grecia).",
+        "În livezile de măslini din Grecia, lavanda, rozmarinul și cimbrul atrag insecte utile, păstrează umiditatea solului și reduc eroziunea pe vreme caldă și uscată.",
       ],
     },
     4: {
@@ -50,31 +58,28 @@ export default {
     },
     5: {
       title: "Reducerea risipei alimentare",
-      info: "Metodele tradiționale de murare, uscare la soare și conservare în ulei păstrează produsele de sezon fără frigider: legumele sunt puse în saramură sau oțet, fructele și plantele aromatice se usucă la soare, iar măslinele se păstrează în ulei, salvând surplusul recoltei de la risipă. Aceste abilități tradiționale au nevoie doar de borcane de sticlă, sare, oțet, ulei și mult soare și economisesc energia consumată permanent de frigidere și congelatoare.",
+      info: "Metodele tradiționale de murare, uscare la soare și conservare în ulei păstrează produsele de sezon fără frigider: legumele sunt puse în saramură sau oțet, fructele și plantele aromatice se usucă la soare, iar măslinele se păstrează în ulei, salvând surplusul recoltei de la risipă. Lăsând la macerat coji de lămâie, portocală sau grapefruit în oțet alb, se obține un detergent natural universal, fără substanțe chimice de sinteză, ambalaje de plastic sau costuri în plus.",
       facts: [
         "În Santorini, cooperative ale tinerilor încă usucă la soare roșii cherry și capere.",
         "Măslinele, plantele aromatice și legumele se păstrează luni întregi în saramură, oțet sau ulei de măsline.",
         "Europa risipește în jur de 88 de milioane de tone de alimente în fiecare an.",
-      ],
-    },
-    6: {
-      title: "Soluții de curățat bucătăria din coji de citrice și oțet",
-      info: "Prepararea soluțiilor de curățat bucătăria din coji de citrice și oțet readuce la viață vechea practică mediteraneeană și carpatică de a folosi resturile alimentare ca agenți puternici de curățenie în gospodărie. Lăsând la macerat coji de lămâie, portocală sau grapefruit în oțet alb, se obține un detergent natural universal, fără substanțe chimice de sinteză, ambalaje de plastic sau costuri în plus.",
-      facts: [
         "În bucătăriile tradiționale grecești, cojile de lămâie rămase erau transformate în agenți de curățare.",
         "Cojile de citrice lăsate în oțet aproximativ două săptămâni dau o soluție naturală pentru toate suprafețele.",
         "O zicală din Creta prețuiește pe cel care cunoaște valoarea unei coji de roșie și a unei coji de lămâie.",
       ],
     },
-    7: {
+    6: {
       title: "Ambalaje sustenabile și reutilizarea apei",
       info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
       facts: [
-        "„Punctul Verde” nu înseamnă întotdeauna că ambalajul este reciclabil: arată că producătorul contribuie la un sistem de recuperare.",
+        "Nu orice afirmație „verde” este adevărată.",
+        "Certificările oficiale sunt mai de încredere decât cuvintele de marketing.",
+        "„Punctul Verde” nu înseamnă întotdeauna ambalaj reciclabil.",
+        "Ambalajele inteligente pot reduce deșeurile, deteriorarea și poluarea.",
         "Apele gri de la spălat, îmbăiat și chiuvete pot fi tratate și reutilizate în scopuri nepotabile, de exemplu pentru toaletă.",
       ],
     },
-    8: {
+    7: {
       title: "Gătit sezonier și conștient: păstrarea moștenirii culturale",
       info: "Tehnicile ancestrale de conservare transformă recoltele de sezon în hrană pentru iarnă. Silvoița românească este un gem de prune fără zahăr, fiert încet împreună cu coaja până se îngroașă și pus fierbinte în borcane sterilizate; zacusca este o pastă din vinete și ardei copți, ceapă, suc de roșii și condimente, fiartă la foc mic și închisă în borcane. Folosirea surplusului local și a borcanelor reutilizabile reduce emisiile din transport, ambalajele și risipa alimentară.",
       facts: [
@@ -85,12 +90,21 @@ export default {
         "În Cehia, produsul tradițional cel mai apropiat de zacuscă este lečo, un preparat din legume asemănător unei tocănițe, păstrat pentru iarnă.",
       ],
     },
-    9: {
+    8: {
       title: "De la plante medicinale la produse tradiționale",
       info: "Plantele aromatice și medicinale, sălbatice sau din grădină, pot fi transformate în ceaiuri, remedii și alte produse tradiționale. Recoltarea sustenabilă înseamnă să culegem doar cantități mici din populații bogate de plante, să folosim părțile potrivite ale fiecărei specii și să uscăm bine plantele înainte de a le păstra în borcane curate, închise și etichetate, pentru ca ele să crească în continuare pentru generațiile viitoare.",
       facts: [
         "Dacă se culege doar puțin din populațiile bogate, plantele continuă să crească și să se înmulțească.",
         "În funcție de specie, se pot culege frunze, flori, semințe, rădăcini sau tulpini.",
+      ],
+    },
+    9: {
+      title: "Să mâncăm după anotimpuri: pH-ul compostului și păstrarea plantelor aromatice",
+      info: "pH-ul compostului arată dacă un extract de compost este acid, neutru sau alcalin. Testarea unei probe cernute, amestecate cu apă distilată, îi ajută pe cultivatori să aprecieze dacă un compost se potrivește solului și plantelor lor, să folosească mai bine nutrienții, să evite risipa și să readucă în grădină resturile organice locale în loc să le arunce. Plantele culese în sezon trebuie uscate corect și folosite, păstrate sau împărțite, ca nimic să nu se irosească.",
+      facts: [
+        "pH-ul 7 este neutru; valorile sub 7 sunt acide, iar cele peste 7 sunt alcaline.",
+        "O schimbare de o unitate de pH înseamnă o schimbare de zece ori a acidității.",
+        "Testul din atelier folosește 10 g de compost cernut amestecat cu 50 mL de apă distilată.",
         "Plantele uscate își păstrează cel mai mult aroma în borcane de sticlă bine închise și etichetate, într-un loc răcoros, uscat și întunecat.",
       ],
     },
@@ -105,7 +119,7 @@ export default {
     6: {
       text: "Ce alegere ajută la reducerea emisiilor din transportul alimentelor?",
       options: ["Alimente ambalate importate", "Hrană crescută într-o grădină comestibilă locală pentru fauna sălbatică"],
-      explanation: "O grădină diversă oferă o mare varietate de alimente și semințe, păstrând biodiversitatea, sprijinind polenizatorii și fauna sălbatică și ajutând grădina să facă mai bine față secetei, dăunătorilor și schimbărilor climatice.",
+      explanation: "Hrana locală parcurge distanțe mai mici, reducând emisiile, deșeurile de ambalaje și consumul de energie. Sistemele alimentare locale sprijină și biodiversitatea și comunitățile sustenabile.",
     },
     7: {
       text: "Care plantă are cele mai mari șanse să îmbunătățească natural solul fixând azotul?",
@@ -115,7 +129,7 @@ export default {
     16: {
       text: "Care grădină are cea mai mare diversitate de semințe?",
       options: ["O grădină colorată, cu multe plante diferite", "Un câmp mare cu o singură cultură", "Un gazon decorativ fără plante comestibile."],
-      explanation: "Semințele tradiționale păstrează soiurile locale de plante, protejează moștenirea culturală și întăresc reziliența climatică, conservând soiuri adaptate natural la clima locală și la condițiile de mediu în schimbare.",
+      explanation: "O grădină diversă oferă o mare varietate de alimente și semințe, păstrând biodiversitatea, sprijinind polenizatorii și fauna sălbatică și ajutând grădina să facă mai bine față secetei, dăunătorilor și schimbărilor climatice.",
     },
     23: {
       text: "Ce mini-seră cultivă plante fără sol?",
@@ -187,16 +201,6 @@ export default {
       options: ["Adevărat", "Fals"],
       explanation: "Europa risipește în jur de 88 de milioane de tone de alimente în fiecare an.",
     },
-    30: {
-      text: "Ce lichid se folosește în mod tradițional pentru murarea legumelor pe termen lung?",
-      options: ["Saramură cu oțet", "Lapte proaspăt", "Apă simplă", "Suc de fructe"],
-      explanation: "Murarea legumelor în saramură cu oțet creează un mediu acid care oprește dezvoltarea bacteriilor dăunătoare, astfel încât legumele pot fi păstrate în siguranță luni întregi fără frigider.",
-    },
-    31: {
-      text: "De ce erau păstrate în mod tradițional măslinele scufundate în ulei?",
-      options: ["Uleiul le îndulcește", "Uleiul blochează aerul și umiditatea care provoacă alterarea", "Uleiul face măslinele să se coacă mai repede", "Așa cerea legea"],
-      explanation: "Scufundarea măslinelor în ulei creează o barieră împotriva aerului și umidității, cele două cauze principale ale alterării, permițând păstrarea lor îndelungată fără frigider.",
-    },
     10: {
       text: "Care sunt cele două ingrediente principale ale acestui detergent natural pentru bucătărie?",
       options: ["Înălbitor și apă", "Coji de citrice și oțet", "Săpun și ulei", "Sare și zahăr"],
@@ -206,16 +210,6 @@ export default {
       text: "De ce este bună pentru climă reutilizarea cojilor de citrice?",
       options: ["Creează mai mult plastic", "Ține resturile departe de depozitele de deșeuri care produc metan", "Consumă mai multă energie", "Are nevoie de refrigerare"],
       explanation: "Reutilizarea cojilor de citrice ține resturile alimentare valoroase departe de depozitele de deșeuri, unde putrezesc încet și eliberează metan dăunător.",
-    },
-    17: {
-      text: "Ce substanță naturală din coaja citricelor dizolvă grăsimea?",
-      options: ["Clorul", "D-limonenul", "Praful de copt", "Zahărul"],
-      explanation: "D-limonenul este un ulei natural din coaja citricelor care dizolvă eficient grăsimea și murdăria; de aceea detergenții pe bază de citrice funcționează atât de bine fără degresanți de sinteză.",
-    },
-    18: {
-      text: "Transformarea cojilor de citrice și a oțetului într-un detergent de bucătărie este un exemplu de ce?",
-      options: ["Depozitarea resturilor alimentare la groapa de gunoi", "Incinerarea resturilor alimentare", "Reutilizare circulară, fără deșeuri", "Consum de unică folosință"],
-      explanation: "În loc să aruncăm cojile de citrice, lăsându-le în oțet transformăm un rest alimentar într-un produs util pentru casă: un exemplu simplu de reutilizare circulară, fără deșeuri, care ține gunoiul departe de groapă.",
     },
     20: {
       text: "Ce ar trebui să verifice consumatorii pentru a evita greenwashing-ul?",
@@ -318,6 +312,16 @@ export default {
         "Uscarea reduce umiditatea, ajutând la prevenirea mucegaiului și la prelungirea termenului de păstrare.",
       ],
       explanation: "Eliminarea umidității în exces limitează dezvoltarea microbilor și degradarea. Plantele trebuie totuși depozitate corect, iar calitatea lor scade în timp.",
+    },
+    46: {
+      text: "Ce indică o valoare a pH-ului compostului peste 7?",
+      options: ["Compost acid", "Compost neutru", "Compost alcalin", "Compost fără nutrienți"],
+      explanation: "pH-ul măsoară aciditatea sau alcalinitatea. Valorile peste 7 indică condiții alcaline. Cunoașterea pH-ului compostului îi ajută pe cultivatori să ia decizii informate privind gestionarea solului.",
+    },
+    47: {
+      text: "ADEVĂRAT sau FALS: testul pH-ului compostului măsoară toți nutrienții din compost.",
+      options: ["Adevărat", "Fals"],
+      explanation: "Testul de pH măsoară aciditatea sau alcalinitatea, nu concentrația nutrienților. Arată condițiile care pot influența disponibilitatea acestora; pentru nutrienți specifici sunt necesare analize suplimentare.",
     },
   },
 };

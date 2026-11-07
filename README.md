@@ -9,24 +9,26 @@ A free, browser-based learning game about sustainable food, gardening and food t
 - **5 languages:** English, Ελληνικά (Greek), Italiano, Română, Čeština. All UI text, module introductions, "Did you know?" facts, questions, answers, explanations and the certificate are translated. The language can be changed at any time from the map.
 - **4 characters:** Manos (GR), Roxana (RO), Rino (IT), Jana (CZ), each with idle, happy and sad reactions.
 - **Living garden world:** mountains, forests, a waterfall, river, pond and flower meadows with butterflies, birds and a duck, drawn in `NatureScene.jsx` behind every screen.
-- **9 modules, 38 questions:** multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
+- **9 modules, 36 questions** (all from the partners' info papers): multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
 - **Accounts:** username + password (Firebase Auth). Progress, language and character sync across devices.
 - **Certificate:** generated in the player's language with their full name and the date, downloadable as a PNG.
 - Works on phones, tablets and desktop. Answer buttons and map nodes work with the keyboard, and animations are reduced when the device asks for reduced motion.
 
 ## Modules and sources
 
-| # | Module | Source (info paper / checklist topic) |
-|---|--------|----------------------------------------|
-| 1 | Wildlife Gardens | CZ Practice 1 (forest-inspired edible wildlife gardens) + CZ Practice 2 (traditional seeds) |
-| 2 | Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology | IT Practice 1 (handmade sustainable greenhouses) + IT Practice 2 (biological control of the woolly aphid) |
-| 3 | Organic Pest Control and Companion Planting | RO Practice 1 (homemade natural pest control) + RO Practice 2 (companion planting) |
-| 4 | Reusable Alternatives for a Plastic-Free Kitchen | GR clay pot crafting + GR stitching reusable bags |
-| 5 | Reducing Food Waste | GR traditional pickling, sun-drying and oil-based methods |
-| 6 | Kitchen Cleaners from Citrus Peels and Vinegar | GR kitchen cleaners from citrus peels and vinegar |
-| 7 | Sustainable Packaging & Water Reuse | CZ / LTTA Romania water case study (greywater) + packaging |
-| 8 | Seasonal and Mindful Cooking: Preserving Cultural Heritage | RO info papers 3 + 4 (silvoița, zacusca) |
-| 9 | From Herbs to Traditional Products | LTTA Italy info paper |
+| # | Module | Source (info paper / checklist topic) | Questions |
+|---|--------|----------------------------------------|-----------|
+| 1 | Wildlife Gardens | CZ Practice 1 (forest-inspired edible wildlife gardens) + Practice 2 (traditional seeds) | 4 |
+| 2 | Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology | IT (TalentWay) Info Paper 1 (sustainable mini-greenhouses) + Info Paper 2 (biological control of the woolly aphid) | 4 |
+| 3 | Organic Pest Control and Companion Planting | RO (Phoenix) Info Paper 1 (homemade natural pest control) + Info Paper 2 (companion planting) | 4 |
+| 4 | Reusable Alternatives for a Plastic-Free Kitchen | GR clay pot crafting + GR stitching reusable bags | 4 |
+| 5 | Reducing Food Waste | GR pickling, sun-drying and oil methods + GR citrus-peel and vinegar cleaners | 4 |
+| 6 | Sustainable Packaging & Water Reuse | IT (TalentWay) Info Paper 3 (sustainable packaging, eco-labels) + LTTA Romania water case study (greywater) | 4 |
+| 7 | Seasonal and Mindful Cooking: Preserving Cultural Heritage | RO (Phoenix) Info Papers 3 + 4 (silvoița, zacusca) | 4 |
+| 8 | From Herbs to Traditional Products | LTTA Italy info paper – 3 picture questions + 1 text question | 4 |
+| 9 | Eating with the Seasons: Compost pH and Preserving Herbs | IT (TalentWay) Info Paper 4 (compost pH) + 2 text questions from the LTTA Italy paper | 4 |
+
+Every question comes from an info paper (36 in total, 4 per module).
 
 ## Project structure
 

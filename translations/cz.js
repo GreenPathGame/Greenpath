@@ -22,18 +22,26 @@ export default {
       title: "Tradiční zemědělské postupy, ekologické zahradničení, hospodaření a agroekologie",
       info: "Udržitelné mini skleníky (tunelové, hydroponické, pasivní solární nebo vertikální) chrání rostliny před chladem, větrem, deštěm a klimatickým stresem a pomáhají pěstovat jídlo lokálně z materiálů s nízkým dopadem. Integrovaná a biologická ochrana, například podpora slunéček, zlatooček a parazitických vosiček, reguluje škůdce, jako je vlnatka krvavá (Eriosoma lanigerum), aniž by se spoléhala hlavně na chemické pesticidy.",
       facts: [
-        "Hydroponické skleníky pěstují rostliny bez půdy, pomocí vody a živin.",
-        "Vertikální skleníky nechávají rostliny růst vzhůru, což se hodí do měst, škol a malých prostor.",
-        "Slunéčka, zlatoočka a parazitické vosičky jsou přirozenými nepřáteli mšic.",
+        "Pěstování v malém měřítku může snížit závislost na dálkové dopravě.",
+        "Znovu použité materiály dělají skleníky levnějšími a udržitelnějšími.",
+        "Vertikální a hydroponické systémy se hodí tam, kde je málo půdy nebo vody.",
+        "Eriosoma lanigerum vypadá jako malé bílé shluky podobné vatě na větvích a listech.",
+        "Eriosoma lanigerum oslabuje stromy tím, že saje jejich mízu.",
+        "Slunéčka, zlatoočka a parazitické vosičky pomáhají přirozeně omezovat mšice.",
       ],
     },
     3: {
       title: "Ekologická ochrana proti škůdcům a smíšené pěstování",
-      info: "Domácí přírodní ochrana proti škůdcům využívá rostlinné přípravky a přírodní suroviny, jako je česnek, kopřivy, chilli papričky nebo mýdlové roztoky, k regulaci zahradních škůdců bez syntetických chemikálií. Tyto metody jsou šetrné k životnímu prostředí, levné a biologicky rozložitelné, chrání užitečný hmyz a podporují udržitelné a ekologické zahradničení.",
+      info: "Domácí přírodní ochrana proti škůdcům využívá rostlinné přípravky a přírodní suroviny, jako je česnek, kopřivy, chilli papričky nebo mýdlové roztoky, k regulaci zahradních škůdců bez syntetických chemikálií. Tyto metody jsou šetrné k životnímu prostředí, levné a biologicky rozložitelné, chrání užitečný hmyz a podporují udržitelné a ekologické zahradničení. Smíšené pěstování tyto metody doplňuje tím, že spojuje plodiny, které se navzájem chrání: aksamitník, bazalka, levandule, pažitka, česnek a lichořeřišnice odpuzují nežádoucí hmyz a klasické dvojice jako rajčata s bazalkou, mrkev s cibulí a kukuřice s fazolemi zvyšují odolnost a úrodu.",
       facts: [
+        "V karpatské oblasti se k odpuzování mšic používá kopřivový výluh.",
+        "Ve středomořských oblastech se k odpuzování mšic používá česnekový roztok.",
         "V karpatských i středomořských oblastech se k odpuzování mšic používá roztok mazlavého mýdla.",
-        "Rajčata pěstovaná vedle bazalky jsou odolnější a chutnější.",
-        "Silná vůně cibule a česneku odhání pochmurnatku mrkvovou.",
+        "V obou oblastech zahrádkáři lákají slunéčka a zlatoočky, přirozené nepřátele mšic, výsadbou kvetoucích bylin, jako je kopr, fenykl, koriandr a řebříček.",
+        "Kukuřice, fazole a dýně se dobře doplňují: kukuřice podpírá popínavé fazole, fazole obohacují půdu dusíkem a dýně kryjí půdu, čímž snižují výpar a plevel (Rumunsko).",
+        "Česnek nebo cibule vysazené u mrkve a zelí svou silnou vůní odpuzují pochmurnatku mrkvovou, škůdce zelí a mšice (Rumunsko, Česko).",
+        "Bazalka vysazená u rajčat pomáhá odpuzovat molice a třásněnky, láká opylovače a může podpořit růst rajčat (Itálie, Řecko).",
+        "V řeckých olivových hájích levandule, rozmarýn a tymián lákají užitečný hmyz, udržují vlhkost půdy a omezují erozi v horkém a suchém podnebí.",
       ],
     },
     4: {
@@ -50,31 +58,28 @@ export default {
     },
     5: {
       title: "Snižování plýtvání potravinami",
-      info: "Tradiční nakládání, sušení na slunci a uchovávání v oleji konzervují sezonní úrodu bez chlazení: zelenina se nakládá do slaného nálevu nebo octa, ovoce a bylinky se suší na slunci a olivy se uchovávají v oleji. Přebytky úrody se tak nevyhodí. Na tyto tradiční dovednosti stačí sklenice, sůl, ocet, olej a hodně slunce a šetří elektřinu, kterou lednice a mrazáky neustále spotřebovávají.",
+      info: "Tradiční nakládání, sušení na slunci a uchovávání v oleji konzervují sezonní úrodu bez chlazení: zelenina se nakládá do slaného nálevu nebo octa, ovoce a bylinky se suší na slunci a olivy se uchovávají v oleji. Louhováním citronových, pomerančových nebo grapefruitových slupek v bílém octě vznikne přírodní univerzální čistič bez syntetických chemikálií, plastových obalů a dalších nákladů.",
       facts: [
         "Na Santorini mládežnická družstva dodnes suší na slunci cherry rajčata a kapary.",
         "Olivy, bylinky a zelenina vydrží měsíce ve slaném nálevu, octě nebo olivovém oleji.",
         "Evropa každý rok vyplýtvá přibližně 88 milionů tun potravin.",
-      ],
-    },
-    6: {
-      title: "Kuchyňské čisticí prostředky z citrusových slupek a octa",
-      info: "Výroba kuchyňských čisticích prostředků z citrusových slupek a octa oživuje starou středomořskou a karpatskou praxi využívat zbytky jídla jako účinné domácí čisticí prostředky. Louhováním citronových, pomerančových nebo grapefruitových slupek v bílém octě vznikne přírodní univerzální čistič bez syntetických chemikálií, plastových obalů a dalších nákladů.",
-      facts: [
         "V tradičních řeckých kuchyních se ze zbylých citronových slupek vyráběly čisticí prostředky.",
         "Citrusové slupky louhované v octě asi dva týdny dají přírodní čistič na všechny povrchy.",
         "Krétské přísloví si cení toho, kdo zná hodnotu rajčatové slupky a citronové kůry.",
       ],
     },
-    7: {
+    6: {
       title: "Udržitelné obaly a opětovné využití vody",
       info: "Udržitelné obaly chrání potraviny, snižují množství odpadu a omezují dopad na životní prostředí, ale ne každé „zelené“ tvrzení na nich je spolehlivé; oficiální certifikace znamenají víc než barevný marketing. Opětovné využití vhodně upravené šedé vody (ze sprch, umyvadel, van a pračky) k vhodným nepitným účelům, například ke splachování toalety, je dalším jednoduchým způsobem, jak domácnost může snížit svou ekologickou stopu.",
       facts: [
-        "Zelený bod (Der Grüne Punkt) neznamená vždy, že je obal recyklovatelný: ukazuje, že výrobce přispívá do systému zpětného odběru.",
+        "Ne každé „zelené“ tvrzení je pravdivé.",
+        "Oficiální certifikace jsou spolehlivější než marketingová slova.",
+        "Zelený bod vždy neznamená recyklovatelný obal.",
+        "Chytré obaly mohou snížit odpad, poškození a znečištění.",
         "Šedou vodu z mytí, koupání a umyvadel lze upravit a znovu použít k nepitným účelům, například ke splachování.",
       ],
     },
-    8: {
+    7: {
       title: "Sezonní a uvědomělé vaření: zachování kulturního dědictví",
       info: "Tradiční způsoby konzervování mění sezonní úrodu v jídlo na zimu. Rumunská silvoița je švestkový džem bez cukru, který se pomalu vaří i se slupkou, dokud nezhoustne, a horký se plní do sterilizovaných sklenic; zacusca je pomazánka z pečených lilků a paprik, cibule, rajčatové šťávy a koření, která se pomalu dusí a uzavírá do sklenic. Využití místních přebytků a opakovaně použitelných sklenic snižuje emise z dopravy, obaly i plýtvání potravinami.",
       facts: [
@@ -85,12 +90,21 @@ export default {
         "V Česku je zacusce nejbližším tradičním produktem lečo, zeleninové jídlo podobné dušenému, které se zavařuje na zimu.",
       ],
     },
-    9: {
+    8: {
       title: "Od bylin k tradičním produktům",
       info: "Z planě rostoucích i zahradních bylin lze připravit čaje, domácí přípravky a další tradiční produkty. Udržitelný sběr znamená brát jen malé množství z hojných porostů, používat správné části každého druhu a byliny před uskladněním pořádně usušit a uložit do čistých, uzavřených a popsaných sklenic, aby rostliny rostly i pro další generace.",
       facts: [
         "Když se z hojných porostů sbírá jen málo, byliny dál rostou a rozmnožují se.",
         "Podle druhu se mohou sbírat listy, květy, semena, kořeny nebo stonky.",
+      ],
+    },
+    9: {
+      title: "Jíme podle ročních období: pH kompostu a uchovávání bylin",
+      info: "pH kompostu ukazuje, zda je výluh z kompostu kyselý, neutrální nebo zásaditý. Test prosetého vzorku smíchaného s destilovanou vodou pomáhá pěstitelům posoudit, zda se kompost hodí pro jejich půdu a rostliny, lépe využívat živiny, neplýtvat a vracet místní organické zbytky do zahrady, místo aby se vyhazovaly. Byliny nasbírané v sezoně je třeba správně usušit a použít, uchovat nebo rozdělit, aby se nic nevyhodilo.",
+      facts: [
+        "pH 7 je neutrální; hodnoty pod 7 jsou kyselé a nad 7 zásadité.",
+        "Změna o jednu jednotku pH znamená desetinásobnou změnu kyselosti.",
+        "Test na workshopu používá 10 g prosetého kompostu smíchaného s 50 mL destilované vody.",
         "Sušené byliny si nejdéle uchovají vůni v dobře uzavřených a popsaných skleněných dózách na chladném, suchém a tmavém místě.",
       ],
     },
@@ -105,7 +119,7 @@ export default {
     6: {
       text: "Která volba pomáhá snižovat emise z přepravy potravin?",
       options: ["Dovážené balené potraviny", "Jídlo vypěstované v místní jedlé zahradě pro divokou přírodu"],
-      explanation: "Rozmanitá zahrada poskytuje širokou škálu potravin a semen, chrání biodiverzitu, podporuje opylovače a divokou přírodu a pomáhá zahradě lépe zvládat sucho, škůdce a změnu klimatu.",
+      explanation: "Místní potraviny cestují kratší vzdálenosti, a tím snižují emise, odpad z obalů i spotřebu energie. Místní potravinové systémy navíc podporují biodiverzitu a udržitelné komunity.",
     },
     7: {
       text: "Která rostlina nejspíš přirozeně zlepší půdu tím, že váže dusík?",
@@ -115,7 +129,7 @@ export default {
     16: {
       text: "Která zahrada má největší rozmanitost semen?",
       options: ["Barevná zahrada s mnoha různými rostlinami", "Velké pole s jedinou plodinou", "Okrasný trávník bez jedlých rostlin."],
-      explanation: "Tradiční semena uchovávají místní odrůdy rostlin, chrání kulturní dědictví a posilují odolnost vůči změně klimatu, protože zachovávají odrůdy přirozeně přizpůsobené místnímu klimatu a měnícím se podmínkám.",
+      explanation: "Rozmanitá zahrada poskytuje širokou škálu potravin a semen, chrání biodiverzitu, podporuje opylovače a divokou přírodu a pomáhá zahradě lépe zvládat sucho, škůdce a změnu klimatu.",
     },
     23: {
       text: "Který mini skleník pěstuje rostliny bez půdy?",
@@ -187,16 +201,6 @@ export default {
       options: ["Pravda", "Nepravda"],
       explanation: "Evropa každý rok vyplýtvá přibližně 88 milionů tun potravin.",
     },
-    30: {
-      text: "Jaká tekutina se tradičně používá k dlouhodobému nakládání zeleniny?",
-      options: ["Octový nálev", "Čerstvé mléko", "Obyčejná voda", "Ovocná šťáva"],
-      explanation: "Nakládání zeleniny do octového nálevu vytváří kyselé prostředí, které zastaví růst škodlivých bakterií, takže zelenina vydrží bezpečně měsíce bez chlazení.",
-    },
-    31: {
-      text: "Proč se olivy tradičně uchovávaly ponořené v oleji?",
-      options: ["Olej dodává sladkost", "Olej zabraňuje přístupu vzduchu a vlhkosti, které způsobují kažení", "Olej urychluje zrání oliv", "Vyžadoval to zákon"],
-      explanation: "Ponoření oliv do oleje vytvoří bariéru proti vzduchu a vlhkosti, dvěma hlavním příčinám kažení, a olivy tak vydrží dlouho bez chlazení.",
-    },
     10: {
       text: "Jaké dvě hlavní suroviny tvoří tento přírodní kuchyňský čistič?",
       options: ["Bělidlo a voda", "Citrusové slupky a ocet", "Mýdlo a olej", "Sůl a cukr"],
@@ -206,16 +210,6 @@ export default {
       text: "Proč je opětovné využití citrusových slupek dobré pro klima?",
       options: ["Vytváří více plastu", "Udrží zbytky mimo skládky, kde vzniká metan", "Spotřebuje víc energie", "Potřebuje chlazení"],
       explanation: "Opětovné využití citrusových slupek udrží cenné zbytky jídla mimo skládky, kde pomalu hnijí a uvolňují škodlivý metan.",
-    },
-    17: {
-      text: "Která přírodní látka v citrusové slupce rozpouští mastnotu?",
-      options: ["Chlór", "D-limonen", "Prášek do pečiva", "Cukr"],
-      explanation: "D-limonen je přírodní olej v citrusové slupce, který účinně rozpouští mastnotu a nečistoty; proto citrusové čističe fungují tak dobře i bez syntetických odmašťovačů.",
-    },
-    18: {
-      text: "Přeměna citrusových slupek a octa na kuchyňský čistič je příkladem čeho?",
-      options: ["Skládkování bioodpadu", "Spalování bioodpadu", "Cirkulárního opětovného využití bez odpadu", "Jednorázové spotřeby"],
-      explanation: "Místo vyhazování citrusových slupek je vyluhujeme v octě a ze zbytku jídla se stane užitečný domácí produkt: jednoduchý příklad cirkulárního využití bez odpadu, který drží odpad mimo skládky.",
     },
     20: {
       text: "Co by měli spotřebitelé kontrolovat, aby se vyhnuli greenwashingu?",
@@ -318,6 +312,16 @@ export default {
         "Sušení snižuje vlhkost, a tím pomáhá předcházet plísni a prodlužuje trvanlivost.",
       ],
       explanation: "Odstranění přebytečné vlhkosti omezuje růst mikrobů a znehodnocení. Byliny je přesto nutné správně skladovat a jejich kvalita časem klesá.",
+    },
+    46: {
+      text: "Co znamená hodnota pH kompostu nad 7?",
+      options: ["Kyselý kompost", "Neutrální kompost", "Zásaditý kompost", "Kompost bez živin"],
+      explanation: "pH měří kyselost nebo zásaditost. Hodnoty nad 7 znamenají zásadité prostředí. Znalost pH kompostu pomáhá pěstitelům rozhodovat se při péči o půdu.",
+    },
+    47: {
+      text: "PRAVDA, nebo NEPRAVDA: test pH kompostu změří všechny živiny v kompostu.",
+      options: ["Pravda", "Nepravda"],
+      explanation: "Test pH měří kyselost nebo zásaditost, ne obsah živin. Ukazuje podmínky, které ovlivňují jejich dostupnost; ke změření konkrétních živin jsou potřeba další testy.",
     },
   },
 };
