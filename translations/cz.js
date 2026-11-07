@@ -32,11 +32,16 @@ export default {
     },
     3: {
       title: "Ekologická ochrana proti škůdcům a smíšené pěstování",
-      info: "Domácí přírodní ochrana proti škůdcům využívá rostlinné přípravky a přírodní suroviny, jako je česnek, kopřivy, chilli papričky nebo mýdlové roztoky, k regulaci zahradních škůdců bez syntetických chemikálií. Tyto metody jsou šetrné k životnímu prostředí, levné a biologicky rozložitelné, chrání užitečný hmyz a podporují udržitelné a ekologické zahradničení.",
+      info: "Domácí přírodní ochrana proti škůdcům využívá rostlinné přípravky a přírodní suroviny, jako je česnek, kopřivy, chilli papričky nebo mýdlové roztoky, k regulaci zahradních škůdců bez syntetických chemikálií. Tyto metody jsou šetrné k životnímu prostředí, levné a biologicky rozložitelné, chrání užitečný hmyz a podporují udržitelné a ekologické zahradničení. Smíšené pěstování tyto metody doplňuje tím, že spojuje plodiny, které se navzájem chrání: aksamitník, bazalka, levandule, pažitka, česnek a lichořeřišnice odpuzují nežádoucí hmyz a klasické dvojice jako rajčata s bazalkou, mrkev s cibulí a kukuřice s fazolemi zvyšují odolnost a úrodu.",
       facts: [
+        "V karpatské oblasti se k odpuzování mšic používá kopřivový výluh.",
+        "Ve středomořských oblastech se k odpuzování mšic používá česnekový roztok.",
         "V karpatských i středomořských oblastech se k odpuzování mšic používá roztok mazlavého mýdla.",
-        "Rajčata pěstovaná vedle bazalky jsou odolnější a chutnější.",
-        "Silná vůně cibule a česneku odhání pochmurnatku mrkvovou.",
+        "V obou oblastech zahrádkáři lákají slunéčka a zlatoočky, přirozené nepřátele mšic, výsadbou kvetoucích bylin, jako je kopr, fenykl, koriandr a řebříček.",
+        "Kukuřice, fazole a dýně se dobře doplňují: kukuřice podpírá popínavé fazole, fazole obohacují půdu dusíkem a dýně kryjí půdu, čímž snižují výpar a plevel (Rumunsko).",
+        "Česnek nebo cibule vysazené u mrkve a zelí svou silnou vůní odpuzují pochmurnatku mrkvovou, škůdce zelí a mšice (Rumunsko, Česko).",
+        "Bazalka vysazená u rajčat pomáhá odpuzovat molice a třásněnky, láká opylovače a může podpořit růst rajčat (Itálie, Řecko).",
+        "V řeckých olivových hájích levandule, rozmarýn a tymián lákají užitečný hmyz, udržují vlhkost půdy a omezují erozi v horkém a suchém podnebí.",
       ],
     },
     4: {

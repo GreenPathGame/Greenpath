@@ -32,11 +32,16 @@ export default {
     },
     3: {
       title: "Combaterea ecologică a dăunătorilor și culturile asociate",
-      info: "Combaterea naturală a dăunătorilor, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic.",
+      info: "Combaterea naturală a dăunătorilor, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic. Culturile asociate completează aceste metode, împerechind plante care se protejează reciproc: crăițele, busuiocul, lavanda, arpagicul, usturoiul și condurul-doamnei îndepărtează insectele nedorite, iar combinații clasice precum roșii cu busuioc, morcovi cu ceapă și porumb cu fasole îmbunătățesc rezistența și productivitatea.",
       facts: [
-        "Atât în Carpați, cât și în zona mediteraneeană, o soluție de săpun moale este folosită pentru a îndepărta afidele.",
-        "Roșiile plantate lângă busuioc sunt mai rezistente și mai gustoase.",
-        "Mirosul puternic al cepei și al usturoiului alungă musca morcovului.",
+        "În zona Carpaților se folosește o soluție de urzică pentru a îndepărta afidele.",
+        "În regiunile mediteraneene se folosește o soluție pe bază de usturoi pentru a îndepărta afidele.",
+        "Atât în Carpați, cât și în zona mediteraneeană, se folosește o soluție de săpun moale pentru a îndepărta afidele.",
+        "În ambele regiuni, grădinarii atrag buburuze și crisope, dușmani naturali ai afidelor, plantând plante aromatice înflorite precum mărar, fenicul, coriandru și coada-șoricelului.",
+        "Porumbul, fasolea și dovleacul cresc bine împreună: porumbul susține fasolea urcătoare, fasolea îmbogățește solul cu azot, iar dovleacul acoperă solul, reducând evaporarea și buruienile (România).",
+        "Usturoiul sau ceapa plantate lângă morcovi și varză alungă prin mirosul lor puternic musca morcovului, dăunătorii verzei și afidele (România, Cehia).",
+        "Busuiocul plantat lângă roșii ajută la îndepărtarea muștelor albe și a tripșilor, atrage polenizatorii și poate îmbunătăți creșterea roșiilor (Italia, Grecia).",
+        "În livezile de măslini din Grecia, lavanda, rozmarinul și cimbrul atrag insecte utile, păstrează umiditatea solului și reduc eroziunea pe vreme caldă și uscată.",
       ],
     },
     4: {

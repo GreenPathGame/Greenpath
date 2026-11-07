@@ -239,12 +239,17 @@ const MODULES = [
     title: "Organic Pest Control and Companion Planting",
     icon: "🌿",
     color: "#22c55e",
-    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are environmentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices.",
-    // Restates the module's own approved explanations (the RO Practice 1-2 papers weren't among the provided files).
+    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are environmentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices. Companion planting adds to this by pairing crops that protect each other: marigolds, basil, lavender, chives, garlic and nasturtiums repel unwanted insects, and classic combinations such as tomatoes with basil, carrots with onions and corn with beans improve resilience and productivity.",
+    // "DID YOU KNOW (GAME FACTS)" from RO (Phoenix) Info Paper 1 + 2
     facts: [
+      "In the Carpathian region, a nettle solution is used to repel aphids.",
+      "In the Mediterranean regions, a garlic-based solution is used to repel aphids.",
       "In both the Carpathian and Mediterranean regions, a soft soap solution is used to repel aphids.",
-      "Tomatoes planted with basil are more resilient and taste better.",
-      "The strong scent of onions and garlic keeps carrot flies away.",
+      "Gardeners in both regions attract ladybugs and lacewings, natural enemies of aphids, by planting flowering herbs such as dill, fennel, coriander and yarrow.",
+      "Maize, beans and pumpkins grow well together: maize supports the climbing beans, beans enrich the soil with nitrogen, and pumpkins cover the soil, reducing evaporation and weeds (Romania).",
+      "Garlic or onions planted near carrots and cabbage deter carrot flies, cabbage pests and aphids with their strong scent (Romania, Czech Republic).",
+      "Basil planted with tomatoes helps repel whiteflies and thrips, attracts pollinators and may improve tomato growth (Italy, Greece).",
+      "In Greek olive groves, lavender, rosemary and thyme attract beneficial insects, conserve soil moisture and reduce erosion in hot, dry conditions.",
     ],
   },
   // Topics 8 & 11 on the list: GR clay pot crafting + stitching reusable bags from old fabrics

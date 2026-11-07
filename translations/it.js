@@ -32,11 +32,16 @@ export default {
     },
     3: {
       title: "Difesa biologica dai parassiti e consociazione delle colture",
-      info: "La difesa naturale fatta in casa usa preparati vegetali e ingredienti naturali come aglio, ortica, peperoncino o soluzioni di sapone per contenere i parassiti dell'orto senza sostanze chimiche di sintesi. Questi metodi sono ecologici, economici e biodegradabili, proteggono gli insetti utili e sostengono un giardinaggio sostenibile e biologico.",
+      info: "La difesa naturale fatta in casa usa preparati vegetali e ingredienti naturali come aglio, ortica, peperoncino o soluzioni di sapone per contenere i parassiti dell'orto senza sostanze chimiche di sintesi. Questi metodi sono ecologici, economici e biodegradabili, proteggono gli insetti utili e sostengono un giardinaggio sostenibile e biologico. La consociazione rafforza questi metodi abbinando colture che si proteggono a vicenda: tagete, basilico, lavanda, erba cipollina, aglio e nasturzi allontanano gli insetti indesiderati, e abbinamenti classici come pomodoro e basilico, carote e cipolle, mais e fagioli migliorano resistenza e produttività.",
       facts: [
+        "Nei Carpazi si usa un macerato di ortica per allontanare gli afidi.",
+        "Nelle regioni mediterranee si usa una soluzione a base di aglio per allontanare gli afidi.",
         "Sia nei Carpazi sia nel Mediterraneo si usa una soluzione di sapone molle per allontanare gli afidi.",
-        "I pomodori piantati vicino al basilico sono più resistenti e più saporiti.",
-        "L'odore forte di cipolla e aglio tiene lontana la mosca della carota.",
+        "In entrambe le regioni si attirano coccinelle e crisope, nemici naturali degli afidi, piantando erbe fiorite come aneto, finocchio, coriandolo e achillea.",
+        "Mais, fagioli e zucche crescono bene insieme: il mais sostiene i fagioli rampicanti, i fagioli arricchiscono il suolo di azoto e le zucche coprono il terreno, riducendo evaporazione ed erbacce (Romania).",
+        "Aglio o cipolle vicino a carote e cavoli tengono lontani, con il loro odore forte, la mosca della carota, i parassiti del cavolo e gli afidi (Romania, Repubblica Ceca).",
+        "Il basilico vicino ai pomodori aiuta ad allontanare aleurodidi e tripidi, attira gli impollinatori e può favorire la crescita del pomodoro (Italia, Grecia).",
+        "Negli uliveti greci lavanda, rosmarino e timo attirano insetti utili, conservano l'umidità del suolo e riducono l'erosione nei climi caldi e secchi.",
       ],
     },
     4: {
