@@ -52,12 +52,8 @@ test("change language / character keeps progress", async () => {
   await seedAlice(prog(3));
   await assertSucceeds(setDoc(doc(alice(), "users/alice"), { progress: prog(3, { languageId: "gr", characterId: "Jana" }) }, { merge: true }));
 });
-test("finishing the last module (10) is allowed", async () => {
-  await seedAlice(prog(9));
-  await assertSucceeds(setDoc(doc(alice(), "users/alice"), { progress: prog(10) }, { merge: true }));
-});
 test("play again resets to 0", async () => {
-  await seedAlice(prog(10));
+  await seedAlice(prog(9));
   await assertSucceeds(setDoc(doc(alice(), "users/alice"), { progress: prog(0) }, { merge: true }));
 });
 
@@ -86,13 +82,13 @@ test("cannot change username later", async () => {
 });
 test("cannot skip modules (jump to the certificate)", async () => {
   await seedAlice(prog(1));
-  await assertFails(setDoc(doc(alice(), "users/alice"), { progress: prog(10) }, { merge: true }));
+  await assertFails(setDoc(doc(alice(), "users/alice"), { progress: prog(9) }, { merge: true }));
   await assertFails(setDoc(doc(alice(), "users/alice"), { progress: prog(3) }, { merge: true }));
 });
 test("cannot store invalid values", async () => {
   await seedAlice();
   const ref = doc(alice(), "users/alice");
-  await assertFails(setDoc(ref, { progress: prog(11) }, { merge: true }));
+  await assertFails(setDoc(ref, { progress: prog(10) }, { merge: true }));
   await assertFails(setDoc(ref, { progress: prog(-1) }, { merge: true }));
   await assertFails(setDoc(ref, { progress: prog(1.5) }, { merge: true }));
   await assertFails(setDoc(ref, { progress: prog(1, { languageId: "xx" }) }, { merge: true }));

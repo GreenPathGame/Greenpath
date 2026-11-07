@@ -58,23 +58,17 @@ export default {
     },
     5: {
       title: "Ridurre lo spreco alimentare",
-      info: "I metodi tradizionali di conservazione sottaceto, essiccazione al sole e sott'olio conservano i prodotti di stagione senza frigorifero: le verdure vanno in salamoia o nell'aceto, frutta ed erbe si seccano al sole e le olive si conservano nell'olio, salvando dallo spreco le eccedenze del raccolto. Queste abilità tradizionali richiedono solo barattoli di vetro, sale, aceto, olio e tanto sole, e risparmiano l'elettricità che frigoriferi e congelatori consumano di continuo.",
+      info: "I metodi tradizionali di conservazione sottaceto, essiccazione al sole e sott'olio conservano i prodotti di stagione senza frigorifero: le verdure vanno in salamoia o nell'aceto, frutta ed erbe si seccano al sole e le olive si conservano nell'olio, salvando dallo spreco le eccedenze del raccolto. Lasciando in infusione bucce di limone, arancia o pompelmo nell'aceto bianco si ottiene un detergente naturale multiuso, senza sostanze chimiche di sintesi, imballaggi di plastica né costi aggiuntivi.",
       facts: [
         "A Santorini, cooperative di giovani essiccano ancora al sole pomodorini e capperi.",
         "Olive, erbe e verdure si conservano per mesi in salamoia, nell'aceto o nell'olio d'oliva.",
         "L'Europa spreca circa 88 milioni di tonnellate di cibo ogni anno.",
-      ],
-    },
-    6: {
-      title: "Detergenti per la cucina con bucce di agrumi e aceto",
-      info: "Preparare detergenti per la cucina con bucce di agrumi e aceto fa rivivere l'antica pratica mediterranea e carpatica di usare gli scarti alimentari come potenti prodotti per la pulizia di casa. Lasciando in infusione bucce di limone, arancia o pompelmo nell'aceto bianco si ottiene un detergente naturale multiuso, senza sostanze chimiche di sintesi, imballaggi di plastica né costi aggiuntivi.",
-      facts: [
         "Nelle cucine greche tradizionali, le bucce di limone avanzate diventavano detergenti.",
         "Le bucce di agrumi lasciate nell'aceto per circa due settimane danno un detergente naturale per tutte le superfici.",
         "Un detto cretese loda chi conosce il valore di una buccia di pomodoro e di una buccia di limone.",
       ],
     },
-    7: {
+    6: {
       title: "Imballaggi sostenibili e riutilizzo dell'acqua",
       info: "Gli imballaggi sostenibili proteggono il cibo, riducono i rifiuti e limitano l'impatto ambientale, ma non tutte le dichiarazioni «verdi» sono affidabili: le certificazioni ufficiali contano più del marketing colorato. Riutilizzare le acque grigie trattate in modo adeguato (da docce, lavandini, vasche e lavatrice) per usi non potabili, come lo scarico del WC, è un altro modo semplice per ridurre l'impronta ambientale di una famiglia.",
       facts: [
@@ -85,7 +79,7 @@ export default {
         "Le acque grigie di lavaggi, bagni e lavandini possono essere trattate e riutilizzate per usi non potabili come lo scarico del WC.",
       ],
     },
-    8: {
+    7: {
       title: "Cucina stagionale e consapevole: preservare il patrimonio culturale",
       info: "Le tecniche ancestrali di conservazione trasformano i raccolti di stagione in cibo per l'inverno. La silvoița romena è una confettura di prugne senza zucchero, bollita lentamente con la buccia fino a diventare densa e versata calda in barattoli sterilizzati; la zacusca è una crema di melanzane e peperoni arrostiti, cipolle, succo di pomodoro e spezie, cotta lentamente e chiusa in barattoli. Usare le eccedenze locali e barattoli riutilizzabili riduce le emissioni dei trasporti, gli imballaggi e lo spreco alimentare.",
       facts: [
@@ -96,22 +90,22 @@ export default {
         "In Repubblica Ceca, il prodotto tradizionale più simile alla zacusca è il lečo, un piatto di verdure simile a uno stufato, conservato per l'inverno.",
       ],
     },
-    9: {
+    8: {
       title: "Dalle erbe ai prodotti tradizionali",
       info: "Le erbe spontanee e dell'orto possono diventare tisane, rimedi e altri prodotti tradizionali. Raccogliere in modo sostenibile significa prendere solo piccole quantità da popolazioni abbondanti, usare le parti giuste di ogni specie ed essiccare bene le erbe prima di conservarle in barattoli puliti, chiusi ed etichettati, così che le piante continuino a crescere per le generazioni future.",
       facts: [
         "Raccogliendo solo poco da popolazioni abbondanti, le erbe continuano a crescere e a riprodursi.",
         "A seconda della specie si possono raccogliere foglie, fiori, semi, radici o fusti.",
-        "Le erbe essiccate mantengono più a lungo l'aroma in barattoli di vetro ben chiusi ed etichettati, al fresco, all'asciutto e al buio.",
       ],
     },
-    10: {
-      title: "Mangiare con le stagioni: capire il pH del compost",
-      info: "Il pH del compost indica se un estratto di compost è acido, neutro o alcalino. Analizzare un campione setacciato mescolato con acqua distillata aiuta i coltivatori a capire se un compost è adatto al loro terreno e alle loro piante, a usare meglio i nutrienti, a evitare sprechi e a restituire all'orto i residui organici locali invece di buttarli.",
+    9: {
+      title: "Mangiare con le stagioni: il pH del compost e la conservazione delle erbe",
+      info: "Il pH del compost indica se un estratto di compost è acido, neutro o alcalino. Analizzare un campione setacciato mescolato con acqua distillata aiuta i coltivatori a capire se un compost è adatto al loro terreno e alle loro piante, a usare meglio i nutrienti, a evitare sprechi e a restituire all'orto i residui organici locali invece di buttarli. Le erbe raccolte di stagione vanno essiccate bene e usate, conservate o condivise, così che nulla vada sprecato.",
       facts: [
         "Il pH 7 è neutro; i valori sotto 7 sono acidi e quelli sopra 7 alcalini.",
         "Una variazione di un'unità di pH corrisponde a una variazione di dieci volte dell'acidità.",
         "Il test del laboratorio usa 10 g di compost setacciato mescolati con 50 mL di acqua distillata.",
+        "Le erbe essiccate mantengono più a lungo l'aroma in barattoli di vetro ben chiusi ed etichettati, al fresco, all'asciutto e al buio.",
       ],
     },
   },
@@ -207,16 +201,6 @@ export default {
       options: ["Vero", "Falso"],
       explanation: "L'Europa spreca circa 88 milioni di tonnellate di cibo ogni anno.",
     },
-    30: {
-      text: "Quale liquido si usa tradizionalmente per conservare le verdure sottaceto a lungo?",
-      options: ["Salamoia con aceto", "Latte fresco", "Acqua semplice", "Succo di frutta"],
-      explanation: "La salamoia con aceto crea un ambiente acido che blocca la crescita dei batteri dannosi, così le verdure si conservano in sicurezza per mesi senza frigorifero.",
-    },
-    31: {
-      text: "Perché le olive venivano tradizionalmente conservate immerse nell'olio?",
-      options: ["L'olio aggiunge dolcezza", "L'olio blocca l'aria e l'umidità che causano il deterioramento", "L'olio fa maturare le olive più in fretta", "Lo imponeva la legge"],
-      explanation: "Immergere le olive nell'olio crea una barriera contro aria e umidità, le due principali cause di deterioramento, e permette di conservarle a lungo senza frigorifero.",
-    },
     10: {
       text: "Quali sono i due ingredienti principali di questo detergente naturale per la cucina?",
       options: ["Candeggina e acqua", "Bucce di agrumi e aceto", "Sapone e olio", "Sale e zucchero"],
@@ -226,16 +210,6 @@ export default {
       text: "Perché riutilizzare le bucce di agrumi fa bene al clima?",
       options: ["Crea più plastica", "Tiene gli scarti lontani dalle discariche che producono metano", "Consuma più energia", "Richiede refrigerazione"],
       explanation: "Riutilizzare le bucce di agrumi tiene preziosi scarti alimentari lontani dalle discariche, dove marciscono lentamente e rilasciano metano dannoso.",
-    },
-    17: {
-      text: "Quale sostanza naturale della buccia degli agrumi scioglie il grasso?",
-      options: ["Cloro", "D-limonene", "Lievito in polvere", "Zucchero"],
-      explanation: "Il D-limonene è un olio naturale presente nella buccia degli agrumi che scioglie efficacemente grasso e sporco: per questo i detergenti agli agrumi funzionano così bene senza sgrassatori di sintesi.",
-    },
-    18: {
-      text: "Trasformare bucce di agrumi e aceto in un detergente per la cucina è un esempio di che cosa?",
-      options: ["Smaltimento in discarica degli scarti alimentari", "Incenerimento degli scarti alimentari", "Riuso circolare a rifiuti zero", "Consumo usa e getta"],
-      explanation: "Invece di buttare le bucce, lasciarle nell'aceto trasforma uno scarto alimentare in un utile prodotto per la casa: un semplice esempio di riuso circolare a rifiuti zero che tiene i rifiuti fuori dalla discarica.",
     },
     20: {
       text: "Che cosa dovrebbero controllare i consumatori per evitare il greenwashing?",

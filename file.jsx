@@ -213,10 +213,6 @@ const MODULES = [
       "Many Carpathian and Mediterranean plant varieties have been cultivated and passed down for hundreds of years.",
     ],
   },
-  // Topics 3 & 7 on the list: IT Practice 1 (Handmade Sustainable Greenhouses) + IT Practice 2 (biological control against the Woolly aphid)
-  // Title/icon/info confirmed against the manager's official info papers ("THEMATIC AREA: Seasonal agriculture
-  // & Climate Resilience" / "MODULE TOPIC: Traditional agricultural practices and agroecology"): this used to
-  // incorrectly say "Native Pollinators & Wildflowers"; swapped with Module 7 below, which had this title.
   {
     id: 2,
     title: "Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology",
@@ -233,7 +229,6 @@ const MODULES = [
       "Ladybirds, lacewings and parasitoid wasps can help control aphids naturally.",
     ],
   },
-  // Topics 5-6 on the list: RO Practice 2 (Companion planting) + RO Practice 1 (Homemade natural pest control)
   {
     id: 3,
     title: "Organic Pest Control and Companion Planting",
@@ -252,7 +247,6 @@ const MODULES = [
       "In Greek olive groves, lavender, rosemary and thyme attract beneficial insects, conserve soil moisture and reduce erosion in hot, dry conditions.",
     ],
   },
-  // Topics 8 & 11 on the list: GR clay pot crafting + stitching reusable bags from old fabrics
   {
     id: 4,
     title: "Reusable Alternatives for a Plastic-Free Kitchen",
@@ -269,41 +263,24 @@ const MODULES = [
       "A single plastic bag can take up to 1,000 years to break down in landfill.",
     ],
   },
-  // Topic 9 on the list: GR Traditional food pickling, sun-drying, and oil-based methods
   {
     id: 5,
     title: "Reducing Food Waste",
-    icon: "🦋",
+    icon: "🥒",
     color: "#3b82f6",
-    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. These heritage skills need only glass jars, salt, vinegar, oil and plenty of sunshine, and they save the constant electricity that fridges and freezers consume.",
+    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration: vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost.",
     // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 1)
     facts: [
       "In Santorini, cherry tomatoes and capers are still sun-dried by youth cooperatives.",
       "Olives, herbs and vegetables keep for months stored in brine, vinegar or olive oil.",
       "Europe wastes around 88 million tonnes of food every year.",
-    ],
-  },
-  // Topic 10 on the list: GR Making kitchen cleaners from citrus peels and vinegar
-  // Title now follows the info paper's practice name (it used to read "Cultural Exchange and Culinary
-  // Traditions", which is a thematic area, not this topic).
-  {
-    id: 6,
-    title: "Kitchen Cleaners from Citrus Peels and Vinegar",
-    icon: "🍋",
-    color: "#8b5cf6",
-    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost.",
-    // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 2)
-    facts: [
       "In traditional Greek kitchens, leftover lemon peels were turned into cleaning agents.",
       "Citrus peel steeped in vinegar for about two weeks makes a natural, all-purpose surface cleaner.",
       "A Cretan saying prizes knowing the worth of a tomato skin and a lemon peel.",
     ],
   },
-  // Topic 4 on the list (CZ Practice LTTA Romania - Water Irrigation / Greywater Reuse) is merged into this
-  // module. Its packaging/greenwashing content isn't one of the 11 listed topics. Title below is a best-effort
-  // placeholder covering both sub-topics: not confirmed by the manager yet; worth double-checking with her.
   {
-    id: 7,
+    id: 6,
     title: "Sustainable Packaging & Water Reuse",
     icon: "♻️",
     color: "#0ea5e9",
@@ -317,10 +294,8 @@ const MODULES = [
       "Greywater from washing, bathing and sinks can be treated and reused for non-drinking purposes such as toilet flushing.",
     ],
   },
-  // RO info papers 3 + 4 (Institutul Postliceal "Phoenix"): Seasonal and Mindful Cooking: Preserving Cultural
-  // Heritage. Replaces the earlier AI-drafted "Seasonal & Local Eating" placeholder, which had no source material.
   {
-    id: 8,
+    id: 7,
     title: "Seasonal and Mindful Cooking: Preserving Cultural Heritage",
     icon: "🥫",
     color: "#ec4899",
@@ -334,9 +309,8 @@ const MODULES = [
       "In the Czech Republic, the closest traditional product to zacusca is lečo, a stew-like vegetable dish preserved for the winter.",
     ],
   },
-  // LTTA Italy info paper: From Herbs to Traditional Products
   {
-    id: 9,
+    id: 8,
     title: "From Herbs to Traditional Products",
     icon: "🌼",
     color: "#a855f7",
@@ -345,28 +319,26 @@ const MODULES = [
     facts: [
       "Collecting only small amounts from abundant plant populations lets herbs keep growing and reproducing.",
       "Depending on the species, leaves, flowers, seeds, roots or stems may be collected.",
-      "Dried herbs keep their aroma longest in tightly closed, labelled glass jars stored somewhere cool, dry and dark.",
     ],
   },
-  // Info Paper 4 (TalentWay, Italy): module topic "Eating with the Seasons: Local Ingredients and
-  // Seasonal Recipes"; the paper's one practice is "Understanding compost pH".
   {
-    id: 10,
-    title: "Eating with the Seasons: Understanding Compost pH",
+    id: 9,
+    title: "Eating with the Seasons: Compost pH and Preserving Herbs",
     icon: "🧪",
     color: "#84cc16",
-    info: "Compost pH shows whether a compost extract is acidic, neutral or alkaline. Testing a sieved sample mixed with distilled water helps growers judge whether a compost suits their soil and plants, use nutrients better, avoid wasted inputs and return local organic residues to the garden instead of throwing them away.",
+    info: "Compost pH shows whether a compost extract is acidic, neutral or alkaline. Testing a sieved sample mixed with distilled water helps growers judge whether a compost suits their soil and plants, use nutrients better, avoid wasted inputs and return local organic residues to the garden instead of throwing them away. Herbs gathered in season should be dried properly and used, preserved or shared, so that nothing is wasted.",
     // "DID YOU KNOW (GAME FACTS)" from Info Paper 4
     facts: [
       "pH 7 is neutral; values below 7 are acidic and values above 7 are alkaline.",
       "A change of one pH unit represents a tenfold change in acidity.",
       "The workshop test uses 10 g of sieved compost mixed with 50 mL of distilled water.",
+      "Dried herbs keep their aroma longest in tightly closed, labelled glass jars stored somewhere cool, dry and dark.",
     ],
   },
 ];
 
 const QUESTIONS = [
-  // MODULE 1: topics 1-2: CZ Forest-inspired edible wildlife gardens / Traditional Seeds
+  // MODULE 1
   {
     id: 5,
     module: 1,
@@ -401,8 +373,7 @@ const QUESTIONS = [
     answer: 0,
     explanation: "A diverse garden provides a wide variety of food and seeds while preserving biodiversity, supporting pollinators and wildlife, and helping gardens better adapt to drought, pests, and climate change."
   },
-
-  // MODULE 2: topics 3 & 7: IT Handmade Sustainable Greenhouses / biological control against the Woolly aphid
+  // MODULE 2
   {
     id: 23,
     module: 2,
@@ -436,8 +407,7 @@ const QUESTIONS = [
     answer: 0,
     explanation: "Biological control uses natural enemies of pests. Ladybirds, lacewings and parasitoid wasps can reduce aphid populations. This helps protect crops without relying mainly on chemicals."
   },
-
-  // MODULE 3: topics 5-6: RO Companion planting / Homemade natural solutions to control plant pests
+  // MODULE 3
   {
     id: 1,
     module: 3,
@@ -470,8 +440,7 @@ const QUESTIONS = [
     answer: 0,
     explanation: "Garlic or onions planted near carrots and cabbage have a strong scent that deters carrot flies, cabbage pests, and aphids, reducing pest damage naturally."
   },
-
-  // MODULE 4: topics 8 & 11: GR Clay pot crafting for food storage / Stitching reusable bags from old fabrics
+  // MODULE 4
   {
     id: 12,
     module: 4,
@@ -504,10 +473,7 @@ const QUESTIONS = [
     answer: 1,
     explanation: "Stitching reusable bags turns worn clothes, linen scraps and leftover textiles into sturdy bags for shopping, produce and bread. This simple upcycling craft revives traditional sewing skills and replaces single-use plastic bags with washable, long-lasting cloth."
   },
-
-  // MODULE 5: topic 9: GR Traditional food pickling, sun-drying, and oil-based methods
-  // id30/31 (pickling & oil preservation) are AI-drafted to fill the topic's gap after id10/11 moved to
-  // Module 6: not sourced from the manager's info papers. Flag for her review/replacement.
+  // MODULE 5
   {
     id: 8,
     module: 5,
@@ -525,28 +491,8 @@ const QUESTIONS = [
     explanation: "Europe wastes around 88 million tonnes of food every year."
   },
   {
-    id: 30,
-    module: 5,
-    text: "Which liquid is traditionally used to pickle vegetables for long-term storage?",
-    options: ["Vinegar brine", "Fresh milk", "Plain water", "Fruit juice"],
-    answer: 0,
-    explanation: "Pickling vegetables in a vinegar brine creates an acidic environment that stops harmful bacteria from growing, allowing vegetables to be safely stored for months without refrigeration."
-  },
-  {
-    id: 31,
-    module: 5,
-    text: "Why were olives traditionally stored submerged in oil?",
-    options: ["Oil adds sweetness", "Oil blocks the air and moisture that cause spoilage", "Oil makes olives ripen faster", "It was required by law"],
-    answer: 1,
-    explanation: "Submerging olives in oil creates a barrier that keeps out air and moisture, the two main causes of spoilage, letting them be preserved for long periods without refrigeration."
-  },
-
-  // MODULE 6: topic 10: GR Making kitchen cleaners from citrus peels and vinegar
-  // id10/11 moved here from Module 5 per the manager's material. id17/18's explanations below are AI-drafted
-  // (the manager's reply didn't cover these two): flag for her to confirm or replace.
-  {
     id: 10,
-    module: 6,
+    module: 5,
     text: "What two main ingredients make this natural kitchen cleaner?",
     options: ["Bleach and water", "Citrus peels and vinegar", "Soap and oil", "Salt and sugar"],
     answer: 1,
@@ -554,34 +500,16 @@ const QUESTIONS = [
   },
   {
     id: 11,
-    module: 6,
+    module: 5,
     text: "Why is reusing citrus peels good for the climate?",
     options: ["It creates more plastic", "It keeps scraps out of methane-producing landfill", "It uses more energy", "It needs refrigeration"],
     answer: 1,
     explanation: "Reusing citrus peels keeps valuable food scraps out of landfill, where they slowly rot and release harmful methane."
   },
-  {
-    id: 17,
-    module: 6,
-    text: "Which natural substance in citrus peel cuts through grease?",
-    options: ["Chlorine", "D-limonene", "Baking powder", "Sugar"],
-    answer: 1,
-    explanation: "D-limonene is a natural oil found in citrus peel that dissolves grease and grime effectively, which is why citrus-based cleaners work so well without synthetic degreasers."
-  },
-  {
-    id: 18,
-    module: 6,
-    text: "Turning citrus peels and vinegar into a kitchen cleaner is an example of what?",
-    options: ["Landfilling food waste", "Incinerating food waste", "Circular, zero-waste reuse", "Single-use consumption"],
-    answer: 2,
-    explanation: "Instead of throwing citrus peels away, steeping them in vinegar turns a food scrap into a useful household product, a simple example of circular, zero-waste reuse that keeps waste out of landfill."
-  },
-
-  // MODULE 7: topic 4 (CZ Water Irrigation / Greywater Reuse) merged in below; the greenwashing/packaging
-  // questions that were already here aren't one of the 11 listed topics.
+  // MODULE 6
   {
     id: 20,
-    module: 7,
+    module: 6,
     text: "What should consumers check to avoid greenwashing?",
     options: ["Attractive colours", "Official certifications", "Generic green words", "Product size"],
     images: [asset("Attractive_colours.png"), asset("Official_certifications.png"), asset("Generic_green_words.png"), asset("Product_Size.png")],
@@ -590,7 +518,7 @@ const QUESTIONS = [
   },
   {
     id: 21,
-    module: 7,
+    module: 6,
     text: "TRUE or FALSE: The Green Dot always means that packaging is recyclable.",
     options: ["True", "False"],
     answer: 1,
@@ -598,7 +526,7 @@ const QUESTIONS = [
   },
   {
     id: 28,
-    module: 7,
+    module: 6,
     text: "Which home uses water more sustainably?",
     options: [     
       "Collects and appropriately treats greywater and reuses it for toilet flushing.",
@@ -611,7 +539,7 @@ const QUESTIONS = [
   },
   {
     id: 29,
-    module: 7,
+    module: 6,
     text: "What Is Greywater?",
     options: [
       "Clean drinking water from the tap that is safe for drinking, cooking, and other everyday household uses.",
@@ -621,12 +549,10 @@ const QUESTIONS = [
     answer: 1,
     explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
   },
-
-  // MODULE 8: RO info papers 3 + 4 (Seasonal and Mindful Cooking: Preserving Cultural Heritage).
-  // Replaces the earlier AI-drafted placeholder questions (ids 32-35), which had no source material.
+  // MODULE 7
   {
     id: 36,
-    module: 8,
+    module: 7,
     text: "What is the method for obtaining sugar-free plum jam?",
     options: ["Slow cooking", "Sun drying", "Baking", "Cooking over high heat", "Steaming"],
     answer: 0,
@@ -634,7 +560,7 @@ const QUESTIONS = [
   },
   {
     id: 37,
-    module: 8,
+    module: 7,
     text: "Is it TRUE or FALSE that the peel of the fruit is used to prepare sugar-free plum jam?",
     options: ["True", "False"],
     answer: 0,
@@ -642,7 +568,7 @@ const QUESTIONS = [
   },
   {
     id: 38,
-    module: 8,
+    module: 7,
     text: "What is the most important reason to pass on the tradition?",
     options: ["To develop sustainable cooking skills", "To save money", "To learn to cook", "To eat together", "To exchange recipes"],
     answer: 0,
@@ -650,17 +576,16 @@ const QUESTIONS = [
   },
   {
     id: 39,
-    module: 8,
+    module: 7,
     text: "Is it TRUE or FALSE that carrots are an ingredient of zacusca?",
     options: ["True", "False"],
     answer: 1,
     explanation: "Zacusca is made with eggplants, kapia peppers or Romanian sweet red peppers (gogoșari), onions, tomato juice, sunflower oil and spices. There are no carrots in it."
   },
-
-  // MODULE 9: LTTA Italy info paper: From Herbs to Traditional Products
+  // MODULE 8
   {
     id: 40,
-    module: 9,
+    module: 8,
     text: "Which picture shows sustainable harvesting of wild herbs?",
     options: [
       "Pulling the entire plant out by its roots (from several plants)",
@@ -673,7 +598,7 @@ const QUESTIONS = [
   },
   {
     id: 41,
-    module: 9,
+    module: 8,
     text: "What is one of the main benefits of using herbs in traditional medicine?",
     options: [
       "Herbal remedies are always safer and more effective than conventional medicines",
@@ -686,7 +611,7 @@ const QUESTIONS = [
   },
   {
     id: 42,
-    module: 9,
+    module: 8,
     text: "Which picture shows the correct way to store a prepared herbal product?",
     options: [
       "A closed but unlabelled container",
@@ -697,6 +622,19 @@ const QUESTIONS = [
     answer: 2,
     explanation: "Storing properly dried herbs in clean, tightly closed and labelled containers, preferably glass jars, preserves their quality, aroma and shelf life. Paper bags can also be used if kept in a cool, dry and dark place, protected from moisture."
   },
+  {
+    id: 44,
+    module: 8,
+    text: "Which parts of a herb can be collected for herbal products?",
+    options: [
+      "Only the leaves and flowers, as other parts of herbs are generally unsuitable.",
+      "Leaves, flowers, seeds, roots or stems, depending on the plant species and intended use.",
+      "Any part of a herb, as long as the plant is collected during the flowering season.",
+    ],
+    answer: 1,
+    explanation: "Different herbs have different useful parts. Depending on the species, leaves, flowers, seeds, roots or stems may be collected. Correct identification and knowing which parts are safe to use are essential."
+  },
+  // MODULE 9
   {
     id: 43,
     module: 9,
@@ -710,18 +648,6 @@ const QUESTIONS = [
     explanation: "Using, preserving or sharing surplus herbs reduces waste and makes better use of natural resources. Correctly identified, safely prepared and labelled herbal products also make thoughtful gifts. Sustainable harvesting means collecting only what is needed and letting plants regenerate."
   },
   {
-    id: 44,
-    module: 9,
-    text: "Which parts of a herb can be collected for herbal products?",
-    options: [
-      "Only the leaves and flowers, as other parts of herbs are generally unsuitable.",
-      "Leaves, flowers, seeds, roots or stems, depending on the plant species and intended use.",
-      "Any part of a herb, as long as the plant is collected during the flowering season.",
-    ],
-    answer: 1,
-    explanation: "Different herbs have different useful parts. Depending on the species, leaves, flowers, seeds, roots or stems may be collected. Correct identification and knowing which parts are safe to use are essential."
-  },
-  {
     id: 45,
     module: 9,
     text: "Why is it important to dry herbs properly before storing them?",
@@ -733,11 +659,9 @@ const QUESTIONS = [
     answer: 2,
     explanation: "Removing excess moisture limits microbial growth and deterioration. Herbs must still be stored correctly, and their quality decreases over time."
   },
-
-  // MODULE 10: Info Paper 4 (TalentWay, Italy): Understanding compost pH
   {
     id: 46,
-    module: 10,
+    module: 9,
     text: "What does a compost pH value above 7 indicate?",
     options: ["Acidic compost", "Neutral compost", "Alkaline compost", "Compost without nutrients"],
     answer: 2,
@@ -745,7 +669,7 @@ const QUESTIONS = [
   },
   {
     id: 47,
-    module: 10,
+    module: 9,
     text: "TRUE or FALSE: A compost pH test measures all the nutrients present in compost.",
     options: ["True", "False"],
     answer: 1,
@@ -754,17 +678,16 @@ const QUESTIONS = [
 ];
 
 const PATH_NODES = [
-  { x:50, y:93 }, // 0 = START
-  { x:18, y:86 }, // 1
-  { x:72, y:79 }, // 2
-  { x:24, y:72 }, // 3
-  { x:72, y:65 }, // 4
-  { x:24, y:58 }, // 5
-  { x:70, y:51 }, // 6
-  { x:26, y:44 }, // 7
-  { x:70, y:37 }, // 8
-  { x:28, y:30 }, // 9
-  { x:62, y:22 }, // 10 = last module = FINISH
+  { x:50, y:92 }, // 0 = START
+  { x:18, y:84 }, // 1
+  { x:72, y:76 }, // 2
+  { x:24, y:68 }, // 3
+  { x:72, y:60 }, // 4
+  { x:24, y:52 }, // 5
+  { x:70, y:44 }, // 6
+  { x:26, y:36 }, // 7
+  { x:68, y:28 }, // 8
+  { x:42, y:20 }, // 9 = last module = FINISH
 ];
 
 function lerp(a,b,t){ return a+(b-a)*t; }
