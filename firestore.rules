@@ -12,7 +12,7 @@ rules_version = '2';
 //    lengths and values (so no one can stuff junk or huge data into the database).
 //  - The username in the document must match the account it belongs to and can't
 //    be changed later.
-//  - Progress can only go up one module per save (or back to 0 for "Play again"),
+//  - Progress (0-10 modules) can only go up one module per save (or back to 0 for "Play again"),
 //    so a player can't jump straight to the certificate.
 //
 // Deploy: Firebase console -> Firestore Database -> Rules -> paste this file -> Publish,
@@ -33,7 +33,7 @@ service cloud.firestore {
         && p.characterId in ['Manos', 'Roxana', 'Rino', 'Jana']
         && p.completedModules is int
         && p.completedModules >= 0
-        && p.completedModules <= 9
+        && p.completedModules <= 10
       );
     }
 

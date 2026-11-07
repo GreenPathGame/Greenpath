@@ -94,6 +94,15 @@ export default {
         "Sušené byliny si nejdéle uchovají vůni v dobře uzavřených a popsaných skleněných dózách na chladném, suchém a tmavém místě.",
       ],
     },
+    10: {
+      title: "Jíme podle ročních období: porozumění pH kompostu",
+      info: "pH kompostu ukazuje, zda je výluh z kompostu kyselý, neutrální nebo zásaditý. Test prosetého vzorku smíchaného s destilovanou vodou pomáhá pěstitelům posoudit, zda se kompost hodí pro jejich půdu a rostliny, lépe využívat živiny, neplýtvat a vracet místní organické zbytky do zahrady, místo aby se vyhazovaly.",
+      facts: [
+        "pH 7 je neutrální; hodnoty pod 7 jsou kyselé a nad 7 zásadité.",
+        "Změna o jednu jednotku pH znamená desetinásobnou změnu kyselosti.",
+        "Test na workshopu používá 10 g prosetého kompostu smíchaného s 50 mL destilované vody.",
+      ],
+    },
   },
 
   questions: {
@@ -318,6 +327,16 @@ export default {
         "Sušení snižuje vlhkost, a tím pomáhá předcházet plísni a prodlužuje trvanlivost.",
       ],
       explanation: "Odstranění přebytečné vlhkosti omezuje růst mikrobů a znehodnocení. Byliny je přesto nutné správně skladovat a jejich kvalita časem klesá.",
+    },
+    46: {
+      text: "Co znamená hodnota pH kompostu nad 7?",
+      options: ["Kyselý kompost", "Neutrální kompost", "Zásaditý kompost", "Kompost bez živin"],
+      explanation: "pH měří kyselost nebo zásaditost. Hodnoty nad 7 znamenají zásadité prostředí. Znalost pH kompostu pomáhá pěstitelům rozhodovat se při péči o půdu.",
+    },
+    47: {
+      text: "PRAVDA, nebo NEPRAVDA: test pH kompostu změří všechny živiny v kompostu.",
+      options: ["Pravda", "Nepravda"],
+      explanation: "Test pH měří kyselost nebo zásaditost, ne obsah živin. Ukazuje podmínky, které ovlivňují jejich dostupnost; ke změření konkrétních živin jsou potřeba další testy.",
     },
   },
 };

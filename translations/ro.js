@@ -94,6 +94,15 @@ export default {
         "Plantele uscate își păstrează cel mai mult aroma în borcane de sticlă bine închise și etichetate, într-un loc răcoros, uscat și întunecat.",
       ],
     },
+    10: {
+      title: "Să mâncăm după anotimpuri: înțelegerea pH-ului compostului",
+      info: "pH-ul compostului arată dacă un extract de compost este acid, neutru sau alcalin. Testarea unei probe cernute, amestecate cu apă distilată, îi ajută pe cultivatori să aprecieze dacă un compost se potrivește solului și plantelor lor, să folosească mai bine nutrienții, să evite risipa și să readucă în grădină resturile organice locale în loc să le arunce.",
+      facts: [
+        "pH-ul 7 este neutru; valorile sub 7 sunt acide, iar cele peste 7 sunt alcaline.",
+        "O schimbare de o unitate de pH înseamnă o schimbare de zece ori a acidității.",
+        "Testul din atelier folosește 10 g de compost cernut amestecat cu 50 mL de apă distilată.",
+      ],
+    },
   },
 
   questions: {
@@ -318,6 +327,16 @@ export default {
         "Uscarea reduce umiditatea, ajutând la prevenirea mucegaiului și la prelungirea termenului de păstrare.",
       ],
       explanation: "Eliminarea umidității în exces limitează dezvoltarea microbilor și degradarea. Plantele trebuie totuși depozitate corect, iar calitatea lor scade în timp.",
+    },
+    46: {
+      text: "Ce indică o valoare a pH-ului compostului peste 7?",
+      options: ["Compost acid", "Compost neutru", "Compost alcalin", "Compost fără nutrienți"],
+      explanation: "pH-ul măsoară aciditatea sau alcalinitatea. Valorile peste 7 indică condiții alcaline. Cunoașterea pH-ului compostului îi ajută pe cultivatori să ia decizii informate privind gestionarea solului.",
+    },
+    47: {
+      text: "ADEVĂRAT sau FALS: testul pH-ului compostului măsoară toți nutrienții din compost.",
+      options: ["Adevărat", "Fals"],
+      explanation: "Testul de pH măsoară aciditatea sau alcalinitatea, nu concentrația nutrienților. Arată condițiile care pot influența disponibilitatea acestora; pentru nutrienți specifici sunt necesare analize suplimentare.",
     },
   },
 };

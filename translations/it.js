@@ -94,6 +94,15 @@ export default {
         "Le erbe essiccate mantengono più a lungo l'aroma in barattoli di vetro ben chiusi ed etichettati, al fresco, all'asciutto e al buio.",
       ],
     },
+    10: {
+      title: "Mangiare con le stagioni: capire il pH del compost",
+      info: "Il pH del compost indica se un estratto di compost è acido, neutro o alcalino. Analizzare un campione setacciato mescolato con acqua distillata aiuta i coltivatori a capire se un compost è adatto al loro terreno e alle loro piante, a usare meglio i nutrienti, a evitare sprechi e a restituire all'orto i residui organici locali invece di buttarli.",
+      facts: [
+        "Il pH 7 è neutro; i valori sotto 7 sono acidi e quelli sopra 7 alcalini.",
+        "Una variazione di un'unità di pH corrisponde a una variazione di dieci volte dell'acidità.",
+        "Il test del laboratorio usa 10 g di compost setacciato mescolati con 50 mL di acqua distillata.",
+      ],
+    },
   },
 
   questions: {
@@ -318,6 +327,16 @@ export default {
         "L'essiccazione riduce l'umidità, aiutando a prevenire la muffa e a prolungare la conservazione.",
       ],
       explanation: "Eliminare l'umidità in eccesso limita la crescita dei microbi e il deterioramento. Le erbe vanno comunque conservate correttamente e la loro qualità diminuisce col tempo.",
+    },
+    46: {
+      text: "Che cosa indica un valore di pH del compost superiore a 7?",
+      options: ["Compost acido", "Compost neutro", "Compost alcalino", "Compost senza nutrienti"],
+      explanation: "Il pH misura l'acidità o l'alcalinità. Valori superiori a 7 indicano condizioni alcaline. Conoscere il pH del compost aiuta i coltivatori a prendere decisioni consapevoli sulla gestione del suolo.",
+    },
+    47: {
+      text: "VERO o FALSO: il test del pH del compost misura tutti i nutrienti presenti nel compost.",
+      options: ["Vero", "Falso"],
+      explanation: "Il test del pH misura l'acidità o l'alcalinità, non la concentrazione dei nutrienti. Indica le condizioni che possono influire sulla loro disponibilità; per misurare nutrienti specifici servono altre analisi.",
     },
   },
 };

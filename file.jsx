@@ -336,6 +336,21 @@ const MODULES = [
       "Dried herbs keep their aroma longest in tightly closed, labelled glass jars stored somewhere cool, dry and dark.",
     ],
   },
+  // Info Paper 4 (TalentWay, Italy): module topic "Eating with the Seasons: Local Ingredients and
+  // Seasonal Recipes"; the paper's one practice is "Understanding compost pH".
+  {
+    id: 10,
+    title: "Eating with the Seasons: Understanding Compost pH",
+    icon: "🧪",
+    color: "#84cc16",
+    info: "Compost pH shows whether a compost extract is acidic, neutral or alkaline. Testing a sieved sample mixed with distilled water helps growers judge whether a compost suits their soil and plants, use nutrients better, avoid wasted inputs and return local organic residues to the garden instead of throwing them away.",
+    // "DID YOU KNOW (GAME FACTS)" from Info Paper 4
+    facts: [
+      "pH 7 is neutral; values below 7 are acidic and values above 7 are alkaline.",
+      "A change of one pH unit represents a tenfold change in acidity.",
+      "The workshop test uses 10 g of sieved compost mixed with 50 mL of distilled water.",
+    ],
+  },
 ];
 
 const QUESTIONS = [
@@ -706,19 +721,38 @@ const QUESTIONS = [
     answer: 2,
     explanation: "Removing excess moisture limits microbial growth and deterioration. Herbs must still be stored correctly, and their quality decreases over time."
   },
+
+  // MODULE 10: Info Paper 4 (TalentWay, Italy): Understanding compost pH
+  {
+    id: 46,
+    module: 10,
+    text: "What does a compost pH value above 7 indicate?",
+    options: ["Acidic compost", "Neutral compost", "Alkaline compost", "Compost without nutrients"],
+    answer: 2,
+    explanation: "pH measures acidity or alkalinity. Values above 7 indicate alkaline conditions. Knowing compost pH helps growers make informed soil management decisions."
+  },
+  {
+    id: 47,
+    module: 10,
+    text: "TRUE or FALSE: A compost pH test measures all the nutrients present in compost.",
+    options: ["True", "False"],
+    answer: 1,
+    explanation: "A pH test measures acidity or alkalinity, not nutrient concentrations. It helps indicate conditions that can affect nutrient availability; additional tests are needed to measure specific nutrients."
+  },
 ];
 
 const PATH_NODES = [
-  { x:50, y:92 }, // 0 = START
-  { x:18, y:84 }, // 1
-  { x:72, y:76 }, // 2
-  { x:24, y:68 }, // 3
-  { x:72, y:60 }, // 4
-  { x:24, y:52 }, // 5
-  { x:70, y:44 }, // 6
-  { x:26, y:36 }, // 7
-  { x:68, y:28 }, // 8
-  { x:42, y:20 }, // 9 = last module = FINISH
+  { x:50, y:93 }, // 0 = START
+  { x:18, y:86 }, // 1
+  { x:72, y:79 }, // 2
+  { x:24, y:72 }, // 3
+  { x:72, y:65 }, // 4
+  { x:24, y:58 }, // 5
+  { x:70, y:51 }, // 6
+  { x:26, y:44 }, // 7
+  { x:70, y:37 }, // 8
+  { x:28, y:30 }, // 9
+  { x:62, y:22 }, // 10 = last module = FINISH
 ];
 
 function lerp(a,b,t){ return a+(b-a)*t; }

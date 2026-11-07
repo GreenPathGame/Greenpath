@@ -1,6 +1,6 @@
 # GreenPath – Online Game
 
-A free, browser-based learning game about sustainable food, gardening and food traditions from the Carpathian and Mediterranean regions. Players pick a language and a character, walk a garden map with Aristotle as their guide, answer questions in 9 modules, and download a personal certificate at the end.
+A free, browser-based learning game about sustainable food, gardening and food traditions from the Carpathian and Mediterranean regions. Players pick a language and a character, walk a garden map with Aristotle as their guide, answer questions in 10 modules, and download a personal certificate at the end.
 
 **Live:** https://greenpathgame.github.io/Greenpath/ (deployed automatically to GitHub Pages from `main` by GitHub Actions, `.github/workflows/deploy.yml`).
 
@@ -9,7 +9,7 @@ A free, browser-based learning game about sustainable food, gardening and food t
 - **5 languages:** English, Ελληνικά (Greek), Italiano, Română, Čeština. All UI text, module introductions, "Did you know?" facts, questions, answers, explanations and the certificate are translated. The language can be changed at any time from the map.
 - **4 characters:** Manos (GR), Roxana (RO), Rino (IT), Jana (CZ), each with idle, happy and sad reactions.
 - **Living garden world:** mountains, forests, a waterfall, river, pond and flower meadows with butterflies, birds and a duck, drawn in `NatureScene.jsx` behind every screen.
-- **9 modules, 38 questions:** multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
+- **10 modules, 40 questions:** multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
 - **Accounts:** username + password (Firebase Auth). Progress, language and character sync across devices.
 - **Certificate:** generated in the player's language with their full name and the date, downloadable as a PNG.
 - Works on phones, tablets and desktop. Answer buttons and map nodes work with the keyboard, and animations are reduced when the device asks for reduced motion.
@@ -27,6 +27,7 @@ A free, browser-based learning game about sustainable food, gardening and food t
 | 7 | Sustainable Packaging & Water Reuse | CZ / LTTA Romania water case study (greywater) + packaging |
 | 8 | Seasonal and Mindful Cooking: Preserving Cultural Heritage | RO info papers 3 + 4 (silvoița, zacusca) |
 | 9 | From Herbs to Traditional Products | LTTA Italy info paper |
+| 10 | Eating with the Seasons: Understanding Compost pH | Info Paper 4 (TalentWay, Italy) – Practice 1, compost pH |
 
 ## Project structure
 
