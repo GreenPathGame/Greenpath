@@ -22,9 +22,12 @@ export default {
       title: "Practici agricole tradiționale, grădinărit ecologic, agricultură și agroecologie",
       info: "Mini-serele sustenabile (tunel, hidroponice, solare pasive sau verticale) protejează plantele de frig, vânt, ploaie și stres climatic, ajutând la cultivarea hranei la nivel local cu materiale cu impact redus. Combaterea integrată și biologică, de exemplu prin încurajarea buburuzelor, a crisopelor și a viespilor parazitoide, ține sub control dăunători precum păduchele lânos (Eriosoma lanigerum) fără a depinde în principal de pesticide chimice.",
       facts: [
-        "Serele hidroponice cultivă plante fără pământ, folosind apă și substanțe nutritive.",
-        "Serele verticale lasă plantele să crească în sus, potrivite pentru orașe, școli și spații mici.",
-        "Buburuzele, crisopele și viespile parazitoide sunt dușmani naturali ai afidelor.",
+        "Cultivarea la scară mică poate reduce dependența de transportul pe distanțe lungi.",
+        "Materialele reutilizate fac serele mai ieftine și mai sustenabile.",
+        "Sistemele verticale și hidroponice sunt utile acolo unde terenul sau apa sunt puține.",
+        "Eriosoma lanigerum arată ca niște grupuri mici, albe, ca de vată, pe ramuri și frunze.",
+        "Eriosoma lanigerum slăbește copacii hrănindu-se cu seva lor.",
+        "Buburuzele, crisopele și viespile parazitoide ajută la controlul natural al afidelor.",
       ],
     },
     3: {
@@ -70,7 +73,10 @@ export default {
       title: "Ambalaje sustenabile și reutilizarea apei",
       info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
       facts: [
-        "„Punctul Verde” nu înseamnă întotdeauna că ambalajul este reciclabil: arată că producătorul contribuie la un sistem de recuperare.",
+        "Nu orice afirmație „verde” este adevărată.",
+        "Certificările oficiale sunt mai de încredere decât cuvintele de marketing.",
+        "„Punctul Verde” nu înseamnă întotdeauna ambalaj reciclabil.",
+        "Ambalajele inteligente pot reduce deșeurile, deteriorarea și poluarea.",
         "Apele gri de la spălat, îmbăiat și chiuvete pot fi tratate și reutilizate în scopuri nepotabile, de exemplu pentru toaletă.",
       ],
     },
@@ -114,7 +120,7 @@ export default {
     6: {
       text: "Ce alegere ajută la reducerea emisiilor din transportul alimentelor?",
       options: ["Alimente ambalate importate", "Hrană crescută într-o grădină comestibilă locală pentru fauna sălbatică"],
-      explanation: "O grădină diversă oferă o mare varietate de alimente și semințe, păstrând biodiversitatea, sprijinind polenizatorii și fauna sălbatică și ajutând grădina să facă mai bine față secetei, dăunătorilor și schimbărilor climatice.",
+      explanation: "Hrana locală parcurge distanțe mai mici, reducând emisiile, deșeurile de ambalaje și consumul de energie. Sistemele alimentare locale sprijină și biodiversitatea și comunitățile sustenabile.",
     },
     7: {
       text: "Care plantă are cele mai mari șanse să îmbunătățească natural solul fixând azotul?",
@@ -124,7 +130,7 @@ export default {
     16: {
       text: "Care grădină are cea mai mare diversitate de semințe?",
       options: ["O grădină colorată, cu multe plante diferite", "Un câmp mare cu o singură cultură", "Un gazon decorativ fără plante comestibile."],
-      explanation: "Semințele tradiționale păstrează soiurile locale de plante, protejează moștenirea culturală și întăresc reziliența climatică, conservând soiuri adaptate natural la clima locală și la condițiile de mediu în schimbare.",
+      explanation: "O grădină diversă oferă o mare varietate de alimente și semințe, păstrând biodiversitatea, sprijinind polenizatorii și fauna sălbatică și ajutând grădina să facă mai bine față secetei, dăunătorilor și schimbărilor climatice.",
     },
     23: {
       text: "Ce mini-seră cultivă plante fără sol?",

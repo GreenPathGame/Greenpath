@@ -223,11 +223,14 @@ const MODULES = [
     icon: "💧",
     color: "#06b6d4",
     info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides.",
-    // The IT info papers weren't among the provided files; these facts restate the module's own approved explanations.
+    // "DID YOU KNOW (GAME FACTS)" from IT (TalentWay) Info Papers 1 + 2
     facts: [
-      "Hydroponic greenhouses grow plants without soil, using water and nutrients instead.",
-      "Vertical greenhouses let plants grow upwards, which suits cities, schools and small spaces.",
-      "Ladybirds, lacewings and parasitoid wasps are natural enemies of aphids.",
+      "Small-scale growing can reduce dependence on long-distance transport.",
+      "Reused materials can make greenhouse systems cheaper and more sustainable.",
+      "Vertical and hydroponic systems are useful where land or water is limited.",
+      "Eriosoma lanigerum looks like small white cotton-like clusters on branches and leaves.",
+      "Eriosoma lanigerum weakens trees by feeding on plant sap.",
+      "Ladybirds, lacewings and parasitoid wasps can help control aphids naturally.",
     ],
   },
   // Topics 5-6 on the list: RO Practice 2 (Companion planting) + RO Practice 1 (Homemade natural pest control)
@@ -300,8 +303,12 @@ const MODULES = [
     icon: "♻️",
     color: "#0ea5e9",
     info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint.",
+    // First four: "DID YOU KNOW (GAME FACTS)" from IT (TalentWay) Info Paper 3; the last restates the LTTA Romania explanations.
     facts: [
-      "The Green Dot doesn't always mean packaging is recyclable: it shows the producer pays into a recovery system.",
+      "Not every “green” claim is true.",
+      "Official certifications are more reliable than marketing words.",
+      "The Green Dot does not always mean recyclable packaging.",
+      "Smart packaging can reduce waste, damage and pollution.",
       "Greywater from washing, bathing and sinks can be treated and reused for non-drinking purposes such as toilet flushing.",
     ],
   },
@@ -370,7 +377,7 @@ const QUESTIONS = [
     options: ["Imported packaged food", "Food grown in a local edible wildlife garden"],
     images: [asset("Garden1.png"), asset("Garden2.png")],
     answer: 1,
-    explanation: "A diverse garden provides a wide variety of food and seeds while preserving biodiversity, supporting pollinators and wildlife, and helping gardens better adapt to drought, pests, and climate change."
+    explanation: "Local food travels shorter distances, reducing emissions, packaging waste, and energy use. Local food systems also support biodiversity and sustainable communities."
   },
   {
     id: 7,
@@ -387,7 +394,7 @@ const QUESTIONS = [
     options: ["A colourful garden with many different plants", "A large field growing only one crop", "A decorative lawn with no edible plants."],
     images: [asset("SeedDiversity1.png"), asset("SeedDiversity2.png"), asset("SeedDiversity3.png")],
     answer: 0,
-    explanation: "Traditional seeds preserve local plant varieties, protect cultural heritage, and strengthen climate resilience by conserving varieties naturally adapted to local climates and changing environmental conditions."
+    explanation: "A diverse garden provides a wide variety of food and seeds while preserving biodiversity, supporting pollinators and wildlife, and helping gardens better adapt to drought, pests, and climate change."
   },
 
   // MODULE 2: topics 3 & 7: IT Handmade Sustainable Greenhouses / biological control against the Woolly aphid

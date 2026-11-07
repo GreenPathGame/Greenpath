@@ -22,9 +22,12 @@ export default {
       title: "Tradiční zemědělské postupy, ekologické zahradničení, hospodaření a agroekologie",
       info: "Udržitelné mini skleníky (tunelové, hydroponické, pasivní solární nebo vertikální) chrání rostliny před chladem, větrem, deštěm a klimatickým stresem a pomáhají pěstovat jídlo lokálně z materiálů s nízkým dopadem. Integrovaná a biologická ochrana, například podpora slunéček, zlatooček a parazitických vosiček, reguluje škůdce, jako je vlnatka krvavá (Eriosoma lanigerum), aniž by se spoléhala hlavně na chemické pesticidy.",
       facts: [
-        "Hydroponické skleníky pěstují rostliny bez půdy, pomocí vody a živin.",
-        "Vertikální skleníky nechávají rostliny růst vzhůru, což se hodí do měst, škol a malých prostor.",
-        "Slunéčka, zlatoočka a parazitické vosičky jsou přirozenými nepřáteli mšic.",
+        "Pěstování v malém měřítku může snížit závislost na dálkové dopravě.",
+        "Znovu použité materiály dělají skleníky levnějšími a udržitelnějšími.",
+        "Vertikální a hydroponické systémy se hodí tam, kde je málo půdy nebo vody.",
+        "Eriosoma lanigerum vypadá jako malé bílé shluky podobné vatě na větvích a listech.",
+        "Eriosoma lanigerum oslabuje stromy tím, že saje jejich mízu.",
+        "Slunéčka, zlatoočka a parazitické vosičky pomáhají přirozeně omezovat mšice.",
       ],
     },
     3: {
@@ -70,7 +73,10 @@ export default {
       title: "Udržitelné obaly a opětovné využití vody",
       info: "Udržitelné obaly chrání potraviny, snižují množství odpadu a omezují dopad na životní prostředí, ale ne každé „zelené“ tvrzení na nich je spolehlivé; oficiální certifikace znamenají víc než barevný marketing. Opětovné využití vhodně upravené šedé vody (ze sprch, umyvadel, van a pračky) k vhodným nepitným účelům, například ke splachování toalety, je dalším jednoduchým způsobem, jak domácnost může snížit svou ekologickou stopu.",
       facts: [
-        "Zelený bod (Der Grüne Punkt) neznamená vždy, že je obal recyklovatelný: ukazuje, že výrobce přispívá do systému zpětného odběru.",
+        "Ne každé „zelené“ tvrzení je pravdivé.",
+        "Oficiální certifikace jsou spolehlivější než marketingová slova.",
+        "Zelený bod vždy neznamená recyklovatelný obal.",
+        "Chytré obaly mohou snížit odpad, poškození a znečištění.",
         "Šedou vodu z mytí, koupání a umyvadel lze upravit a znovu použít k nepitným účelům, například ke splachování.",
       ],
     },
@@ -114,7 +120,7 @@ export default {
     6: {
       text: "Která volba pomáhá snižovat emise z přepravy potravin?",
       options: ["Dovážené balené potraviny", "Jídlo vypěstované v místní jedlé zahradě pro divokou přírodu"],
-      explanation: "Rozmanitá zahrada poskytuje širokou škálu potravin a semen, chrání biodiverzitu, podporuje opylovače a divokou přírodu a pomáhá zahradě lépe zvládat sucho, škůdce a změnu klimatu.",
+      explanation: "Místní potraviny cestují kratší vzdálenosti, a tím snižují emise, odpad z obalů i spotřebu energie. Místní potravinové systémy navíc podporují biodiverzitu a udržitelné komunity.",
     },
     7: {
       text: "Která rostlina nejspíš přirozeně zlepší půdu tím, že váže dusík?",
@@ -124,7 +130,7 @@ export default {
     16: {
       text: "Která zahrada má největší rozmanitost semen?",
       options: ["Barevná zahrada s mnoha různými rostlinami", "Velké pole s jedinou plodinou", "Okrasný trávník bez jedlých rostlin."],
-      explanation: "Tradiční semena uchovávají místní odrůdy rostlin, chrání kulturní dědictví a posilují odolnost vůči změně klimatu, protože zachovávají odrůdy přirozeně přizpůsobené místnímu klimatu a měnícím se podmínkám.",
+      explanation: "Rozmanitá zahrada poskytuje širokou škálu potravin a semen, chrání biodiverzitu, podporuje opylovače a divokou přírodu a pomáhá zahradě lépe zvládat sucho, škůdce a změnu klimatu.",
     },
     23: {
       text: "Který mini skleník pěstuje rostliny bez půdy?",

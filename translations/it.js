@@ -22,9 +22,12 @@ export default {
       title: "Pratiche agricole tradizionali, giardinaggio biologico, agricoltura e agroecologia",
       info: "Le mini-serre sostenibili (a tunnel, idroponiche, solari passive o verticali) proteggono le piante da freddo, vento, pioggia e stress climatico, aiutando a coltivare cibo a livello locale con materiali a basso impatto. La lotta integrata e biologica, per esempio favorendo coccinelle, crisope e vespe parassitoidi, contiene parassiti come l'afide lanigero (Eriosoma lanigerum) senza dipendere principalmente dai pesticidi chimici.",
       facts: [
-        "Le serre idroponiche coltivano piante senza terra, usando acqua e sostanze nutritive.",
-        "Le serre verticali fanno crescere le piante verso l'alto: ideali per città, scuole e piccoli spazi.",
-        "Coccinelle, crisope e vespe parassitoidi sono nemici naturali degli afidi.",
+        "La coltivazione su piccola scala può ridurre la dipendenza dai trasporti a lunga distanza.",
+        "I materiali riutilizzati rendono le serre più economiche e sostenibili.",
+        "I sistemi verticali e idroponici sono utili dove terra o acqua scarseggiano.",
+        "L'Eriosoma lanigerum appare come piccoli ammassi bianchi simili a cotone su rami e foglie.",
+        "L'Eriosoma lanigerum indebolisce gli alberi nutrendosi della loro linfa.",
+        "Coccinelle, crisope e vespe parassitoidi aiutano a controllare gli afidi in modo naturale.",
       ],
     },
     3: {
@@ -70,7 +73,10 @@ export default {
       title: "Imballaggi sostenibili e riutilizzo dell'acqua",
       info: "Gli imballaggi sostenibili proteggono il cibo, riducono i rifiuti e limitano l'impatto ambientale, ma non tutte le dichiarazioni «verdi» sono affidabili: le certificazioni ufficiali contano più del marketing colorato. Riutilizzare le acque grigie trattate in modo adeguato (da docce, lavandini, vasche e lavatrice) per usi non potabili, come lo scarico del WC, è un altro modo semplice per ridurre l'impronta ambientale di una famiglia.",
       facts: [
-        "Il «Punto Verde» non significa sempre che l'imballaggio è riciclabile: indica che il produttore contribuisce a un sistema di recupero.",
+        "Non tutte le dichiarazioni «verdi» sono vere.",
+        "Le certificazioni ufficiali sono più affidabili delle parole del marketing.",
+        "Il «Punto Verde» non significa sempre che l'imballaggio è riciclabile.",
+        "Un imballaggio intelligente può ridurre rifiuti, danni e inquinamento.",
         "Le acque grigie di lavaggi, bagni e lavandini possono essere trattate e riutilizzate per usi non potabili come lo scarico del WC.",
       ],
     },
@@ -114,7 +120,7 @@ export default {
     6: {
       text: "Quale scelta aiuta a ridurre le emissioni dovute al trasporto del cibo?",
       options: ["Cibo confezionato importato", "Cibo coltivato in un giardino commestibile locale per la fauna selvatica"],
-      explanation: "Un giardino diversificato offre un'ampia varietà di cibo e semi, preserva la biodiversità, sostiene gli impollinatori e la fauna selvatica e aiuta il giardino ad affrontare meglio siccità, parassiti e cambiamenti climatici.",
+      explanation: "Il cibo locale percorre distanze più brevi, riducendo emissioni, rifiuti da imballaggio e consumo di energia. I sistemi alimentari locali sostengono anche la biodiversità e comunità sostenibili.",
     },
     7: {
       text: "Quale pianta ha più probabilità di migliorare il terreno in modo naturale fissando l'azoto?",
@@ -124,7 +130,7 @@ export default {
     16: {
       text: "Quale giardino ha la maggiore diversità di semi?",
       options: ["Un giardino colorato con molte piante diverse", "Un grande campo con una sola coltura", "Un prato ornamentale senza piante commestibili."],
-      explanation: "I semi tradizionali conservano le varietà vegetali locali, proteggono il patrimonio culturale e rafforzano la resilienza climatica, perché mantengono varietà naturalmente adattate al clima locale e alle condizioni ambientali che cambiano.",
+      explanation: "Un giardino diversificato offre un'ampia varietà di cibo e semi, preserva la biodiversità, sostiene gli impollinatori e la fauna selvatica e aiuta il giardino ad affrontare meglio siccità, parassiti e cambiamenti climatici.",
     },
     23: {
       text: "Quale mini-serra coltiva le piante senza terra?",

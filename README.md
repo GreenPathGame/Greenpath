@@ -19,12 +19,12 @@ A free, browser-based learning game about sustainable food, gardening and food t
 | # | Module | Source (info paper / checklist topic) |
 |---|--------|----------------------------------------|
 | 1 | Wildlife Gardens | CZ Practice 1 (forest-inspired edible wildlife gardens) + CZ Practice 2 (traditional seeds) |
-| 2 | Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology | IT Practice 1 (handmade sustainable greenhouses) + IT Practice 2 (biological control of the woolly aphid) |
+| 2 | Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology | IT (TalentWay) Info Paper 1 (sustainable mini-greenhouses) + Info Paper 2 (biological control of the woolly aphid) |
 | 3 | Organic Pest Control and Companion Planting | RO Practice 1 (homemade natural pest control) + RO Practice 2 (companion planting) |
 | 4 | Reusable Alternatives for a Plastic-Free Kitchen | GR clay pot crafting + GR stitching reusable bags |
 | 5 | Reducing Food Waste | GR traditional pickling, sun-drying and oil-based methods |
 | 6 | Kitchen Cleaners from Citrus Peels and Vinegar | GR kitchen cleaners from citrus peels and vinegar |
-| 7 | Sustainable Packaging & Water Reuse | CZ / LTTA Romania water case study (greywater) + packaging |
+| 7 | Sustainable Packaging & Water Reuse | IT (TalentWay) Info Paper 3 (sustainable packaging, eco-labels) + LTTA Romania water case study (greywater) |
 | 8 | Seasonal and Mindful Cooking: Preserving Cultural Heritage | RO info papers 3 + 4 (silvoița, zacusca) |
 | 9 | From Herbs to Traditional Products | LTTA Italy info paper |
 | 10 | Eating with the Seasons: Understanding Compost pH | Info Paper 4 (TalentWay, Italy) – Practice 1, compost pH |
