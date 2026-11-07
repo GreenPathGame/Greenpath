@@ -57,3 +57,43 @@ npm run build     # production build into dist/
 ```
 
 Pushing to `main` builds and deploys to GitHub Pages.
+
+## Security
+
+What protects the game, and what must be switched on by hand.
+
+**Already in the code**
+
+| Protection | What it stops | Where |
+| --- | --- | --- |
+| Firestore security rules | Reading or changing other players' data, writing anywhere else, junk/oversized data, faking a username, skipping straight to the certificate | `firestore.rules` (tests: `tests/firestore.rules.test.mjs`) |
+| Content Security Policy | Running injected scripts; sending data to any site other than Firebase/Google | `vite.config.js` (added to production builds) |
+| Input limits | Overlong names/usernames/passwords, invisible or direction-reversing characters in names | `AuthScreen` / `cleanFullName` in `file.jsx` |
+| No HTML injection | Text from players is always shown as text (React escapes it; the code uses no `innerHTML`/`eval`) | whole app |
+| Clean sign-up | A failed sign-up no longer leaves a half-made account that blocks the username | `registerUser` in `file.jsx` |
+| Optional bot protection | Scripts creating accounts or hammering the database | Firebase App Check in `firebase.js` (off until a key is set) |
+| Rules tests on GitHub | A future change to the rules silently opening the database | `.github/workflows/rules-tests.yml` |
+
+**To do in the Firebase console (project `greenpath-96558`)**
+
+1. **Publish the rules** – Firestore Database → Rules → replace everything with the contents of `firestore.rules` → Publish. (Or `npx firebase-tools deploy --only firestore:rules`.)
+2. **Authentication → Settings → User actions:** keep "Enable create (sign-up)" on; turn **on** "Email enumeration protection".
+3. **Authentication → Settings → Authorized domains:** add `greenpathgame.github.io`.
+4. **Usage and billing:** stay on the free Spark plan (it cannot run up a bill). If you ever move to Blaze, set a budget alert.
+
+**To do in Google Cloud console (APIs & Services → Credentials → the "Browser key")**
+
+5. Application restrictions → **Websites** → add `https://greenpathgame.github.io/*`, `http://localhost:*/*`. API restrictions → restrict to *Identity Toolkit API*, *Token Service API*, *Cloud Firestore API* (and *Firebase App Check API* if you use step 7). This stops other sites from using the game's key.
+
+**To do on GitHub (repository Settings)**
+
+6. Branches → add a protection rule for `main`: require a pull request (anyone pushing to `main` changes the live site).
+
+**Optional: bot protection (App Check)**
+
+7. In the [reCAPTCHA admin console](https://www.google.com/recaptcha/admin) create a **reCAPTCHA v3** key for `greenpathgame.github.io` and `localhost`. In Firebase → App Check, register the web app with that key. Add the *site key* to the deploy workflow as `VITE_RECAPTCHA_SITE_KEY` (Settings → Secrets and variables → Actions → Variables, and `env: VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}` on the Build step). Deploy, check the game still works, and only then press **Enforce** for Authentication and Firestore in App Check.
+
+**Known limits (by design of a browser game)**
+
+- The certificate is drawn in the player's browser, so a determined person can edit their own copy of the page. The rules make faking progress in the database slow (one module per save), but a certificate is not proof of learning.
+- GitHub Pages cannot send HTTP security headers, so protection against being embedded in another site (clickjacking) is not possible there. The game has no actions worth clickjacking.

@@ -12,6 +12,7 @@ import {
   updateProfile,
   onAuthStateChanged,
   signOut,
+  deleteUser,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -102,6 +103,14 @@ function rememberLanguage(id) {
    only ever shows the username.
 ═══════════════════════════════════════════════════ */
 const USERNAME_RE = /^[a-z0-9_.-]{3,20}$/;
+// Limits match firestore.rules, so nothing the form accepts is refused by the database.
+const FULLNAME_MAX = 60;
+const PASSWORD_MIN = 6, PASSWORD_MAX = 128;
+// Trims, removes invisible control characters and collapses runs of spaces.
+function cleanFullName(raw) {
+  // eslint-disable-next-line no-control-regex -- removing control characters is the point
+  return raw.replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, "").replace(/\s+/g, " ").trim();
+}
 function usernameToEmail(username) { return `${username}@gardenquest.local`; }
 
 // Returns an i18n key (see i18n.js), translated where it's shown.
@@ -113,14 +122,22 @@ function friendlyAuthError(err) {
     case "auth/user-not-found": return "auth.errIncorrect";
     case "auth/weak-password": return "auth.errPassword";
     case "auth/network-request-failed": return "auth.errNetwork";
+    case "auth/too-many-requests": return "auth.errTooMany";
+    case "auth/invalid-email": return "auth.errUsername";
     default: return "auth.errGeneric";
   }
 }
 
 async function registerUser(username, password, fullName) {
   const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
-  await updateProfile(cred.user, { displayName: fullName });
-  await setDoc(doc(db, "users", cred.user.uid), { username, fullName, progress: null });
+  try {
+    await updateProfile(cred.user, { displayName: fullName });
+    await setDoc(doc(db, "users", cred.user.uid), { username, fullName, progress: null });
+  } catch (err) {
+    // Don't leave a half-made account behind (it would block the username forever).
+    await deleteUser(cred.user).catch(()=>{});
+    throw err;
+  }
   return { uid: cred.user.uid, username, fullName, progress: null };
 }
 
@@ -943,21 +960,26 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
     const uname = username.trim().toLowerCase();
 
     if (mode === "register") {
-      if (!fullName.trim() || !uname || !password) {
+      const name = cleanFullName(fullName);
+      if (!name || !uname || !password) {
         setError("auth.errFill");
+        return;
+      }
+      if (name.length > FULLNAME_MAX) {
+        setError("auth.errName");
         return;
       }
       if (!USERNAME_RE.test(uname)) {
         setError("auth.errUsername");
         return;
       }
-      if (password.length < 6) {
+      if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
         setError("auth.errPassword");
         return;
       }
       setBusy(true);
       try {
-        const u = await registerUser(uname, password, fullName.trim());
+        const u = await registerUser(uname, password, name);
         onAuth(u);
       } catch (err) {
         setError(friendlyAuthError(err));
@@ -967,6 +989,10 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
     } else {
       if (!uname || !password) {
         setError("auth.errFill");
+        return;
+      }
+      if (!USERNAME_RE.test(uname) || password.length > PASSWORD_MAX) {
+        setError("auth.errIncorrect");
         return;
       }
       setBusy(true);
@@ -999,14 +1025,14 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
           {mode==="register" && (
             <input
               type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
-              autoComplete="name" className="gp-input"
+              autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
               value={fullName} onChange={e=>setFullName(e.target.value)}
               style={inputStyle}
             />
           )}
           <input
             type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
-            autoComplete="username" className="gp-input" spellCheck={false}
+            autoComplete="username" className="gp-input" spellCheck={false} maxLength={20}
             value={username} onChange={e=>setUsername(e.target.value)}
             style={inputStyle} autoCapitalize="none"
           />
@@ -1014,6 +1040,7 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
             <input
               type={showPw ? "text" : "password"} placeholder={t("auth.password")} aria-label={t("auth.password")}
               autoComplete={mode==="register" ? "new-password" : "current-password"} className="gp-input"
+              maxLength={PASSWORD_MAX}
               value={password} onChange={e=>setPassword(e.target.value)}
               style={{ ...inputStyle, paddingRight:46 }}
             />
