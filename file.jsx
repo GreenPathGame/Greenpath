@@ -1,4 +1,9 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useContext, useCallback, createContext } from "react";
+import { translate, LANGUAGE_META } from "./i18n.js";
+import trGr from "./translations/gr.js";
+import trIt from "./translations/it.js";
+import trRo from "./translations/ro.js";
+import trCz from "./translations/cz.js";
 import { auth, db } from "./firebase.js";
 import {
   createUserWithEmailAndPassword,
@@ -42,6 +47,48 @@ function useIsMobile() {
 }
 
 /* ═══════════════════════════════════════════════════
+   LANGUAGE / TRANSLATION HELPERS
+   The selected language id flows down through context;
+   components call t("key") for UI text, and modules and
+   questions are localized just before they're rendered
+   (English in this file is the source of truth and the
+   fallback for anything missing).
+═══════════════════════════════════════════════════ */
+const LangCtx = createContext("en");
+function useT() {
+  const lang = useContext(LangCtx);
+  return useCallback((key, vars) => translate(lang, key, vars), [lang]);
+}
+const CONTENT_TR = { gr: trGr, it: trIt, ro: trRo, cz: trCz };
+function localizeModule(mod, lang) {
+  const tr = CONTENT_TR[lang]?.modules?.[mod.id];
+  return tr ? { ...mod, ...tr } : mod;
+}
+function localizeQuestion(q, lang) {
+  const tr = CONTENT_TR[lang]?.questions?.[q.id];
+  if (!tr) return q;
+  return {
+    ...q,
+    text: tr.text ?? q.text,
+    explanation: tr.explanation ?? q.explanation,
+    options: tr.options?.length === q.options.length ? tr.options : q.options,
+  };
+}
+const LANG_STORAGE_KEY = "greenpath.lang";
+function initialLanguageId() {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved && LANGUAGE_META[saved]) return saved;
+  } catch { /* storage unavailable */ }
+  const nav = (typeof navigator !== "undefined" && navigator.language || "en").slice(0, 2).toLowerCase();
+  const byHtml = Object.entries(LANGUAGE_META).find(([, m]) => m.htmlLang === nav);
+  return byHtml ? byHtml[0] : "en";
+}
+function rememberLanguage(id) {
+  try { localStorage.setItem(LANG_STORAGE_KEY, id); } catch { /* storage unavailable */ }
+}
+
+/* ═══════════════════════════════════════════════════
    ACCOUNTS: Firebase Auth + Firestore, so a username is
    unique across every device, not just one browser. Auth
    needs an email, so usernames are mapped to a fake
@@ -51,15 +98,16 @@ function useIsMobile() {
 const USERNAME_RE = /^[a-z0-9_.-]{3,20}$/;
 function usernameToEmail(username) { return `${username}@gardenquest.local`; }
 
+// Returns an i18n key (see i18n.js), translated where it's shown.
 function friendlyAuthError(err) {
   switch (err?.code) {
-    case "auth/email-already-in-use": return "That username is already taken.";
+    case "auth/email-already-in-use": return "auth.errTaken";
     case "auth/invalid-credential":
     case "auth/wrong-password":
-    case "auth/user-not-found": return "Incorrect username or password.";
-    case "auth/weak-password": return "Password must be at least 6 characters.";
-    case "auth/network-request-failed": return "No internet connection. Please try again.";
-    default: return "Something went wrong. Please try again.";
+    case "auth/user-not-found": return "auth.errIncorrect";
+    case "auth/weak-password": return "auth.errPassword";
+    case "auth/network-request-failed": return "auth.errNetwork";
+    default: return "auth.errGeneric";
   }
 }
 
@@ -95,12 +143,13 @@ function logoutUser() { return signOut(auth); }
 /* ═══════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════ */
+// `label` is each language's own name, so players can always find theirs.
 const LANGUAGES = [
-  { id: "en", label: "English",  flag: "🇬🇧", color: "#8b5cf6" },
-  { id: "gr", label: "Greek",    flag: "🇬🇷", color: "#3b82f6" },
-  { id: "it", label: "Italian",  flag: "🇮🇹", color: "#22c55e" },
-  { id: "ro", label: "Romanian", flag: "🇷🇴", color: "#f59e0b" },
-  { id: "cz", label: "Czech",    flag: "🇨🇿", color: "#ef4444" },
+  { id: "en", label: LANGUAGE_META.en.native, flag: "🇬🇧", color: "#8b5cf6" },
+  { id: "gr", label: LANGUAGE_META.gr.native, flag: "🇬🇷", color: "#3b82f6" },
+  { id: "it", label: LANGUAGE_META.it.native, flag: "🇮🇹", color: "#22c55e" },
+  { id: "ro", label: LANGUAGE_META.ro.native, flag: "🇷🇴", color: "#f59e0b" },
+  { id: "cz", label: LANGUAGE_META.cz.native, flag: "🇨🇿", color: "#ef4444" },
 ];
 
 const CHARACTERS = [
@@ -126,7 +175,14 @@ const MODULES = [
     title: "Wildlife Gardens",
     icon: "🌍",
     color: "#f59e0b",
-    info: "Wildlife gardens are natural or semi-natural spaces where edible plants grow in harmony with local ecosystems, mimicking the layers and biodiversity of a forest with minimal human intervention. Traditional seeds are the hidden power behind these gardens saving, exchanging, and growing diverse local varieties preserves cultural heritage and strengthens climate resilience for generations to come."
+    info: "Wildlife gardens are natural or semi-natural spaces where edible plants grow in harmony with local ecosystems, mimicking the layers and biodiversity of a forest with minimal human intervention. Traditional seeds are the hidden power behind these gardens saving, exchanging, and growing diverse local varieties preserves cultural heritage and strengthens climate resilience for generations to come.",
+    // "DID YOU KNOW (GAME FACTS)" from the CZ info papers (Practice 1 + 2)
+    facts: [
+      "Local food reduces transport emissions significantly.",
+      "Trees, shrubs, and perennial plants help retain water and reduce drought impacts.",
+      "One seed can produce hundreds of new seeds in a single growing season.",
+      "Growing diverse local plants supports pollinators such as bees, butterflies, and other beneficial insects.",
+    ],
   },
   // Topics 3 & 7 on the list: IT Practice 1 (Handmade Sustainable Greenhouses) + IT Practice 2 (biological control against the Woolly aphid)
   // Title/icon/info confirmed against the manager's official info papers ("THEMATIC AREA: Seasonal agriculture
@@ -137,15 +193,27 @@ const MODULES = [
     title: "Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology",
     icon: "💧",
     color: "#06b6d4",
-    info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides."
+    info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides.",
+    // The IT info papers weren't among the provided files; these facts restate the module's own approved explanations.
+    facts: [
+      "Hydroponic greenhouses grow plants without soil, using water and nutrients instead.",
+      "Vertical greenhouses let plants grow upwards, which suits cities, schools and small spaces.",
+      "Ladybirds, lacewings and parasitoid wasps are natural enemies of aphids.",
+    ],
   },
   // Topics 5-6 on the list: RO Practice 2 (Companion planting) + RO Practice 1 (Homemade natural pest control)
   {
     id: 3,
-    title: "ORGANIC PEST CONTROL AND COMPANION PLANTING",
+    title: "Organic Pest Control and Companion Planting",
     icon: "🌿",
     color: "#22c55e",
-    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are enviromentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices."
+    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are environmentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices.",
+    // Restates the module's own approved explanations (the RO Practice 1-2 papers weren't among the provided files).
+    facts: [
+      "In both the Carpathian and Mediterranean regions, a soft soap solution is used to repel aphids.",
+      "Tomatoes planted with basil are more resilient and taste better.",
+      "The strong scent of onions and garlic keeps carrot flies away.",
+    ],
   },
   // Topics 8 & 11 on the list: GR clay pot crafting + stitching reusable bags from old fabrics
   {
@@ -153,7 +221,14 @@ const MODULES = [
     title: "Reusable Alternatives for a Plastic-Free Kitchen",
     icon: "🌱",
     color: "#10b981",
-    info: "Clay pot crafting revives the ancient art of shaping terracotta vessels for food storage durable, breathable containers for grains, legumes and pickles that keep food fresh for longer without a single scrap of plastic. Old clothes and linen scraps get a second life too, stitched into sturdy reusable bags for shopping, produce and bread reviving traditional sewing skills while replacing single-use plastic."
+    info: "Clay pot crafting revives the ancient art of shaping terracotta vessels for food storage durable, breathable containers for grains, legumes and pickles that keep food fresh for longer without a single scrap of plastic. Old clothes and linen scraps get a second life too, stitched into sturdy reusable bags for shopping, produce and bread reviving traditional sewing skills while replacing single-use plastic.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Plastic-Free Kitchen info papers
+    facts: [
+      "In Maramureș, Romania, potters still craft clay jars for pickles and legumes.",
+      "Clay's tiny pores let food breathe, slowing spoilage.",
+      "In Greece, kitchen textiles were once handwoven and given as dowry gifts.",
+      "Folk schools in Iași, Romania, turn fabric scraps into reusable kitchen cloths.",
+    ],
   },
   // Topic 9 on the list: GR Traditional food pickling, sun-drying, and oil-based methods
   {
@@ -161,16 +236,29 @@ const MODULES = [
     title: "Reducing Food Waste",
     icon: "🦋",
     color: "#3b82f6",
-    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. Leftover citrus peels get a second life too: steeped in vinegar for about two weeks, they become a fragrant, all-purpose cleaner that replaces synthetic chemical products."
+    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. These heritage skills need only glass jars, salt, vinegar, oil and plenty of sunshine, and they save the constant electricity that fridges and freezers consume.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 1)
+    facts: [
+      "In Santorini, cherry tomatoes and capers are still sun-dried by youth cooperatives.",
+      "Olives, herbs and vegetables keep for months stored in brine, vinegar or olive oil.",
+      "Europe wastes around 88 million tonnes of food every year.",
+    ],
   },
   // Topic 10 on the list: GR Making kitchen cleaners from citrus peels and vinegar
-  // NOTE: title "Cultural Exchange and Culinary Traditions" doesn't match this topic's actual content either.
+  // Title now follows the info paper's practice name (it used to read "Cultural Exchange and Culinary
+  // Traditions", which is a thematic area, not this topic).
   {
     id: 6,
-    title: "Cultural Exchange and Culinary Traditions",
-    icon: "🍂",
+    title: "Kitchen Cleaners from Citrus Peels and Vinegar",
+    icon: "🍋",
     color: "#8b5cf6",
-    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost."
+    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 2)
+    facts: [
+      "In traditional Greek kitchens, leftover lemon peels were turned into cleaning agents.",
+      "Citrus peel steeped in vinegar for about two weeks makes a natural, all-purpose surface cleaner.",
+      "A Cretan saying prizes knowing the worth of a tomato skin and a lemon peel.",
+    ],
   },
   // Topic 4 on the list (CZ Practice LTTA Romania - Water Irrigation / Greywater Reuse) is merged into this
   // module. Its packaging/greenwashing content isn't one of the 11 listed topics. Title below is a best-effort
@@ -180,16 +268,42 @@ const MODULES = [
     title: "Sustainable Packaging & Water Reuse",
     icon: "♻️",
     color: "#0ea5e9",
-    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint."
+    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint.",
+    facts: [
+      "The Green Dot doesn't always mean packaging is recyclable: it shows the producer pays into a recovery system.",
+      "Greywater from washing, bathing and sinks can be treated and reused for non-drinking purposes such as toilet flushing.",
+    ],
   },
-  // NOT on the list either (seasonal/local eating); kept, moved to the end.
+  // RO info papers 3 + 4 (Institutul Postliceal "Phoenix"): Seasonal and Mindful Cooking: Preserving Cultural
+  // Heritage. Replaces the earlier AI-drafted "Seasonal & Local Eating" placeholder, which had no source material.
   {
     id: 8,
-    title: "Seasonal & Local Eating",
-    icon: "🥕",
+    title: "Seasonal and Mindful Cooking: Preserving Cultural Heritage",
+    icon: "🥫",
     color: "#ec4899",
-    info: "Eating fruits and vegetables when they're in season and grown nearby means less transport, less energy-intensive storage, and produce that's fresher and tastier. Choosing seasonal, local food is one of the simplest everyday ways to shrink a household's carbon footprint."
-  }
+    info: "Ancestral preserving techniques turn seasonal harvests into food for the winter. Romanian silvoița is a sugar-free plum jam, slow-boiled with the skins until thick and poured hot into sterilised jars; zacusca is a spread of roasted eggplants and peppers, onions, tomato juice and spices, simmered slowly and sealed in jars. Using local surplus and reusable jars cuts transport emissions, packaging and food waste.",
+    // "DID YOU KNOW (GAME FACTS)" from RO info papers 3 + 4
+    facts: [
+      "In the Czech Republic, a similar slow-cooking technique is used to make švestková povidla (plum butter).",
+      "In Mediterranean regions, grape must is slowly boiled into a thick, sweet syrup without added sugar.",
+      "In Greece, melitzanosalata is a paste of baked eggplant, garlic, olive oil, lemon or vinegar and herbs.",
+      "In Italy, Sicilian caponata slow-cooks eggplant, tomatoes, onions, peppers, celery, olives and capers.",
+    ],
+  },
+  // LTTA Italy info paper: From Herbs to Traditional Products
+  {
+    id: 9,
+    title: "From Herbs to Traditional Products",
+    icon: "🌼",
+    color: "#a855f7",
+    info: "Wild and garden herbs can be turned into teas, remedies and other traditional products. Sustainable harvesting means collecting only small amounts from abundant plants, using the right parts of each species, and drying herbs properly before storing them in clean, closed and labelled jars, so that plants keep growing for future generations.",
+    // Restates the explanations in the LTTA Italy info paper
+    facts: [
+      "Collecting only small amounts from abundant plant populations lets herbs keep growing and reproducing.",
+      "Depending on the species, leaves, flowers, seeds, roots or stems may be collected.",
+      "Dried herbs keep their aroma longest in tightly closed, labelled glass jars stored somewhere cool, dry and dark.",
+    ],
+  },
 ];
 
 const QUESTIONS = [
@@ -206,7 +320,7 @@ const QUESTIONS = [
     id: 6,
     module: 1,
     text: "Which choice helps reduce food transport emissions?",
-    options: ["Imported packaged food", "Food grown in a local edible whildlife garden"],
+    options: ["Imported packaged food", "Food grown in a local edible wildlife garden"],
     images: [asset("Garden1.png"), asset("Garden2.png")],
     answer: 1,
     explanation: "A diverse garden provides a wide variety of food and seeds while preserving biodiversity, supporting pollinators and wildlife, and helping gardens better adapt to drought, pests, and climate change."
@@ -285,7 +399,7 @@ const QUESTIONS = [
     id: 3,
     module: 3,
     text: "Which companion plants also contribute to improving the taste of the plants they accompany?",
-    options: ["Basil", "Marigold", "Garlic", "Nastutium"],
+    options: ["Basil", "Marigold", "Garlic", "Nasturtium"],
     answer: 0,
     explanation: "Companion planting pairs crops that protect and enhance one another. The classic combination of tomatoes with basil improves both resilience and flavour."
   },
@@ -391,7 +505,7 @@ const QUESTIONS = [
     id: 17,
     module: 6,
     text: "Which natural substance in citrus peel cuts through grease?",
-    options: [" Chlorine", "D-limonene", "Baking powder", "Sugar"],
+    options: ["Chlorine", "D-limonene", "Baking powder", "Sugar"],
     answer: 1,
     explanation: "D-limonene is a natural oil found in citrus peel that dissolves grease and grime effectively, which is why citrus-based cleaners work so well without synthetic degreasers."
   },
@@ -449,52 +563,130 @@ const QUESTIONS = [
     explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
   },
 
-  // MODULE 8: not on the list: Seasonal & Local Eating.
-  // AI-drafted from scratch (no source material existed for this module): flag for the manager to review.
+  // MODULE 8: RO info papers 3 + 4 (Seasonal and Mindful Cooking: Preserving Cultural Heritage).
+  // Replaces the earlier AI-drafted placeholder questions (ids 32-35), which had no source material.
   {
-    id: 32,
+    id: 36,
     module: 8,
-    text: "Which of these has the lowest carbon footprint?",
-    options: ["Berries flown in from overseas in winter", "Local, in-season vegetables from a nearby farm", "Vegetables grown in a heated greenhouse out of season", "Canned imported fruit"],
-    answer: 1,
-    explanation: "Local, in-season produce travels short distances and needs no extra heating or long-term refrigerated storage, so it has a much smaller carbon footprint than food that's imported or grown out of season."
+    text: "What is the method for obtaining sugar-free plum jam?",
+    options: ["Slow cooking", "Sun drying", "Baking", "Cooking over high heat", "Steaming"],
+    answer: 0,
+    explanation: "Silvoița, the Romanian sugar-free plum jam, is made by slowly boiling well-ripened plums, stirring constantly until they shrink into a dense paste, which is then placed hot in sterilised jars."
   },
   {
-    id: 33,
+    id: 37,
     module: 8,
-    text: "Is it TRUE OR FALSE that buying imported fruit year-round is more sustainable than buying local fruit only when it's in season?",
+    text: "Is it TRUE or FALSE that the peel of the fruit is used to prepare sugar-free plum jam?",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "The plums are cooked with their skins. Using the whole fruit preserves nutrients and flavour and avoids waste."
+  },
+  {
+    id: 38,
+    module: 8,
+    text: "What is the most important reason to pass on the tradition?",
+    options: ["To develop sustainable cooking skills", "To save money", "To learn to cook", "To eat together", "To exchange recipes"],
+    answer: 0,
+    explanation: "Passing recipes and practical skills from one generation to another keeps sustainable cooking alive: using local, seasonal produce, preserving surplus for the winter and reusing jars."
+  },
+  {
+    id: 39,
+    module: 8,
+    text: "Is it TRUE or FALSE that carrots are an ingredient of zacusca?",
     options: ["True", "False"],
     answer: 1,
-    explanation: "Imported, out-of-season fruit usually requires long-distance transport, refrigeration or energy-intensive greenhouse growing, all of which increase emissions compared to eating what's locally in season."
+    explanation: "Zacusca is made with eggplants, kapia peppers or Romanian sweet red peppers (gogoșari), onions, tomato juice, sunflower oil and spices. There are no carrots in it."
+  },
+
+  // MODULE 9: LTTA Italy info paper: From Herbs to Traditional Products
+  {
+    id: 40,
+    module: 9,
+    text: "Which picture shows sustainable harvesting of wild herbs?",
+    options: [
+      "Pulling the entire plant out by its roots (from several plants)",
+      "Cutting all flowering stems from a patch (nothing is left to regrow)",
+      "Carefully collecting a small amount from an abundant population",
+    ],
+    images: [asset("herb_harvest_pull.jpg"), asset("herb_harvest_cutall.jpg"), asset("herb_harvest_sustainable.jpg")],
+    answer: 2,
+    explanation: "Collecting only small amounts from abundant plant populations allows herbs to continue growing and reproducing. It helps protect biodiversity and ensures that plants remain available for future generations."
   },
   {
-    id: 34,
-    module: 8,
-    text: "What is one benefit of eating seasonally?",
-    options: ["Food is always more expensive", "Produce is fresher and often more nutritious", "It requires more packaging", "It increases food miles"],
+    id: 41,
+    module: 9,
+    text: "What is one of the main benefits of using herbs in traditional medicine?",
+    options: [
+      "Herbal remedies are always safer and more effective than conventional medicines",
+      "Herbs support health and well-being because they contain naturally occurring beneficial compounds",
+      "All herbs have the same medicinal properties, regardless of their species",
+    ],
+    images: [asset("herb_benefit_safer.jpg"), asset("herb_benefit_compounds.jpg"), asset("herb_benefit_same.jpg")],
     answer: 1,
-    explanation: "Seasonal produce is usually harvested closer to when it's eaten, so it retains more nutrients and flavour than food that's been stored or shipped long distances."
+    explanation: "Herbs contain natural compounds that support health and well-being, for example respiratory health, digestion or liver function. Their specific effects vary according to the plant species, its chemical composition and the way it is prepared and used."
   },
   {
-    id: 35,
-    module: 8,
-    text: "Which shopping habit best supports local, seasonal eating?",
-    options: ["Shopping at a farmers' market for what's currently in season", "Buying whatever fruit you want regardless of season", "Choosing pre-packaged imported produce", "Always picking the cheapest option regardless of origin"],
-    answer: 0,
-    explanation: "Farmers' markets typically sell what's currently in season and grown nearby, making it easy to shop in line with local, low-carbon eating."
+    id: 42,
+    module: 9,
+    text: "Which picture shows the correct way to store a prepared herbal product?",
+    options: [
+      "A closed but unlabelled container",
+      "An open jar exposed to moisture",
+      "A clean, tightly closed and labelled jar, stored away from sunlight",
+    ],
+    images: [asset("herb_store_unlabelled.jpg"), asset("herb_store_open.jpg"), asset("herb_store_labelled.jpg")],
+    answer: 2,
+    explanation: "Storing properly dried herbs in clean, tightly closed and labelled containers, preferably glass jars, preserves their quality, aroma and shelf life. Paper bags can also be used if kept in a cool, dry and dark place, protected from moisture."
+  },
+  {
+    id: 43,
+    module: 9,
+    text: "You have collected more herbs than you need. What is the most sustainable approach?",
+    options: [
+      "Dry all the herbs immediately, even if some will never be used.",
+      "Discard the extra herbs and collect fresh ones when needed.",
+      "Use what you need, preserve or share the surplus with family and friends.",
+    ],
+    answer: 2,
+    explanation: "Using, preserving or sharing surplus herbs reduces waste and makes better use of natural resources. Correctly identified, safely prepared and labelled herbal products also make thoughtful gifts. Sustainable harvesting means collecting only what is needed and letting plants regenerate."
+  },
+  {
+    id: 44,
+    module: 9,
+    text: "Which parts of a herb can be collected for herbal products?",
+    options: [
+      "Only the leaves and flowers, as other parts of herbs are generally unsuitable.",
+      "Leaves, flowers, seeds, roots or stems, depending on the plant species and intended use.",
+      "Any part of a herb, as long as the plant is collected during the flowering season.",
+    ],
+    answer: 1,
+    explanation: "Different herbs have different useful parts. Depending on the species, leaves, flowers, seeds, roots or stems may be collected. Correct identification and knowing which parts are safe to use are essential."
+  },
+  {
+    id: 45,
+    module: 9,
+    text: "Why is it important to dry herbs properly before storing them?",
+    options: [
+      "Drying removes all microorganisms and guarantees that herbs remain safe indefinitely.",
+      "Drying increases the concentration of every beneficial substance found in herbs.",
+      "Drying reduces moisture, helping prevent mould growth and extend shelf life.",
+    ],
+    answer: 2,
+    explanation: "Removing excess moisture limits microbial growth and deterioration. Herbs must still be stored correctly, and their quality decreases over time."
   },
 ];
 
 const PATH_NODES = [
-  { x:50, y:90 }, // 0 = START
-  { x:18, y:82 }, // 1
-  { x:72, y:74 }, // 2
-  { x:24, y:66 }, // 3
-  { x:70, y:58 }, // 4
-  { x:24, y:50 }, // 5
-  { x:68, y:42 }, // 6
-  { x:26, y:34 }, // 7
-  { x:60, y:26 }, // 8 = last module = FINISH
+  { x:50, y:92 }, // 0 = START
+  { x:18, y:84 }, // 1
+  { x:72, y:76 }, // 2
+  { x:24, y:68 }, // 3
+  { x:72, y:60 }, // 4
+  { x:24, y:52 }, // 5
+  { x:70, y:44 }, // 6
+  { x:26, y:36 }, // 7
+  { x:68, y:28 }, // 8
+  { x:42, y:20 }, // 9 = last module = FINISH
 ];
 
 function lerp(a,b,t){ return a+(b-a)*t; }
@@ -507,8 +699,19 @@ function GlobalStyles() {
   return (
     <style>{`
       * { margin:0; padding:0; box-sizing:border-box; }
-      body { font-family:'Nunito','Segoe UI',sans-serif; }
+      body { font-family:'Nunito','Segoe UI',sans-serif; background:#2d7d32; -webkit-tap-highlight-color:transparent; }
       #root { min-height:100vh; }
+      button { font-family:inherit; }
+      .gp-btn:focus-visible, .gp-opt:focus-visible, .gp-node:focus-visible {
+        outline:3px solid #fde047; outline-offset:2px;
+      }
+      .gp-input:focus { border-color:#4ade80 !important; box-shadow:0 0 0 3px rgba(74,222,128,0.18); }
+      .gp-input::placeholder { color:#86a993; }
+      .gp-lang-chip { transition:transform 0.15s, background 0.15s, border-color 0.15s; }
+      .gp-lang-chip:hover { transform:translateY(-2px); }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+      }
 
       @keyframes leafDrift  { 0%,100%{transform:translateY(0) rotate(-8deg)} 50%{transform:translateY(-14px) rotate(8deg)} }
       @keyframes charBob    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
@@ -627,10 +830,10 @@ function WaterfallSVG({ w = 100, h = 170 }) {
 /* ═══════════════════════════════════════════════════
    SHARED UI
 ═══════════════════════════════════════════════════ */
-function Btn({ children, onClick, color="#22c55e", style={}, disabled }) {
+function Btn({ children, onClick, color="#22c55e", style={}, disabled, type="button" }) {
   const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} disabled={disabled}
+    <button type={type} onClick={onClick} disabled={disabled} className="gp-btn"
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{
         background: disabled?"#1e293b":hov?color:color+"cc",
@@ -645,13 +848,14 @@ function Btn({ children, onClick, color="#22c55e", style={}, disabled }) {
 }
 
 function BackBtn({ onClick }) {
+  const t = useT();
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} className="gp-btn" style={{
       background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
       color:"#94a3b8", cursor:"pointer", fontSize:13, fontWeight:700,
       padding:"6px 14px", marginBottom:16, fontFamily:"inherit",
       borderRadius:10, transition:"all 0.15s",
-    }}>← Back</button>
+    }}>{t("common.back")}</button>
   );
 }
 
@@ -676,7 +880,7 @@ function CoinIcon({ size=28, style={} }) {
 function GardenWrap({ children, showWaterfall=true }) {
   return (
     <div style={{
-      minHeight:"100dvh",
+      minHeight:"100dvh", width:"100%",
       background:"linear-gradient(180deg,#6bbde8 0%,#a8ddb5 32%,#4caf50 65%,#2d7d32 100%)",
       display:"flex", alignItems:"center", justifyContent:"center",
       fontFamily:"'Nunito','Segoe UI',sans-serif", padding:16,
@@ -730,10 +934,40 @@ const inputStyle = {
   background:"rgba(255,255,255,0.06)",
   border:"1px solid rgba(74,222,128,0.25)",
   borderRadius:12, padding:"12px 14px",
-  color:"#f0fdf4", fontSize:14, fontFamily:"inherit", outline:"none",
+  color:"#f0fdf4", fontSize:16, fontFamily:"inherit", outline:"none",
+  width:"100%", transition:"border-color 0.15s, box-shadow 0.15s",
 };
 
-function AuthScreen({ onAuth }) {
+/* Compact flag picker, so the very first screens are already in the player's language. */
+function LanguageChips({ value, onChange }) {
+  const t = useT();
+  return (
+    <div role="group" aria-label={t("lang.title")}
+      style={{ display:"flex", justifyContent:"center", gap:6, flexWrap:"wrap", marginBottom:18 }}>
+      {LANGUAGES.map(l => {
+        const active = l.id === value;
+        return (
+          <button key={l.id} type="button" className="gp-btn gp-lang-chip"
+            onClick={() => onChange(l)} aria-pressed={active} title={l.label}
+            style={{
+              display:"flex", alignItems:"center", gap:5, cursor:"pointer",
+              background: active ? `${l.color}33` : "rgba(255,255,255,0.05)",
+              border: `1.5px solid ${active ? l.color : "rgba(255,255,255,0.12)"}`,
+              color: active ? "#f0fdf4" : "#94a3b8",
+              borderRadius:999, padding:"4px 10px 4px 7px", fontSize:12, fontWeight:800,
+            }}>
+            <span style={{ fontSize:16, lineHeight:1 }}>{l.flag}</span>
+            {l.id === "gr" ? "EL" : l.id === "cz" ? "CS" : l.id.toUpperCase()}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function AuthScreen({ onAuth, languageId, onLanguageChange }) {
+  const t = useT();
+  const [showPw, setShowPw] = useState(false);
   const [mode, setMode] = useState("register"); // "register" | "login"
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -748,15 +982,15 @@ function AuthScreen({ onAuth }) {
 
     if (mode === "register") {
       if (!fullName.trim() || !uname || !password) {
-        setError("Please fill in all fields.");
+        setError("auth.errFill");
         return;
       }
       if (!USERNAME_RE.test(uname)) {
-        setError("Username must be 3-20 characters: letters, numbers, dots, hyphens or underscores.");
+        setError("auth.errUsername");
         return;
       }
       if (password.length < 6) {
-        setError("Password must be at least 6 characters.");
+        setError("auth.errPassword");
         return;
       }
       setBusy(true);
@@ -770,7 +1004,7 @@ function AuthScreen({ onAuth }) {
       }
     } else {
       if (!uname || !password) {
-        setError("Please fill in all fields.");
+        setError("auth.errFill");
         return;
       }
       setBusy(true);
@@ -788,58 +1022,72 @@ function AuthScreen({ onAuth }) {
   return (
     <GardenWrap>
       <Panel>
+        <LanguageChips value={languageId} onChange={onLanguageChange}/>
         <div style={{ textAlign:"center", marginBottom:22 }}>
-          <div style={{ fontSize:44, marginBottom:8 }}>🔐</div>
+          <div style={{ fontSize:44, marginBottom:8 }}>{mode==="register" ? "🌱" : "🔐"}</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
-            {mode==="register" ? "Create Your Account" : "Welcome Back"}
+            {mode==="register" ? t("auth.registerTitle") : t("auth.loginTitle")}
           </h1>
           <p style={{ color:"#86efac", fontSize:13, marginTop:4 }}>
-            {mode==="register"
-              ? "We'll use your name on your completion certificate"
-              : "Log in to continue your garden journey"}
+            {mode==="register" ? t("auth.registerSub") : t("auth.loginSub")}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:12 }}>
           {mode==="register" && (
             <input
-              type="text" placeholder="Full name (for your certificate)"
+              type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
+              autoComplete="name" className="gp-input"
               value={fullName} onChange={e=>setFullName(e.target.value)}
               style={inputStyle}
             />
           )}
           <input
-            type="text" placeholder="Username"
+            type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
+            autoComplete="username" className="gp-input" spellCheck={false}
             value={username} onChange={e=>setUsername(e.target.value)}
             style={inputStyle} autoCapitalize="none"
           />
-          <input
-            type="password" placeholder="Password"
-            value={password} onChange={e=>setPassword(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={{ position:"relative" }}>
+            <input
+              type={showPw ? "text" : "password"} placeholder={t("auth.password")} aria-label={t("auth.password")}
+              autoComplete={mode==="register" ? "new-password" : "current-password"} className="gp-input"
+              value={password} onChange={e=>setPassword(e.target.value)}
+              style={{ ...inputStyle, paddingRight:46 }}
+            />
+            <button type="button" className="gp-btn" onClick={()=>setShowPw(v=>!v)}
+              aria-label={showPw ? t("auth.hidePassword") : t("auth.showPassword")}
+              title={showPw ? t("auth.hidePassword") : t("auth.showPassword")}
+              style={{ position:"absolute", right:6, top:"50%", transform:"translateY(-50%)",
+                background:"none", border:"none", cursor:"pointer", fontSize:17, padding:"4px 8px",
+                opacity: showPw ? 1 : 0.6, borderRadius:8 }}>
+              {showPw ? "🙈" : "👁️"}
+            </button>
+          </div>
 
           {error && (
-            <div style={{ color:"#fca5a5", fontSize:13, textAlign:"center" }}>{error}</div>
+            <div role="alert" style={{ color:"#fecaca", fontSize:13, textAlign:"center",
+              background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.35)",
+              borderRadius:10, padding:"8px 10px", lineHeight:1.45 }}>{t(error)}</div>
           )}
 
-          <Btn onClick={()=>{}} disabled={busy} style={{ width:"100%", marginTop:6 }} color="#22c55e">
-            {busy ? "Please wait…" : mode==="register" ? "Create Account 🌱" : "Log In 🌿"}
+          <Btn type="submit" disabled={busy} style={{ width:"100%", marginTop:6 }} color="#22c55e">
+            {busy ? t("auth.wait") : mode==="register" ? t("auth.create") : t("auth.login")}
           </Btn>
         </form>
 
         <div style={{ textAlign:"center", marginTop:16 }}>
-          <button
+          <button type="button" className="gp-btn"
             onClick={()=>{ setMode(m=>m==="register"?"login":"register"); setError(""); }}
             style={{ background:"none", border:"none", color:"#86efac",
               fontSize:13, cursor:"pointer", textDecoration:"underline", fontFamily:"inherit" }}
           >
-            {mode==="register" ? "Already have an account? Log in" : "New here? Create an account"}
+            {mode==="register" ? t("auth.toLogin") : t("auth.toRegister")}
           </button>
         </div>
 
-        <p style={{ marginTop:18, color:"#475569", fontSize:11, textAlign:"center", lineHeight:1.5 }}>
-          Your account works on any device: just log in with the same username and password.
+        <p style={{ marginTop:18, color:"#86a993", fontSize:11, textAlign:"center", lineHeight:1.5 }}>
+          {t("auth.anyDevice")}
         </p>
       </Panel>
     </GardenWrap>
@@ -850,17 +1098,26 @@ function AuthScreen({ onAuth }) {
    LOADING SCREEN
 ═══════════════════════════════════════════════════ */
 function LoadingScreen({ onDone }) {
+  const t = useT();
   const [progress, setProgress] = useState(0);
 
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
   useEffect(() => {
+    let doneTimer;
     const id = setInterval(() => {
       setProgress(p => {
         const next = p + 1.4;
-        if (next >= 100) { clearInterval(id); setTimeout(()=>onDone(), 600); return 100; }
+        if (next >= 100) {
+          clearInterval(id);
+          clearTimeout(doneTimer);
+          doneTimer = setTimeout(()=>onDoneRef.current(), 600);
+          return 100;
+        }
         return next;
       });
     }, 38);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); clearTimeout(doneTimer); };
   }, []);
 
   return (
@@ -893,9 +1150,13 @@ function LoadingScreen({ onDone }) {
         <div style={{ fontSize:56, marginBottom:6, filter:"drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }}>🌿</div>
         <h1 style={{ fontSize:38, fontWeight:900, color:"white",
           textShadow:"0 3px 16px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.4)",
-          letterSpacing:-0.5, lineHeight:1.1, marginBottom:8 }}>Garden Quest</h1>
+          letterSpacing:-0.5, lineHeight:1.1, marginBottom:6 }}>GreenPath</h1>
+        <p style={{ color:"#f0fdf4", fontSize:13, fontWeight:800, opacity:0.9, marginBottom:4,
+          textShadow:"0 1px 6px rgba(0,0,0,0.35)" }}>
+          {t("brand.tagline")}
+        </p>
         <p style={{ color:"#dcfce7", fontSize:14, fontWeight:600, opacity:0.85 }}>
-          Your journey through the garden begins…
+          {t("loading.tagline")}
         </p>
       </div>
 
@@ -948,9 +1209,10 @@ function LoadingScreen({ onDone }) {
 
       <div style={{ position:"relative", zIndex:1, width:280, textAlign:"center" }}>
         <div style={{ fontSize:12, color:"#a7f3d0", fontWeight:700, marginBottom:8, letterSpacing:1 }}>
-          LOADING…
+          {t("loading.label")}
         </div>
-        <div style={{ height:22, borderRadius:999,
+        <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}
+          style={{ height:22, borderRadius:999,
           background:"rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.35)",
           overflow:"hidden", position:"relative" }}>
           <div style={{
@@ -986,23 +1248,27 @@ function LoadingScreen({ onDone }) {
 /* ═══════════════════════════════════════════════════
    LANGUAGE SCREEN
 ═══════════════════════════════════════════════════ */
-function LanguageScreen({ onSelect }) {
+function LanguageScreen({ onSelect, onBack, currentId }) {
+  const t = useT();
   return (
     <GardenWrap>
       <Panel>
+        {onBack && <BackBtn onClick={onBack}/>}
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <div style={{ fontSize:46, marginBottom:8 }}>🌍</div>
           <h1 style={{ fontSize:22, fontWeight:900, marginBottom:4, color:"#f0fdf4" }}>
-            Choose Your Language
+            {t("lang.title")}
           </h1>
-          <p style={{ color:"#86efac", fontSize:13 }}>Select a language to continue</p>
+          <p style={{ color:"#86efac", fontSize:13 }}>{t("lang.sub")}</p>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
           {LANGUAGES.map(lang=>(
-            <div key={lang.id} onClick={()=>onSelect(lang)}
+            <button type="button" className="gp-btn" key={lang.id} onClick={()=>onSelect(lang)}
+              aria-current={lang.id===currentId ? "true" : undefined}
               style={{
-                background:`${lang.color}14`,
-                border:`2px solid ${lang.color}44`,
+                width:"100%", textAlign:"left", color:"inherit", fontFamily:"inherit",
+                background:lang.id===currentId ? `${lang.color}30` : `${lang.color}14`,
+                border:`2px solid ${lang.id===currentId ? lang.color : lang.color+"44"}`,
                 borderRadius:16, padding:"14px 18px", cursor:"pointer",
                 display:"flex", alignItems:"center", gap:14, transition:"all 0.2s",
               }}
@@ -1012,15 +1278,17 @@ function LanguageScreen({ onSelect }) {
                 e.currentTarget.style.borderColor=lang.color;
               }}
               onMouseLeave={e=>{
-                e.currentTarget.style.background=`${lang.color}14`;
+                e.currentTarget.style.background=lang.id===currentId ? `${lang.color}30` : `${lang.color}14`;
                 e.currentTarget.style.transform="translateX(0)";
-                e.currentTarget.style.borderColor=`${lang.color}44`;
+                e.currentTarget.style.borderColor=lang.id===currentId ? lang.color : `${lang.color}44`;
               }}
             >
               <span style={{ fontSize:32 }}>{lang.flag}</span>
-              <span style={{ fontWeight:800, fontSize:16, color:"#f0fdf4" }}>{lang.label}</span>
-              <span style={{ marginLeft:"auto", color:"#64748b", fontSize:18 }}>›</span>
-            </div>
+              <span lang={LANGUAGE_META[lang.id].htmlLang} style={{ fontWeight:800, fontSize:16, color:"#f0fdf4" }}>{lang.label}</span>
+              <span style={{ marginLeft:"auto", color:lang.id===currentId ? "#4ade80" : "#64748b", fontSize:18 }}>
+                {lang.id===currentId ? "✓" : "›"}
+              </span>
+            </button>
           ))}
         </div>
       </Panel>
@@ -1030,15 +1298,14 @@ function LanguageScreen({ onSelect }) {
 
 /*AristotleIntro*/
 
-function AristotleIntro({ module, onStart }) {
+function AristotleIntro({ module, questionCount, onStart, onBack }) {
+  const t = useT();
   const [AristotleIn, setAristotleIn] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
 
+  // The component is keyed by module id, so state starts fresh for every module.
   useEffect(() => {
-    setAristotleIn(false);
-    setShowCloud(false);
-    setCanProceed(false);
     const t1 = setTimeout(() => setAristotleIn(true), 250);
     const t2 = setTimeout(() => setShowCloud(true), 1400);
     const t3 = setTimeout(() => setCanProceed(true), 1400 + 2500); // stays locked ~2.5s after text appears
@@ -1048,6 +1315,7 @@ function AristotleIntro({ module, onStart }) {
   return (
     <GardenWrap>
       <Panel>
+        {onBack && <BackBtn onClick={onBack}/>}
         <div style={{ textAlign: "center", marginBottom: 14 }}>
           <div style={{
             display:"inline-block", background:`${module.color}22`,
@@ -1055,12 +1323,17 @@ function AristotleIntro({ module, onStart }) {
             padding:"4px 14px", marginBottom:10,
           }}>
             <span style={{ color: module.color, fontWeight:900, fontSize:12, letterSpacing:0.5 }}>
-              {module.icon} MODULE {module.id}
+              {module.icon} {t("intro.module", { n: module.id })}
             </span>
           </div>
           <h2 style={{ color: "#fbbf24", fontWeight:900, fontSize:19, lineHeight:1.3 }}>
             {module.title}
           </h2>
+          {questionCount > 0 && (
+            <div style={{ color:"#86efac", fontSize:12, fontWeight:700, marginTop:4 }}>
+              {t("intro.questions", { n: questionCount })}
+            </div>
+          )}
         </div>
 
         {/* Aristotle appears */}
@@ -1090,7 +1363,7 @@ function AristotleIntro({ module, onStart }) {
                 textTransform:"uppercase", letterSpacing:1,
                 display:"flex", alignItems:"center", gap:6, justifyContent:"center",
               }}>
-                📜 Aristotle explains…
+                📜 {t("intro.explains")}
               </div>
               {module.info}
             </div>
@@ -1113,9 +1386,31 @@ function AristotleIntro({ module, onStart }) {
           </div>
         </div>
 
+        {/* "Did you know?" game facts from the info papers */}
+        {showCloud && module.facts?.length > 0 && (
+          <div style={{
+            background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.35)",
+            borderRadius:16, padding:"12px 14px", marginBottom:18,
+            animation:"panelSlideUp 0.5s ease",
+          }}>
+            <div style={{ color:"#fbbf24", fontWeight:900, fontSize:12, letterSpacing:0.6,
+              textTransform:"uppercase", marginBottom:8 }}>
+              💡 {t("intro.didYouKnow")}
+            </div>
+            <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:7 }}>
+              {module.facts.map((f,i)=>(
+                <li key={i} style={{ display:"flex", gap:8, color:"#e2e8f0", fontSize:13, lineHeight:1.5 }}>
+                  <span style={{ color:module.color, flexShrink:0 }}>●</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div style={{ textAlign: "center" }}>
-          <Btn onClick={onStart} color="#fbbf24" disabled={!canProceed}>
-            {canProceed ? "Begin the Quest 🌿" : "Reading… ⏳"}
+          <Btn onClick={onStart} color="#fbbf24" disabled={!canProceed} style={{ minWidth:220 }}>
+            {canProceed ? t("intro.begin") : t("intro.reading")}
           </Btn>
         </div>
       </Panel>
@@ -1126,8 +1421,9 @@ function AristotleIntro({ module, onStart }) {
 /* ═══════════════════════════════════════════════════
    CHARACTER SCREEN
 ═══════════════════════════════════════════════════ */
-function CharacterScreen({ language, onSelect, onBack }) {
-  const [idx,     setIdx]     = useState(0);
+function CharacterScreen({ language, initialId, onSelect, onBack }) {
+  const t = useT();
+  const [idx,     setIdx]     = useState(()=>Math.max(0, CHARACTERS.findIndex(c=>c.id===initialId)));
   const [animDir, setAnimDir] = useState(null);
   const [animKey, setAnimKey] = useState(0);
   const touchStartX = useRef(null);
@@ -1151,15 +1447,15 @@ function CharacterScreen({ language, onSelect, onBack }) {
       <Panel>
         <BackBtn onClick={onBack}/>
         <div style={{ textAlign:"center", marginBottom:20 }}>
-          <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>Choose Your Character</h1>
+          <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>{t("char.title")}</h1>
           <p style={{ color:"#86efac", fontSize:13, marginTop:3 }}>
-            {language.flag} {language.label} · Swipe or use arrows to browse
+            {language.flag} {language.label} · {t("char.browse")}
           </p>
         </div>
 
         <div style={{ position:"relative" }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <button onClick={prev} style={{
-            position:"absolute", left:-16, top:"50%", transform:"translateY(-50%)",
+          <button type="button" className="gp-btn" onClick={prev} aria-label={t("char.prev")} style={{
+            position:"absolute", left:-10, top:"50%", transform:"translateY(-50%)",
             width:38, height:38, borderRadius:"50%", zIndex:10,
             background:"rgba(74,222,128,0.15)", border:"2px solid rgba(74,222,128,0.35)",
             color:"#4ade80", fontSize:20, cursor:"pointer",
@@ -1181,16 +1477,16 @@ function CharacterScreen({ language, onSelect, onBack }) {
               <div style={{
                 display:"inline-block", background:`${c.color}22`, border:`1px solid ${c.color}55`,
                 color:c.color, fontWeight:700, fontSize:12, borderRadius:8, padding:"3px 10px", marginBottom:10,
-              }}>{c.culture}</div>
+              }}>{t(`culture.${c.culture}`)}</div>
               <div style={{ color:"#94a3b8", fontSize:13, fontStyle:"italic",
                 background:"rgba(255,255,255,0.04)", borderRadius:12, padding:"8px 12px" }}>
-                "{c.bubble.idle}"
+                "{t(`char.${c.id}.idle`)}"
               </div>
             </div>
           </div>
 
-          <button onClick={next} style={{
-            position:"absolute", right:-16, top:"50%", transform:"translateY(-50%)",
+          <button type="button" className="gp-btn" onClick={next} aria-label={t("char.next")} style={{
+            position:"absolute", right:-10, top:"50%", transform:"translateY(-50%)",
             width:38, height:38, borderRadius:"50%", zIndex:10,
             background:"rgba(74,222,128,0.15)", border:"2px solid rgba(74,222,128,0.35)",
             color:"#4ade80", fontSize:20, cursor:"pointer",
@@ -1200,14 +1496,16 @@ function CharacterScreen({ language, onSelect, onBack }) {
 
         <div style={{ display:"flex", justifyContent:"center", gap:8, margin:"18px 0 20px" }}>
           {CHARACTERS.map((ch,i)=>(
-            <div key={i} onClick={()=>goTo(i,i>idx?"left":"right")}
-              style={{ width:i===idx?22:8, height:8, borderRadius:4, cursor:"pointer",
+            <button type="button" className="gp-btn" key={ch.id} aria-label={ch.name}
+              aria-current={i===idx ? "true" : undefined}
+              onClick={()=>i!==idx&&goTo(i,i>idx?"left":"right")}
+              style={{ width:i===idx?22:8, height:8, borderRadius:4, cursor:"pointer", border:"none", padding:0,
                 background:i===idx?c.color:"#334155", transition:"all 0.3s" }}/>
           ))}
         </div>
 
         <Btn onClick={()=>onSelect(c)} style={{ width:"100%" }} color={c.color}>
-          🌿 Start the Game with {c.name}!
+          {t("char.start", { name: c.name })}
         </Btn>
       </Panel>
     </GardenWrap>
@@ -1455,8 +1753,8 @@ function MapSVG({ completedModules }) {
 /* ═══════════════════════════════════════════════════
    MAP SCREEN
 ═══════════════════════════════════════════════════ */
-function MapScreen({ language, character, completedModules, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout }) {
-  const [charNode,        setCharNode]        = useState(prevCompleted);
+function MapScreen({ language, character, modules = MODULES, completedModules, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout, onChangeLanguage }) {
+  const t = useT();
   const [charPos,         setCharPos]         = useState(PATH_NODES[prevCompleted]);
   const [isWalking,       setIsWalking]       = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -1478,14 +1776,6 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     return { x:Math.min(Math.max(x,-ms),ms), y:Math.min(Math.max(y,-ms),ms) };
   }
 
-  useEffect(() => {
-    if (completedModules <= prevCompleted) return;
-    const queue = [];
-    for (let i=prevCompleted+1; i<=completedModules; i++) queue.push(i);
-    stepQueue.current = queue;
-    walkNextStep();
-  }, []);
-
   function walkNextStep() {
     if (stepQueue.current.length===0) {
       setIsWalking(false);
@@ -1498,7 +1788,6 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     const target = stepQueue.current.shift();
     animateTo(currentNodeRef.current, target, ()=>{
       currentNodeRef.current = target;
-      setCharNode(target);
       walkNextStep();
     });
   }
@@ -1519,6 +1808,16 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     animRef.current=requestAnimationFrame(step);
   }
   useEffect(()=>()=>cancelAnimationFrame(animRef.current),[]);
+
+  // Walk the character from its previous node to the newly unlocked one, once on mount.
+  useEffect(() => {
+    if (completedModules <= prevCompleted) return;
+    const queue = [];
+    for (let i=prevCompleted+1; i<=completedModules; i++) queue.push(i);
+    stepQueue.current = queue;
+    walkNextStep();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only
+  }, []);
 
   function onWheel(e) {
     e.preventDefault();
@@ -1562,6 +1861,7 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     const el=mapContainerRef.current; if(!el) return;
     el.addEventListener("wheel",onWheel,{passive:false});
     return ()=>el.removeEventListener("wheel",onWheel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- listener only uses functional state updates
   },[]);
 
   function zoomIn()    { setZoom(z=>{ const nz=clampZoom(z+0.25); setPan(p=>clampPan(p.x,p.y,nz)); return nz; }); }
@@ -1575,18 +1875,27 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
         <div style={{ padding:"16px 20px 12px", borderBottom:"1px solid rgba(74,222,128,0.12)" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <BackBtn onClick={onBack}/>
-            <button onClick={onLogout} style={{
-              background:"none", border:"none", color:"#f87171", fontSize:12,
-              cursor:"pointer", textDecoration:"underline", fontFamily:"inherit", marginBottom:16,
-            }}>Log out</button>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+              <button type="button" className="gp-btn" onClick={onChangeLanguage}
+                aria-label={t("map.changeLang")} title={t("map.changeLang")}
+                style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
+                  borderRadius:10, padding:"5px 10px", cursor:"pointer", fontSize:13, color:"#cbd5e1",
+                  fontWeight:800, display:"flex", alignItems:"center", gap:5 }}>
+                <span style={{ fontSize:15 }}>{language.flag}</span> 🌐
+              </button>
+              <button type="button" className="gp-btn" onClick={onLogout} style={{
+                background:"none", border:"none", color:"#f87171", fontSize:12,
+                cursor:"pointer", textDecoration:"underline", fontFamily:"inherit",
+              }}>{t("map.logout")}</button>
+            </div>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <img src={character.idle} alt={character.name}
               style={{ width:42, height:56, objectFit:"contain", flexShrink:0 }}/>
             <div style={{ flex:1 }}>
-              <div style={{ fontWeight:900, fontSize:15, color:"#f0fdf4" }}>{character.name}'s Garden Journey</div>
+              <div style={{ fontWeight:900, fontSize:15, color:"#f0fdf4" }}>{t("map.journey", { name: character.name })}</div>
               <div style={{ color:"#86efac", fontSize:12 }}>
-                {language.flag} {language.label} · {completedModules}/{MODULES.length} completed
+                {language.flag} {language.label} · {t("map.completed", { done: completedModules, total: MODULES.length })}
               </div>
             </div>
             <div style={{ width:80 }}>
@@ -1622,8 +1931,9 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
             <MapSVG completedModules={completedModules}/>
 
             {/* Module nodes */}
-            {MODULES.map((mod,i)=>(
+            {modules.map((mod,i)=>(
               <MapNode key={mod.id} mod={mod} node={PATH_NODES[i+1]}
+                label={completedModules<i ? t("map.moduleLocked",{ n: mod.id }) : `${t("map.module",{ n: mod.id })}: ${mod.title}`}
                 done={completedModules>i} current={completedModules===i}
                 locked={completedModules<i}
                 onClick={()=>!isWalking&&completedModules>=i&&onStartModule(mod)}/>
@@ -1635,7 +1945,7 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
               fontSize:20, zIndex:6, filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.6))" }}>🏁</div>
             <div style={{ position:"absolute", left:`${PATH_NODES[0].x}%`, top:`${PATH_NODES[0].y+6}%`,
               transform:"translate(-50%,-50%)", fontSize:9, color:"#ffe066", fontWeight:900, zIndex:6,
-              letterSpacing:1, textShadow:"0 1px 4px rgba(0,0,0,0.8)" }}>START</div>
+              letterSpacing:1, textShadow:"0 1px 4px rgba(0,0,0,0.8)" }}>{t("map.start")}</div>
 
             {/* Walking character */}
             <div style={{
@@ -1673,8 +1983,8 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
 
           {/* Zoom controls */}
           <div style={{ position:"absolute",bottom:12,right:12,display:"flex",flexDirection:"column",gap:6,zIndex:30 }}>
-            {[{label:"+",fn:zoomIn},{label:"⟳",fn:zoomReset},{label:"−",fn:zoomOut}].map(({label,fn})=>(
-              <button key={label} onClick={fn} style={{
+            {[{label:"+",fn:zoomIn,aria:t("map.zoomIn")},{label:"⟳",fn:zoomReset,aria:t("map.zoomReset")},{label:"−",fn:zoomOut,aria:t("map.zoomOut")}].map(({label,fn,aria})=>(
+              <button type="button" className="gp-btn" key={label} onClick={fn} aria-label={aria} title={aria} style={{
                 width:36,height:36,borderRadius:10,
                 background:"rgba(15,30,15,0.85)",border:"1.5px solid rgba(74,222,128,0.3)",
                 color:"#86efac",fontSize:16,fontWeight:900,cursor:"pointer",
@@ -1687,22 +1997,22 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
             background:"rgba(15,30,15,0.7)",borderRadius:8,padding:"3px 9px",
             fontSize:10,color:"#4ade80",border:"1px solid rgba(74,222,128,0.25)",
             backdropFilter:"blur(8px)",zIndex:30 }}>
-            {Math.round(zoom*100)}% · scroll or pinch to zoom
+            {Math.round(zoom*100)}% · {t("map.zoomHint")}
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ padding:"10px 20px",borderTop:"1px solid rgba(74,222,128,0.12)",textAlign:"center" }}>
-          <p style={{ color:"#6b7280", fontSize:12 }}>
-            {isWalking&&`${character.name} is walking through the garden…`}
-            {!isWalking&&completedModules===0&&"👆 Tap Module 1 to begin, the Aristotle is waiting!"}
-            {!isWalking&&completedModules>0&&completedModules<MODULES.length&&"The Aristotle awaits your next lesson! 👆"}
-            {!isWalking&&completedModules===MODULES.length&&"🏆 You've mastered the entire garden journey!"}
+          <p aria-live="polite" style={{ color:"#9ca3af", fontSize:12 }}>
+            {isWalking&&t("map.walking", { name: character.name })}
+            {!isWalking&&completedModules===0&&t("map.tapFirst")}
+            {!isWalking&&completedModules>0&&completedModules<MODULES.length&&t("map.next")}
+            {!isWalking&&completedModules>=MODULES.length&&t("map.done")}
           </p>
-          {completedModules===MODULES.length && (
-            <div style={{ marginTop:10, display:"flex", gap:8, justifyContent:"center" }}>
-              <Btn onClick={onViewCertificate} color="#fbbf24">🏆 View Certificate</Btn>
-              <Btn onClick={onPlayAgain} color="#3b82f6">🔄 Play Again</Btn>
+          {completedModules>=MODULES.length && (
+            <div style={{ marginTop:10, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+              <Btn onClick={onViewCertificate} color="#fbbf24">{t("map.viewCert")}</Btn>
+              <Btn onClick={onPlayAgain} color="#3b82f6">{t("map.playAgain")}</Btn>
             </div>
           )}
         </div>
@@ -1712,17 +2022,19 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
 }
 
 /* Map node */
-function MapNode({ mod, node, done, current, locked, onClick }) {
+function MapNode({ mod, node, done, current, locked, onClick, label }) {
   const [hov, setHov] = useState(false);
   const ring = done?"#4ade80":current?"#fbbf24":"#6b8f4a";
   const bg   = done?"linear-gradient(135deg,#166534,#22c55e)"
     :current?"linear-gradient(135deg,#78350f,#d97706)"
     :"linear-gradient(135deg,#1c3a10,#2d5a1b)";
   return (
-    <div onClick={onClick}
+    <button type="button" className="gp-node" onClick={onClick} disabled={locked}
+      aria-label={label} title={label}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ position:"absolute", left:`${node.x}%`, top:`${node.y}%`,
-        transform:"translate(-50%,-50%)", cursor:locked?"not-allowed":"pointer", zIndex:5 }}>
+        transform:"translate(-50%,-50%)", cursor:locked?"not-allowed":"pointer", zIndex:5,
+        background:"none", border:"none", padding:0, borderRadius:"50%", color:"inherit" }}>
       {(current||(!locked&&hov))&&(
         <div style={{ position:"absolute",width:68,height:68,borderRadius:"50%",
           top:"50%",left:"50%",transform:"translate(-50%,-50%)",
@@ -1743,13 +2055,25 @@ function MapNode({ mod, node, done, current, locked, onClick }) {
         border:`1px solid ${done?"#4ade8044":current?"#fbbf2444":"#3a5a2044"}` }}>
         M{mod.id}
       </div>
-    </div>
+    </button>
   );
 }
 /* ═══════════════════════════════════════════════════
    GAME SCREEN: cinematic encounter + quiz
 ═══════════════════════════════════════════════════ */
-function GameScreen({ mod, character, questions, onFinish }) {
+// Random permutation of 0..n-1 (Fisher-Yates).
+function randomPermutation(n) {
+  const idx = Array.from({ length:n }, (_,i)=>i);
+  for (let i=n-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [idx[i],idx[j]]=[idx[j],idx[i]];
+  }
+  return idx;
+}
+const OPTION_LETTERS = ["A","B","C","D","E","F"];
+
+function GameScreen({ mod, character, questions, onFinish, onExit }) {
+  const t = useT();
   const isMobile = useIsMobile();
   const [phase,     setPhase]     = useState("encounter");
   const [idx,       setIdx]       = useState(0);
@@ -1763,21 +2087,18 @@ function GameScreen({ mod, character, questions, onFinish }) {
   const [animKey,   setAnimKey]   = useState(0);
   const timers = useRef([]);
 
-const shuffled = useMemo(()=>questions.map(q=>{
-  const hasImages = Array.isArray(q.images);
-  const pairs = q.options.map((opt,i)=>({ opt, img: hasImages?q.images[i]:null }));
-  const correctPair = pairs[q.answer];
-  for (let i=pairs.length-1;i>0;i--) {
-    const j=Math.floor(Math.random()*(i+1));
-    [pairs[i],pairs[j]]=[pairs[j],pairs[i]];
-  }
-  return {
-    ...q,
-    options: pairs.map(p=>p.opt),
-    images: hasImages ? pairs.map(p=>p.img) : null,
-    answer: pairs.indexOf(correctPair),
-  };
-}),[questions]);
+  // Option order is shuffled once per play-through (images stay paired with their captions)
+  // and the correct answer's index is remapped to match.
+  const [perms] = useState(()=>questions.map(q=>randomPermutation(q.options.length)));
+  const shuffled = useMemo(()=>questions.map((q,qi)=>{
+    const perm = perms[qi] || q.options.map((_,i)=>i);
+    return {
+      ...q,
+      options: perm.map(i=>q.options[i]),
+      images: Array.isArray(q.images) ? perm.map(i=>q.images[i]) : null,
+      answer: perm.indexOf(q.answer),
+    };
+  }),[questions, perms]);
 
   const q     = shuffled[idx];
   const total = shuffled.length;
@@ -1786,7 +2107,6 @@ const shuffled = useMemo(()=>questions.map(q=>{
 
   useEffect(()=>{
     if (phase!=="encounter") return;
-    setAristotleIn(false); setShowCloud(false);
     clearTimers();
     const t1=setTimeout(()=>setAristotleIn(true),  300);
     const t2=setTimeout(()=>setShowCloud(true), 2200);
@@ -2121,10 +2441,21 @@ function handleNext() {
         padding:"0 16px",zIndex:20 }}>
         <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
           color:"#86efac",fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
-          border:"1px solid rgba(74,222,128,0.2)" }}>Q {idx+1}/{total}</div>
-        <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
-          fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
-          border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24" }}>⭐ {score}</div>
+          border:"1px solid rgba(74,222,128,0.2)" }}>{t("game.q", { n: idx+1, total })}</div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
+            fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
+            border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24" }}>⭐ {score}</div>
+          {onExit && (
+            <button type="button" className="gp-btn"
+              onClick={()=>{ if (window.confirm(t("game.exitConfirm"))) { clearTimers(); onExit(); } }}
+              style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
+                fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",cursor:"pointer",
+                border:"1px solid rgba(255,255,255,0.18)",color:"#e2e8f0" }}>
+              {t("game.exit")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ═══ ENCOUNTER PHASE ═══ */}
@@ -2181,7 +2512,7 @@ function handleNext() {
         <div style={{ color:"#7c3aed",fontSize:11,fontWeight:900,
           marginBottom:8,textTransform:"uppercase",letterSpacing:1.2,
           display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
-          <span>📜</span> The Aristotle asks…
+          <span>📜</span> {t("game.asksCloud")}
         </div>
         <div style={{ color:"#1e293b",fontSize:15,fontWeight:800,lineHeight:1.6 }}>
           {q.text}
@@ -2210,12 +2541,12 @@ function handleNext() {
 
     {/* Skip */}
     <div style={{ position:"absolute",bottom:18,right:16 }}>
-      <button onClick={()=>{ clearTimers(); setAristotleIn(true); setShowCloud(true);
-        setTimeout(()=>setPhase("question"),400); }}
+      <button type="button" className="gp-btn" onClick={()=>{ clearTimers(); setAristotleIn(true); setShowCloud(true);
+        timers.current.push(setTimeout(()=>setPhase("question"),400)); }}
         style={{ background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.2)",
           color:"#94a3b8",fontSize:11,cursor:"pointer",borderRadius:10,
           padding:"6px 12px",fontFamily:"inherit" }}>
-        Skip intro ›
+        {t("game.skip")}
       </button>
     </div>
   </div>
@@ -2243,10 +2574,11 @@ function handleNext() {
               <div style={{ color:character.color,fontWeight:900,fontSize:11,
                 background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
-              <div style={{ color:"#94a3b8",fontSize:10,textAlign:isMobile?"left":"center",
-                marginTop:6,fontStyle:"italic",padding:"0 4px",lineHeight:1.4,
+              <div style={{ color:"#e2e8f0",fontSize:10,textAlign:isMobile?"left":"center",
+                marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
+                background:"rgba(0,0,0,0.45)",borderRadius:8,
                 maxWidth:isMobile?180:undefined }}>
-                "{character.bubble.idle}"
+                "{t(`char.${character.id}.idle`)}"
               </div>
             </div>
           </div>
@@ -2264,7 +2596,7 @@ function handleNext() {
                 }}/>
                 <div>
                   <div style={{ color:"#a78bfa",fontWeight:900,fontSize:10,
-                    marginBottom:5,letterSpacing:0.5 }}>📜 Aristotle ASKS:</div>
+                    marginBottom:5,letterSpacing:0.5,textTransform:"uppercase" }}>📜 {t("game.asksPanel")}</div>
                   <div style={{ color:"#f0fdf4",fontWeight:800,fontSize:14,lineHeight:1.55 }}>
                     {q.text}
                   </div>
@@ -2278,28 +2610,30 @@ function handleNext() {
                 gap:isMobile?8:10,justifyContent:"center",
                 flex:1,alignContent:"center",maxHeight:"100%",overflow:"auto" }}>
                 {q.images.map((img,i)=>(
-                  <div key={i} onClick={()=>handleAnswer(i)}
-                    style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",
+                  <button type="button" className="gp-opt" key={i} onClick={()=>handleAnswer(i)}
+                    aria-label={`${OPTION_LETTERS[i]}: ${q.options[i]}`}
+                    style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",padding:0,color:"inherit",
                       border:"1.5px solid rgba(74,222,128,0.18)",transition:"all 0.15s",
-                      background:"rgba(10,25,10,0.4)",display:"flex",flexDirection:"column",
-                      width:"clamp(100px, 15vw, 190px)" }}
+                      background:"rgba(10,25,10,0.55)",display:"flex",flexDirection:"column",
+                      width:"clamp(110px, 15vw, 190px)" }}
                     onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.03)"; e.currentTarget.style.borderColor="#22c55e88"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; }}
                   >
-                    <img src={img} alt={q.options[i]} style={{
+                    <img src={img} alt="" draggable={false} style={{
                       width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block" }}/>
-                    <div style={{ fontSize:"clamp(9px, 1.1vw, 12px)",fontWeight:700,color:"#e2e8f0",
-                      textAlign:"center",padding:"3px 4px",lineHeight:1.2 }}>
+                    <div style={{ fontSize:"clamp(10px, 1.1vw, 12px)",fontWeight:700,color:"#e2e8f0",
+                      textAlign:"center",padding:"4px 5px",lineHeight:1.25 }}>
                       {q.options[i]}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
               <div style={{ display:"flex",flexDirection:"column",gap:7,flex:1,justifyContent:"center" }}>
                 {q.options.map((opt,i)=>(
-                  <div key={i} onClick={()=>handleAnswer(i)}
-                    style={{ background:"rgba(10,25,10,0.78)",backdropFilter:"blur(12px)",
+                  <button type="button" className="gp-opt" key={i} onClick={()=>handleAnswer(i)}
+                    style={{ width:"100%",textAlign:"left",fontFamily:"inherit",
+                      background:"rgba(10,25,10,0.78)",backdropFilter:"blur(12px)",
                       border:"1.5px solid rgba(74,222,128,0.18)",
                       borderRadius:13,padding:"11px 14px",cursor:"pointer",
                       fontSize:13,fontWeight:700,color:"#e2e8f0",transition:"all 0.15s",
@@ -2311,10 +2645,10 @@ function handleNext() {
                       background:"rgba(74,222,128,0.12)",border:"1.5px solid rgba(74,222,128,0.3)",
                       display:"flex",alignItems:"center",justifyContent:"center",
                       fontSize:11,fontWeight:900,color:"#4ade80" }}>
-                      {["A","B","C","D"][i]}
+                      {OPTION_LETTERS[i]}
                     </span>
                     {opt}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -2352,9 +2686,10 @@ function handleNext() {
                 background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
               <div style={{ color:correct?"#86efac":"#fca5a5",fontSize:10,textAlign:isMobile?"left":"center",
-                marginTop:6,fontStyle:"italic",padding:"0 4px",lineHeight:1.4,
+                marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
+                background:"rgba(0,0,0,0.5)",borderRadius:8,
                 maxWidth:isMobile?180:undefined }}>
-                "{correct?character.bubble.happy:character.bubble.sad}"
+                "{t(`char.${character.id}.${correct?"happy":"sad"}`)}"
               </div>
             </div>
           </div>
@@ -2383,17 +2718,15 @@ function handleNext() {
                 <div>
                   <div style={{ fontWeight:900,fontSize:11,letterSpacing:0.5,
                     color:correct?"#4ade80":"#f87171",marginBottom:4 }}>
-                    {correct?"🌟 Aristotle IS HAPPY!":"😤 Aristotle IS DISAPPOINTED!"}
+                    {correct?t("game.happy"):t("game.disappointed")}
                   </div>
                   <div style={{ color:correct?"#bbf7d0":"#fecaca",fontSize:13,fontStyle:"italic" }}>
-                    {correct
-                      ?"Excellent! The garden blooms with your wisdom! 🌸"
-                      :"Hmm… not quite. The plants whisper differently… 🍃"}
+                    {correct?t("game.praise"):t("game.notQuite")}
                   </div>
                   {correct&&(
                     <div style={{ color:"#fbbf24",fontSize:11,fontWeight:800,marginTop:5,
                       display:"flex",alignItems:"center",gap:5 }}>
-                      <CoinIcon size={14}/> Coin flying to your pocket!
+                      <CoinIcon size={14}/> {t("game.coin")}
                     </div>
                     )}
                 </div>
@@ -2437,7 +2770,7 @@ function handleNext() {
                 {q.options.map((opt,i)=>{
                   let bg="rgba(10,25,10,0.6)";
                   let border="1px solid rgba(255,255,255,0.06)";
-                  let col="#475569";
+                  let col="#94a3b8";
                   if (i===q.answer)      { bg="rgba(22,101,52,0.7)"; border="1px solid #22c55e88"; col="#bbf7d0"; }
                   else if (i===selected) { bg="rgba(127,29,29,0.7)"; border="1px solid #ef444488"; col="#fecaca"; }
                   return (
@@ -2454,13 +2787,14 @@ function handleNext() {
               </div>
             )}
 
-            <div style={{ background:"rgba(251,191,36,0.14)",border:"1.5px solid rgba(251,191,36,0.45)",
-              borderRadius:12,padding:"10px 13px",fontSize:12.5,fontWeight:600,color:"#2c32efff",lineHeight:1.55 }}>
+            <div role="status" style={{ background:"rgba(255,251,235,0.96)",border:"1.5px solid #fbbf24",
+              borderRadius:12,padding:"10px 13px",fontSize:13,fontWeight:700,color:"#1e3a8a",lineHeight:1.55,
+              boxShadow:"0 6px 20px rgba(0,0,0,0.18)",maxHeight:isMobile?"30vh":undefined,overflowY:"auto" }}>
               💡 {q.explanation}
             </div>
 
             <Btn onClick={handleNext} color={mod.color} style={{ width:"100%" }}>
-              {idx===total-1?"Finish Module 🎉":"Next Question →"}
+              {idx===total-1?t("game.finish"):t("game.next")}
             </Btn>
           </div>
         </div>
@@ -2471,8 +2805,11 @@ function handleNext() {
 /* ═══════════════════════════════════════════════════
    RESULTS SCREEN
 ═══════════════════════════════════════════════════ */
-function ResultsScreen({ mod, character, score, total, onContinue }) {
+function ResultsScreen({ mod, character, score, total, onContinue, saveError }) {
+  const t = useT();
   const pass  = score >= total - 1;
+  const [factIdx] = useState(()=>Math.floor(Math.random()*Math.max(mod.facts?.length||0,1)));
+  const fact = mod.facts?.[factIdx];
   const stars = score===total?3:pass?2:score>0?1:0;
 
   return (
@@ -2482,7 +2819,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
           {score===total?"🏆":pass?"🎉":"💪"}
         </div>
         <h2 style={{ fontSize:22, fontWeight:900, marginBottom:4, color:"#f0fdf4" }}>
-          {pass?"Module Complete!":"Keep Practicing!"}
+          {pass?t("results.complete"):t("results.keep")}
         </h2>
         <p style={{ color:"#86efac", fontSize:13, marginBottom:20 }}>{mod.title}</p>
 
@@ -2498,7 +2835,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
           border:`2px solid ${pass?"#22c55e":"#f59e0b"}`,
           borderRadius:18, padding:"14px 32px", marginBottom:20 }}>
           <div style={{ fontSize:42, fontWeight:900, color:pass?"#22c55e":"#f59e0b" }}>{score}/{total}</div>
-          <div style={{ color:"#64748b", fontSize:13 }}>correct</div>
+          <div style={{ color:"#94a3b8", fontSize:13 }}>{t("results.correct")}</div>
         </div>
 
         <div style={{ display:"flex", gap:12, alignItems:"center",
@@ -2508,11 +2845,9 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
             style={{ width:52, height:69, objectFit:"contain", flexShrink:0,
               animation:pass?"AristotleBounce 0.7s ease":"none" }}/>
           <div>
-            <div style={{ color:"#4ade80", fontWeight:900, fontSize:12, marginBottom:3 }}>Aristotle says:</div>
+            <div style={{ color:"#4ade80", fontWeight:900, fontSize:12, marginBottom:3 }}>{t("results.says")}</div>
             <div style={{ color:"#cbd5e1", fontSize:13, fontStyle:"italic" }}>
-              {pass
-                ?"The garden flourishes with your knowledge! Well done! 🌿"
-                :"The plants need more tending. Come back and try again! 🌱"}
+              {pass?t("results.praise"):t("results.retry")}
             </div>
           </div>
         </div>
@@ -2524,18 +2859,29 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
             style={{ width:60, height:80, objectFit:"contain", flexShrink:0,
               animation:pass?"cBounce 0.7s ease":"cShake 0.5s ease" }}/>
           <div style={{ color:"#cbd5e1", fontSize:13, fontStyle:"italic" }}>
-            "{pass?character.bubble.happy:character.bubble.sad}"
+            "{t(`char.${character.id}.${pass?"happy":"sad"}`)}"
             <div style={{ color:character.color, fontSize:12, marginTop:4 }}>— {character.name}</div>
           </div>
         </div>
 
+        {fact && (
+          <div style={{ background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)",
+            borderRadius:14, padding:"10px 14px", marginBottom:20, textAlign:"left",
+            color:"#e2e8f0", fontSize:13, lineHeight:1.5 }}>
+            <span style={{ color:"#fbbf24", fontWeight:900 }}>💡 {t("intro.didYouKnow")} </span>{fact}
+          </div>
+        )}
+
         <Btn onClick={onContinue} style={{ width:"100%" }} color={pass?"#22c55e":"#f59e0b"}>
-          {pass?"Continue Journey 🗺️":"Try Again 🔄"}
+          {pass?t("results.continue"):t("results.tryAgain")}
         </Btn>
         {!pass&&(
-          <p style={{ marginTop:12, color:"#475569", fontSize:12 }}>
-            You need at least <strong style={{ color:"#f59e0b" }}>{Math.max(total-1,0)} out of {total}</strong> correct to unlock the next level.
+          <p style={{ marginTop:12, color:"#94a3b8", fontSize:12 }}>
+            {t("results.need", { n: Math.max(total-1,0), total })}
           </p>
+        )}
+        {saveError&&(
+          <p role="alert" style={{ marginTop:12, color:"#fca5a5", fontSize:12 }}>{t("results.saveError")}</p>
         )}
       </Panel>
     </GardenWrap>
@@ -2546,6 +2892,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
    CERTIFICATE SCREEN
 ═══════════════════════════════════════════════════ */
 function CertificateScreen({ user, language, onBack }) {
+  const t = useT();
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -2700,7 +3047,7 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.textAlign = "center";
 
     /* ── Wordmark ── */
-    const wmWidth = spacedText("GARDEN QUEST", cx, 96, "700 22px Georgia", GREEN, 4);
+    const wmWidth = spacedText("GREENPATH", cx, 96, "700 22px Georgia", GREEN, 4);
     leaf(cx-wmWidth/2-22, 94, 200, 8, GREEN_LIGHT);
     leaf(cx-wmWidth/2-34, 98, 195, 6, GREEN);
     leaf(cx+wmWidth/2+22, 94, 20, 8, GREEN_LIGHT);
@@ -2708,28 +3055,29 @@ function CertificateScreen({ user, language, onBack }) {
     divider(122, 170);
 
     /* ── Title ── */
+    const MAXW = W - 220; // keeps longer translations inside the border
     ctx.fillStyle = "rgba(15,23,42,0.12)"; ctx.font = "700 46px Georgia";
-    ctx.fillText("Certificate of Achievement", cx+2, 192);
+    ctx.fillText(t("cert.heading"), cx+2, 192, MAXW);
     ctx.fillStyle = INK;
-    ctx.fillText("Certificate of Achievement", cx, 190);
+    ctx.fillText(t("cert.heading"), cx, 190, MAXW);
 
     ctx.fillStyle = GRAY; ctx.font = "italic 20px Georgia";
-    ctx.fillText("This certifies that", cx, 236);
+    ctx.fillText(t("cert.certifies"), cx, 236, MAXW);
 
     /* ── Name ── */
     ctx.fillStyle = GREEN; ctx.font = "italic 700 50px Georgia";
-    ctx.fillText(user.fullName, cx, 306);
-    const nameWidth = ctx.measureText(user.fullName).width;
+    ctx.fillText(user.fullName, cx, 306, MAXW);
+    const nameWidth = Math.min(ctx.measureText(user.fullName).width, MAXW);
     divider(328, Math.min(Math.max(nameWidth+70,260),520));
 
     /* ── Body ── */
     ctx.fillStyle = GRAY; ctx.font = "21px Georgia";
-    ctx.fillText(`has successfully completed all ${MODULES.length} modules of Garden Quest`, cx, 374);
+    ctx.fillText(t("cert.completed", { n: MODULES.length }), cx, 374, MAXW);
     ctx.font = "italic 21px Georgia";
-    ctx.fillText(`in ${language.label}`, cx, 402);
+    ctx.fillText(t("cert.inLang", { lang: language.label }), cx, 402, MAXW);
 
     /* ── Module badges ── */
-    spacedText("MODULES COMPLETED", cx, 440, "700 12px Georgia", GOLD_DARK, 2);
+    spacedText(t("cert.modules"), cx, 440, "700 12px Georgia", GOLD_DARK, 2);
     const R = 19, GAP = 13;
     const total = MODULES.length*(2*R) + (MODULES.length-1)*GAP;
     const startX = cx - total/2 + R;
@@ -2761,23 +3109,23 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
 
     ctx.save(); ctx.translate(cx,sealY);
-    arcText("GARDEN QUEST", sealR-13, "700 10px Georgia", "#5c3d0a", 16);
+    arcText("GREENPATH", sealR-13, "700 10px Georgia", "#5c3d0a", 18);
     ctx.restore();
     star(cx, sealY+3, 15, 6.5, "#5c3d0a");
 
     /* ── Footer ── */
-    const dateStr = new Date().toLocaleDateString(undefined, {
+    const dateStr = new Date().toLocaleDateString(LANGUAGE_META[language.id]?.locale, {
       year:"numeric", month:"long", day:"numeric"
     });
-    signatureBlock(90, "Garden Quest", "italic 26px Georgia", "PROGRAMME DIRECTOR", "left");
-    signatureBlock(W-90, dateStr, "italic 20px Georgia", "DATE OF COMPLETION", "right");
+    signatureBlock(90, "GreenPath", "italic 26px Georgia", t("cert.director"), "left");
+    signatureBlock(W-90, dateStr, "italic 20px Georgia", t("cert.date"), "right");
     ctx.textAlign = "center";
-  }, [user, language]);
+  }, [user, language, t]);
 
   function download() {
     const canvas = canvasRef.current;
     const link = document.createElement("a");
-    link.download = `${user.fullName.replace(/\s+/g,"_")}_GardenQuest_Certificate.png`;
+    link.download = `${user.fullName.replace(/\s+/g,"_")}_GreenPath_Certificate.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -2786,24 +3134,26 @@ function CertificateScreen({ user, language, onBack }) {
     <GardenWrap>
       <Panel style={{ maxWidth: 620 }}>
         <div style={{ textAlign:"center", marginBottom:16 }}>
+          <div style={{ fontSize:44, marginBottom:4 }}>🏆</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
-            Certificate of Achievement
+            {t("cert.heading")}
           </h1>
           <p style={{ color:"#86efac", fontSize:13 }}>
-            {user.fullName} has completed the Garden Quest programme.
+            {t("cert.sub", { name: user.fullName })}
           </p>
         </div>
 
         <div style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(74,222,128,0.25)", marginBottom:18 }}>
-          <canvas ref={canvasRef} style={{ width:"100%", display:"block" }} />
+          <canvas ref={canvasRef} role="img" aria-label={`${t("cert.heading")}: ${user.fullName}`}
+            style={{ width:"100%", display:"block" }} />
         </div>
 
-        <div style={{ display:"flex", gap:10 }}>
-          <Btn onClick={download} style={{ flex:1 }} color="#fbbf24">
-            Download Certificate
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          <Btn onClick={download} style={{ flex:"1 1 180px" }} color="#fbbf24">
+            {t("cert.download")}
           </Btn>
-          <Btn onClick={onBack} style={{ flex:1 }} color="#22c55e">
-            Back to Map
+          <Btn onClick={onBack} style={{ flex:"1 1 180px" }} color="#22c55e">
+            {t("cert.backMap")}
           </Btn>
         </div>
       </Panel>
@@ -2819,20 +3169,51 @@ export default function App() {
   const [screen,           setScreen]           = useState("loading");
   const [user,             setUser]             = useState(null);
   const [language,         setLanguage]         = useState(null);
+  // Language for the UI before (and independent of) the saved game language.
+  const [uiLangId,         setUiLangId]         = useState(initialLanguageId);
   const [character,        setCharacter]        = useState(null);
   const [completedModules, setCompletedModules] = useState(0);
   const [prevCompleted,    setPrevCompleted]    = useState(0);
   const [activeModule,     setActiveModule]     = useState(null);
   const [lastScore,        setLastScore]        = useState(null);
+  const [saveError,        setSaveError]        = useState(false);
+  const [langReturnTo,     setLangReturnTo]     = useState(null);
 
   const [loadingDone, setLoadingDone] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [destination, setDestination] = useState(null);
   const initialAuthCheckedRef = useRef(false);
 
+  const langId = language?.id || uiLangId;
+
+  // Keep <html lang> in sync for screen readers, hyphenation and fonts.
+  useEffect(() => {
+    document.documentElement.lang = LANGUAGE_META[langId]?.htmlLang || "en";
+  }, [langId]);
+
   const moduleQuestions = useMemo(()=>
-    activeModule ? QUESTIONS.filter(q=>q.module===activeModule.id) : [],
-  [activeModule]);
+    activeModule ? QUESTIONS.filter(q=>q.module===activeModule.id).map(q=>localizeQuestion(q, langId)) : [],
+  [activeModule, langId]);
+  const localizedModule = useMemo(()=>
+    activeModule ? localizeModule(activeModule, langId) : null,
+  [activeModule, langId]);
+
+  function chooseUiLanguage(lang) {
+    setUiLangId(lang.id);
+    rememberLanguage(lang.id);
+  }
+
+  function persistProgress(patch) {
+    if (!user) return;
+    const progress = {
+      languageId: language?.id,
+      characterId: character?.id,
+      completedModules,
+      ...patch,
+    };
+    setSaveError(false);
+    saveProgress(user.uid, progress).catch(()=>setSaveError(true));
+  }
 
   function handleAuth(u) {
     setUser(u);
@@ -2883,11 +3264,11 @@ export default function App() {
     return unsub;
   }, []);
 
-  useEffect(() => {
-    if (loadingDone && authChecked && destination) setScreen(destination);
-  }, [loadingDone, authChecked, destination]);
+  // While the splash is up, move on as soon as both the animation and the auth check are done.
+  const currentScreen = (screen==="loading" && loadingDone && authChecked && destination) ? destination : screen;
+  function go(next) { setScreen(next); }
 
-  function handleFinish(score) { setLastScore(score); setScreen("results"); }
+  function handleFinish(score) { setLastScore(score); go("results"); }
 
   function handleContinue() {
     const isNextModule = activeModule.id === completedModules+1;
@@ -2898,28 +3279,30 @@ export default function App() {
 
     setPrevCompleted(completedModules);
     setCompletedModules(newCompleted);
-
-    if (user) {
-      saveProgress(user.uid, {
-        languageId: language.id,
-        characterId: character.id,
-        completedModules: newCompleted,
-      });
-    }
-    setScreen("map");
+    persistProgress({ completedModules: newCompleted });
+    // Failed attempts go straight back to the module so the "Try Again" button means what it says.
+    if (!pass) { go("intro"); return; }
+    go("map");
   }
 
   function handlePlayAgain() {
     setPrevCompleted(0);
     setCompletedModules(0);
-    if (user) {
-      saveProgress(user.uid, {
-        languageId: language.id,
-        characterId: character.id,
-        completedModules: 0,
-      });
+    persistProgress({ completedModules: 0 });
+    go("map");
+  }
+
+  function handleLanguageSelected(lang) {
+    setLanguage(lang);
+    chooseUiLanguage(lang);
+    if (langReturnTo === "map" && character) {
+      setLangReturnTo(null);
+      setPrevCompleted(completedModules);
+      persistProgress({ languageId: lang.id });
+      go("map");
+      return;
     }
-    setScreen("map");
+    go("character");
   }
 
   async function handleLogout() {
@@ -2931,52 +3314,65 @@ export default function App() {
     setPrevCompleted(0);
     setActiveModule(null);
     setLastScore(null);
-    setScreen("auth");
+    setSaveError(false);
+    go("auth");
   }
 
+  const mapModules = useMemo(()=>MODULES.map(m=>localizeModule(m, langId)), [langId]);
+
   return (
-    <>
+    <LangCtx.Provider value={langId}>
       <GlobalStyles/>
-      {screen==="loading"&&(
+      {currentScreen==="loading"&&(
         <LoadingScreen onDone={()=>setLoadingDone(true)}/>
       )}
-      {screen==="auth"&&(
-        <AuthScreen onAuth={handleAuth}/>
+      {currentScreen==="auth"&&(
+        <AuthScreen onAuth={handleAuth} languageId={uiLangId} onLanguageChange={chooseUiLanguage}/>
       )}
-      {screen==="language"&&(
-        <LanguageScreen onSelect={l=>{ setLanguage(l); setScreen("character"); }}/>
+      {currentScreen==="language"&&(
+        <LanguageScreen currentId={langId} onSelect={handleLanguageSelected}
+          onBack={langReturnTo==="map" ? ()=>{ setLangReturnTo(null); go("map"); } : undefined}/>
       )}
-      {screen==="character"&&(
-        <CharacterScreen language={language}
-          onSelect={c=>{ setCharacter(c); setScreen("map"); }}
-          onBack={()=>setScreen("language")}/>
+      {currentScreen==="character"&&language&&(
+        <CharacterScreen language={language} initialId={character?.id}
+          onSelect={c=>{
+            setCharacter(c);
+            setPrevCompleted(completedModules);
+            persistProgress({ characterId: c.id, languageId: language.id });
+            go("map");
+          }}
+          onBack={()=>go("language")}/>
       )}
-      {screen==="map"&&(
-        <MapScreen language={language} character={character}
+      {currentScreen==="map"&&language&&character&&(
+        <MapScreen language={language} character={character} modules={mapModules}
           completedModules={completedModules} prevCompleted={prevCompleted}
-          onStartModule={mod=>{ setActiveModule(mod); setScreen("intro"); }}
-          onBack={()=>setScreen("character")}
-          onViewCertificate={()=>setScreen("certificate")}
+          onStartModule={mod=>{ setActiveModule(mod); go("intro"); }}
+          onBack={()=>go("character")}
+          onChangeLanguage={()=>{ setLangReturnTo("map"); go("language"); }}
+          onViewCertificate={()=>go("certificate")}
           onPlayAgain={handlePlayAgain}
           onLogout={handleLogout}/>
       )}
-      {screen==="intro"&&activeModule&&(
-        <AristotleIntro module={activeModule}
-          onStart={()=>setScreen("game")}/>
+      {currentScreen==="intro"&&localizedModule&&(
+        <AristotleIntro key={localizedModule.id} module={localizedModule} questionCount={moduleQuestions.length}
+          onBack={()=>{ setPrevCompleted(completedModules); go("map"); }}
+          onStart={()=>go("game")}/>
       )}
-      {screen==="game"&&activeModule&&(
-        <GameScreen mod={activeModule} character={character}
-          questions={moduleQuestions} onFinish={handleFinish}/>
+      {currentScreen==="game"&&localizedModule&&(
+        <GameScreen key={localizedModule.id}
+          mod={localizedModule} character={character}
+          questions={moduleQuestions} onFinish={handleFinish}
+          onExit={()=>{ setPrevCompleted(completedModules); go("map"); }}/>
       )}
-      {screen==="results"&&activeModule&&(
-        <ResultsScreen mod={activeModule} character={character}
-          score={lastScore} total={moduleQuestions.length}
+      {currentScreen==="results"&&localizedModule&&(
+        <ResultsScreen mod={localizedModule} character={character}
+          score={lastScore} total={moduleQuestions.length} saveError={saveError}
           onContinue={handleContinue}/>
       )}
-      {screen==="certificate"&&user&&(
+      {currentScreen==="certificate"&&user&&language&&(
         <CertificateScreen user={user} language={language}
-          onBack={()=>setScreen("map")}/>
+          onBack={()=>go("map")}/>
       )}
-    </>
+    </LangCtx.Provider>
   );
 }
