@@ -3,14 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://anahit-tumasyan.github.io/Greenpath",
+  "homepage": "https://greenpathgame.github.io/Greenpath/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project greenpath-rules-test \"node --test tests/firestore.rules.test.mjs\""
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

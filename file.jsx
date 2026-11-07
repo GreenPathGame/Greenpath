@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useContext, useCallback, createContext } from "react";
+import { translate, LANGUAGE_META } from "./i18n.js";
+import NatureScene, { NATURE_SCENE_CSS } from "./NatureScene.jsx";
+import trGr from "./translations/gr.js";
+import trIt from "./translations/it.js";
+import trRo from "./translations/ro.js";
+import trCz from "./translations/cz.js";
 import { auth, db } from "./firebase.js";
 import {
   createUserWithEmailAndPassword,
@@ -6,6 +12,7 @@ import {
   updateProfile,
   onAuthStateChanged,
   signOut,
+  deleteUser,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -25,20 +32,67 @@ function asset(name) { return ASSET_BASE + name; }
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE HELPER
-   Tracks viewport width so layouts can adapt between
-   narrow phone screens and wider tablet/desktop screens.
+   "Mobile" = the stacked (one column) quiz layout. Used on
+   phones and on portrait tablets, where a side-by-side layout
+   would squeeze the question into a narrow, small-text column.
 ═══════════════════════════════════════════════════ */
 const MOBILE_BREAKPOINT = 640;
+const PORTRAIT_TABLET_MAX = 1024;
+function isStackedLayout() {
+  if (typeof window === "undefined") return false;
+  const w = window.innerWidth, h = window.innerHeight;
+  return w <= MOBILE_BREAKPOINT || (w <= PORTRAIT_TABLET_MAX && h > w);
+}
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= MOBILE_BREAKPOINT : false
-  );
+  const [isMobile, setIsMobile] = useState(isStackedLayout);
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    const onResize = () => setIsMobile(isStackedLayout());
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
   return isMobile;
+}
+
+/* ═══════════════════════════════════════════════════
+   LANGUAGE / TRANSLATION HELPERS
+   The selected language id flows down through context;
+   components call t("key") for UI text, and modules and
+   questions are localized just before they're rendered
+   (English in this file is the source of truth and the
+   fallback for anything missing).
+═══════════════════════════════════════════════════ */
+const LangCtx = createContext("en");
+function useT() {
+  const lang = useContext(LangCtx);
+  return useCallback((key, vars) => translate(lang, key, vars), [lang]);
+}
+const CONTENT_TR = { gr: trGr, it: trIt, ro: trRo, cz: trCz };
+function localizeModule(mod, lang) {
+  const tr = CONTENT_TR[lang]?.modules?.[mod.id];
+  return tr ? { ...mod, ...tr } : mod;
+}
+function localizeQuestion(q, lang) {
+  const tr = CONTENT_TR[lang]?.questions?.[q.id];
+  if (!tr) return q;
+  return {
+    ...q,
+    text: tr.text ?? q.text,
+    explanation: tr.explanation ?? q.explanation,
+    options: tr.options?.length === q.options.length ? tr.options : q.options,
+  };
+}
+const LANG_STORAGE_KEY = "greenpath.lang";
+function initialLanguageId() {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved && LANGUAGE_META[saved]) return saved;
+  } catch { /* storage unavailable */ }
+  const nav = (typeof navigator !== "undefined" && navigator.language || "en").slice(0, 2).toLowerCase();
+  const byHtml = Object.entries(LANGUAGE_META).find(([, m]) => m.htmlLang === nav);
+  return byHtml ? byHtml[0] : "en";
+}
+function rememberLanguage(id) {
+  try { localStorage.setItem(LANG_STORAGE_KEY, id); } catch { /* storage unavailable */ }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -49,24 +103,41 @@ function useIsMobile() {
    only ever shows the username.
 ═══════════════════════════════════════════════════ */
 const USERNAME_RE = /^[a-z0-9_.-]{3,20}$/;
+// Limits match firestore.rules, so nothing the form accepts is refused by the database.
+const FULLNAME_MAX = 60;
+const PASSWORD_MIN = 6, PASSWORD_MAX = 128;
+// Trims, removes invisible control characters and collapses runs of spaces.
+function cleanFullName(raw) {
+  // eslint-disable-next-line no-control-regex -- removing control characters is the point
+  return raw.replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, "").replace(/\s+/g, " ").trim();
+}
 function usernameToEmail(username) { return `${username}@gardenquest.local`; }
 
+// Returns an i18n key (see i18n.js), translated where it's shown.
 function friendlyAuthError(err) {
   switch (err?.code) {
-    case "auth/email-already-in-use": return "That username is already taken.";
+    case "auth/email-already-in-use": return "auth.errTaken";
     case "auth/invalid-credential":
     case "auth/wrong-password":
-    case "auth/user-not-found": return "Incorrect username or password.";
-    case "auth/weak-password": return "Password must be at least 6 characters.";
-    case "auth/network-request-failed": return "No internet connection. Please try again.";
-    default: return "Something went wrong. Please try again.";
+    case "auth/user-not-found": return "auth.errIncorrect";
+    case "auth/weak-password": return "auth.errPassword";
+    case "auth/network-request-failed": return "auth.errNetwork";
+    case "auth/too-many-requests": return "auth.errTooMany";
+    case "auth/invalid-email": return "auth.errUsername";
+    default: return "auth.errGeneric";
   }
 }
 
 async function registerUser(username, password, fullName) {
   const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
-  await updateProfile(cred.user, { displayName: fullName });
-  await setDoc(doc(db, "users", cred.user.uid), { username, fullName, progress: null });
+  try {
+    await updateProfile(cred.user, { displayName: fullName });
+    await setDoc(doc(db, "users", cred.user.uid), { username, fullName, progress: null });
+  } catch (err) {
+    // Don't leave a half-made account behind (it would block the username forever).
+    await deleteUser(cred.user).catch(()=>{});
+    throw err;
+  }
   return { uid: cred.user.uid, username, fullName, progress: null };
 }
 
@@ -95,12 +166,13 @@ function logoutUser() { return signOut(auth); }
 /* ═══════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════ */
+// `label` is each language's own name, so players can always find theirs.
 const LANGUAGES = [
-  { id: "en", label: "English",  flag: "🇬🇧", color: "#8b5cf6" },
-  { id: "gr", label: "Greek",    flag: "🇬🇷", color: "#3b82f6" },
-  { id: "it", label: "Italian",  flag: "🇮🇹", color: "#22c55e" },
-  { id: "ro", label: "Romanian", flag: "🇷🇴", color: "#f59e0b" },
-  { id: "cz", label: "Czech",    flag: "🇨🇿", color: "#ef4444" },
+  { id: "en", label: LANGUAGE_META.en.native, flag: "🇬🇧", color: "#8b5cf6" },
+  { id: "gr", label: LANGUAGE_META.gr.native, flag: "🇬🇷", color: "#3b82f6" },
+  { id: "it", label: LANGUAGE_META.it.native, flag: "🇮🇹", color: "#22c55e" },
+  { id: "ro", label: LANGUAGE_META.ro.native, flag: "🇷🇴", color: "#f59e0b" },
+  { id: "cz", label: LANGUAGE_META.cz.native, flag: "🇨🇿", color: "#ef4444" },
 ];
 
 const CHARACTERS = [
@@ -126,7 +198,20 @@ const MODULES = [
     title: "Wildlife Gardens",
     icon: "🌍",
     color: "#f59e0b",
-    info: "Wildlife gardens are natural or semi-natural spaces where edible plants grow in harmony with local ecosystems, mimicking the layers and biodiversity of a forest with minimal human intervention. Traditional seeds are the hidden power behind these gardens saving, exchanging, and growing diverse local varieties preserves cultural heritage and strengthens climate resilience for generations to come."
+    info: "Wildlife gardens are natural or semi-natural spaces where edible plants grow in harmony with local ecosystems, mimicking the layers and biodiversity of a forest with minimal human intervention. Traditional seeds are the hidden power behind these gardens saving, exchanging, and growing diverse local varieties preserves cultural heritage and strengthens climate resilience for generations to come.",
+    // "DID YOU KNOW (GAME FACTS)" from the CZ info papers (Practice 1 + 2)
+    facts: [
+      "Local food reduces transport emissions significantly.",
+      "Trees, shrubs, and perennial plants help retain water and reduce drought impacts.",
+      "One seed can produce hundreds of new seeds in a single growing season.",
+      "Growing diverse local plants supports pollinators such as bees, butterflies, and other beneficial insects.",
+      "Biodiverse gardens with local trees, shrubs, and perennials are more resilient to climate change.",
+      "Traditional seeds help preserve biodiversity and local food heritage.",
+      "Saving local seeds supports climate-resilient agriculture and future food security.",
+      "Exchanging seeds between gardeners and farmers has helped preserve traditional crops for generations.",
+      "Many traditional seed varieties are naturally adapted to local climates and require fewer chemical inputs.",
+      "Many Carpathian and Mediterranean plant varieties have been cultivated and passed down for hundreds of years.",
+    ],
   },
   // Topics 3 & 7 on the list: IT Practice 1 (Handmade Sustainable Greenhouses) + IT Practice 2 (biological control against the Woolly aphid)
   // Title/icon/info confirmed against the manager's official info papers ("THEMATIC AREA: Seasonal agriculture
@@ -137,15 +222,27 @@ const MODULES = [
     title: "Traditional Agricultural Practices, Organic Gardening, Farming, and Agroecology",
     icon: "💧",
     color: "#06b6d4",
-    info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides."
+    info: "Sustainable mini-greenhouses (tunnel, hydroponic, passive solar or vertical) protect plants from cold, wind, rain and climate stress, helping grow food locally with low-impact materials. Integrated and biological pest control, such as encouraging ladybirds, lacewings and parasitoid wasps, manages pests like the woolly aphid (Eriosoma lanigerum) without relying mainly on chemical pesticides.",
+    // The IT info papers weren't among the provided files; these facts restate the module's own approved explanations.
+    facts: [
+      "Hydroponic greenhouses grow plants without soil, using water and nutrients instead.",
+      "Vertical greenhouses let plants grow upwards, which suits cities, schools and small spaces.",
+      "Ladybirds, lacewings and parasitoid wasps are natural enemies of aphids.",
+    ],
   },
   // Topics 5-6 on the list: RO Practice 2 (Companion planting) + RO Practice 1 (Homemade natural pest control)
   {
     id: 3,
-    title: "ORGANIC PEST CONTROL AND COMPANION PLANTING",
+    title: "Organic Pest Control and Companion Planting",
     icon: "🌿",
     color: "#22c55e",
-    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are enviromentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices."
+    info: "Homemade natural pest control uses plant-based preparations and natural ingredients such as garlic, nettles, chili peppers, or soap solutions to manage garden pests without synthetic chemicals. These methods are environmentally friendly, affordable, biodegradable, and help protect beneficial insects while supporting sustainable and organic gardening practices.",
+    // Restates the module's own approved explanations (the RO Practice 1-2 papers weren't among the provided files).
+    facts: [
+      "In both the Carpathian and Mediterranean regions, a soft soap solution is used to repel aphids.",
+      "Tomatoes planted with basil are more resilient and taste better.",
+      "The strong scent of onions and garlic keeps carrot flies away.",
+    ],
   },
   // Topics 8 & 11 on the list: GR clay pot crafting + stitching reusable bags from old fabrics
   {
@@ -153,7 +250,16 @@ const MODULES = [
     title: "Reusable Alternatives for a Plastic-Free Kitchen",
     icon: "🌱",
     color: "#10b981",
-    info: "Clay pot crafting revives the ancient art of shaping terracotta vessels for food storage durable, breathable containers for grains, legumes and pickles that keep food fresh for longer without a single scrap of plastic. Old clothes and linen scraps get a second life too, stitched into sturdy reusable bags for shopping, produce and bread reviving traditional sewing skills while replacing single-use plastic."
+    info: "Clay pot crafting revives the ancient art of shaping terracotta vessels for food storage durable, breathable containers for grains, legumes and pickles that keep food fresh for longer without a single scrap of plastic. Old clothes and linen scraps get a second life too, stitched into sturdy reusable bags for shopping, produce and bread reviving traditional sewing skills while replacing single-use plastic.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Plastic-Free Kitchen info papers
+    facts: [
+      "In Maramureș, Romania, potters still craft clay jars for pickles and legumes.",
+      "Clay's tiny pores let food breathe, slowing spoilage.",
+      "In Greece, kitchen textiles were once handwoven and given as dowry gifts.",
+      "Folk schools in Iași, Romania, turn fabric scraps into reusable kitchen cloths.",
+      "Terracotta storage jars have been used around the Mediterranean for over 6,000 years.",
+      "A single plastic bag can take up to 1,000 years to break down in landfill.",
+    ],
   },
   // Topic 9 on the list: GR Traditional food pickling, sun-drying, and oil-based methods
   {
@@ -161,16 +267,29 @@ const MODULES = [
     title: "Reducing Food Waste",
     icon: "🦋",
     color: "#3b82f6",
-    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. Leftover citrus peels get a second life too: steeped in vinegar for about two weeks, they become a fragrant, all-purpose cleaner that replaces synthetic chemical products."
+    info: "Traditional pickling, sun-drying and oil-based methods preserve seasonal produce without refrigeration vegetables are brined or soaked in vinegar, fruit and herbs are dried in the sun, and olives are stored in oil, saving surplus harvests from waste. These heritage skills need only glass jars, salt, vinegar, oil and plenty of sunshine, and they save the constant electricity that fridges and freezers consume.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 1)
+    facts: [
+      "In Santorini, cherry tomatoes and capers are still sun-dried by youth cooperatives.",
+      "Olives, herbs and vegetables keep for months stored in brine, vinegar or olive oil.",
+      "Europe wastes around 88 million tonnes of food every year.",
+    ],
   },
   // Topic 10 on the list: GR Making kitchen cleaners from citrus peels and vinegar
-  // NOTE: title "Cultural Exchange and Culinary Traditions" doesn't match this topic's actual content either.
+  // Title now follows the info paper's practice name (it used to read "Cultural Exchange and Culinary
+  // Traditions", which is a thematic area, not this topic).
   {
     id: 6,
-    title: "Cultural Exchange and Culinary Traditions",
-    icon: "🍂",
+    title: "Kitchen Cleaners from Citrus Peels and Vinegar",
+    icon: "🍋",
     color: "#8b5cf6",
-    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost."
+    info: "Making kitchen cleaners from citrus peels and vinegar revives the age-old Mediterranean and Carpathian practice of using food scraps as powerful household cleaning agents. By infusing lemon, orange or grapefruit peels in white vinegar, a natural all-purpose cleaner is produced free of synthetic chemicals, plastic packaging and added cost.",
+    // "DID YOU KNOW (GAME FACTS)" from the GR Reducing Food Waste info paper (Practice 2)
+    facts: [
+      "In traditional Greek kitchens, leftover lemon peels were turned into cleaning agents.",
+      "Citrus peel steeped in vinegar for about two weeks makes a natural, all-purpose surface cleaner.",
+      "A Cretan saying prizes knowing the worth of a tomato skin and a lemon peel.",
+    ],
   },
   // Topic 4 on the list (CZ Practice LTTA Romania - Water Irrigation / Greywater Reuse) is merged into this
   // module. Its packaging/greenwashing content isn't one of the 11 listed topics. Title below is a best-effort
@@ -180,16 +299,43 @@ const MODULES = [
     title: "Sustainable Packaging & Water Reuse",
     icon: "♻️",
     color: "#0ea5e9",
-    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint."
+    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint.",
+    facts: [
+      "The Green Dot doesn't always mean packaging is recyclable: it shows the producer pays into a recovery system.",
+      "Greywater from washing, bathing and sinks can be treated and reused for non-drinking purposes such as toilet flushing.",
+    ],
   },
-  // NOT on the list either (seasonal/local eating); kept, moved to the end.
+  // RO info papers 3 + 4 (Institutul Postliceal "Phoenix"): Seasonal and Mindful Cooking: Preserving Cultural
+  // Heritage. Replaces the earlier AI-drafted "Seasonal & Local Eating" placeholder, which had no source material.
   {
     id: 8,
-    title: "Seasonal & Local Eating",
-    icon: "🥕",
+    title: "Seasonal and Mindful Cooking: Preserving Cultural Heritage",
+    icon: "🥫",
     color: "#ec4899",
-    info: "Eating fruits and vegetables when they're in season and grown nearby means less transport, less energy-intensive storage, and produce that's fresher and tastier. Choosing seasonal, local food is one of the simplest everyday ways to shrink a household's carbon footprint."
-  }
+    info: "Ancestral preserving techniques turn seasonal harvests into food for the winter. Romanian silvoița is a sugar-free plum jam, slow-boiled with the skins until thick and poured hot into sterilised jars; zacusca is a spread of roasted eggplants and peppers, onions, tomato juice and spices, simmered slowly and sealed in jars. Using local surplus and reusable jars cuts transport emissions, packaging and food waste.",
+    // "DID YOU KNOW (GAME FACTS)" from RO info papers 3 + 4
+    facts: [
+      "In the Czech Republic, a similar slow-cooking technique is used to make švestková povidla (plum butter).",
+      "In Mediterranean regions, grape must is slowly boiled into a thick, sweet syrup without added sugar.",
+      "In Greece, melitzanosalata is a paste of baked eggplant, garlic, olive oil, lemon or vinegar and herbs.",
+      "In Italy, Sicilian caponata slow-cooks eggplant, tomatoes, onions, peppers, celery, olives and capers.",
+      "In the Czech Republic, the closest traditional product to zacusca is lečo, a stew-like vegetable dish preserved for the winter.",
+    ],
+  },
+  // LTTA Italy info paper: From Herbs to Traditional Products
+  {
+    id: 9,
+    title: "From Herbs to Traditional Products",
+    icon: "🌼",
+    color: "#a855f7",
+    info: "Wild and garden herbs can be turned into teas, remedies and other traditional products. Sustainable harvesting means collecting only small amounts from abundant plants, using the right parts of each species, and drying herbs properly before storing them in clean, closed and labelled jars, so that plants keep growing for future generations.",
+    // Restates the explanations in the LTTA Italy info paper
+    facts: [
+      "Collecting only small amounts from abundant plant populations lets herbs keep growing and reproducing.",
+      "Depending on the species, leaves, flowers, seeds, roots or stems may be collected.",
+      "Dried herbs keep their aroma longest in tightly closed, labelled glass jars stored somewhere cool, dry and dark.",
+    ],
+  },
 ];
 
 const QUESTIONS = [
@@ -206,7 +352,7 @@ const QUESTIONS = [
     id: 6,
     module: 1,
     text: "Which choice helps reduce food transport emissions?",
-    options: ["Imported packaged food", "Food grown in a local edible whildlife garden"],
+    options: ["Imported packaged food", "Food grown in a local edible wildlife garden"],
     images: [asset("Garden1.png"), asset("Garden2.png")],
     answer: 1,
     explanation: "A diverse garden provides a wide variety of food and seeds while preserving biodiversity, supporting pollinators and wildlife, and helping gardens better adapt to drought, pests, and climate change."
@@ -285,7 +431,7 @@ const QUESTIONS = [
     id: 3,
     module: 3,
     text: "Which companion plants also contribute to improving the taste of the plants they accompany?",
-    options: ["Basil", "Marigold", "Garlic", "Nastutium"],
+    options: ["Basil", "Marigold", "Garlic", "Nasturtium"],
     answer: 0,
     explanation: "Companion planting pairs crops that protect and enhance one another. The classic combination of tomatoes with basil improves both resilience and flavour."
   },
@@ -391,7 +537,7 @@ const QUESTIONS = [
     id: 17,
     module: 6,
     text: "Which natural substance in citrus peel cuts through grease?",
-    options: [" Chlorine", "D-limonene", "Baking powder", "Sugar"],
+    options: ["Chlorine", "D-limonene", "Baking powder", "Sugar"],
     answer: 1,
     explanation: "D-limonene is a natural oil found in citrus peel that dissolves grease and grime effectively, which is why citrus-based cleaners work so well without synthetic degreasers."
   },
@@ -449,52 +595,130 @@ const QUESTIONS = [
     explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
   },
 
-  // MODULE 8: not on the list: Seasonal & Local Eating.
-  // AI-drafted from scratch (no source material existed for this module): flag for the manager to review.
+  // MODULE 8: RO info papers 3 + 4 (Seasonal and Mindful Cooking: Preserving Cultural Heritage).
+  // Replaces the earlier AI-drafted placeholder questions (ids 32-35), which had no source material.
   {
-    id: 32,
+    id: 36,
     module: 8,
-    text: "Which of these has the lowest carbon footprint?",
-    options: ["Berries flown in from overseas in winter", "Local, in-season vegetables from a nearby farm", "Vegetables grown in a heated greenhouse out of season", "Canned imported fruit"],
-    answer: 1,
-    explanation: "Local, in-season produce travels short distances and needs no extra heating or long-term refrigerated storage, so it has a much smaller carbon footprint than food that's imported or grown out of season."
+    text: "What is the method for obtaining sugar-free plum jam?",
+    options: ["Slow cooking", "Sun drying", "Baking", "Cooking over high heat", "Steaming"],
+    answer: 0,
+    explanation: "Silvoița, the Romanian sugar-free plum jam, is made by slowly boiling well-ripened plums, stirring constantly until they shrink into a dense paste, which is then placed hot in sterilised jars."
   },
   {
-    id: 33,
+    id: 37,
     module: 8,
-    text: "Is it TRUE OR FALSE that buying imported fruit year-round is more sustainable than buying local fruit only when it's in season?",
+    text: "Is it TRUE or FALSE that the peel of the fruit is used to prepare sugar-free plum jam?",
+    options: ["True", "False"],
+    answer: 0,
+    explanation: "The plums are cooked with their skins. Using the whole fruit preserves nutrients and flavour and avoids waste."
+  },
+  {
+    id: 38,
+    module: 8,
+    text: "What is the most important reason to pass on the tradition?",
+    options: ["To develop sustainable cooking skills", "To save money", "To learn to cook", "To eat together", "To exchange recipes"],
+    answer: 0,
+    explanation: "Passing recipes and practical skills from one generation to another keeps sustainable cooking alive: using local, seasonal produce, preserving surplus for the winter and reusing jars."
+  },
+  {
+    id: 39,
+    module: 8,
+    text: "Is it TRUE or FALSE that carrots are an ingredient of zacusca?",
     options: ["True", "False"],
     answer: 1,
-    explanation: "Imported, out-of-season fruit usually requires long-distance transport, refrigeration or energy-intensive greenhouse growing, all of which increase emissions compared to eating what's locally in season."
+    explanation: "Zacusca is made with eggplants, kapia peppers or Romanian sweet red peppers (gogoșari), onions, tomato juice, sunflower oil and spices. There are no carrots in it."
+  },
+
+  // MODULE 9: LTTA Italy info paper: From Herbs to Traditional Products
+  {
+    id: 40,
+    module: 9,
+    text: "Which picture shows sustainable harvesting of wild herbs?",
+    options: [
+      "Pulling the entire plant out by its roots (from several plants)",
+      "Cutting all flowering stems from a patch (nothing is left to regrow)",
+      "Carefully collecting a small amount from an abundant population",
+    ],
+    images: [asset("herb_harvest_pull.jpg"), asset("herb_harvest_cutall.jpg"), asset("herb_harvest_sustainable.jpg")],
+    answer: 2,
+    explanation: "Collecting only small amounts from abundant plant populations allows herbs to continue growing and reproducing. It helps protect biodiversity and ensures that plants remain available for future generations."
   },
   {
-    id: 34,
-    module: 8,
-    text: "What is one benefit of eating seasonally?",
-    options: ["Food is always more expensive", "Produce is fresher and often more nutritious", "It requires more packaging", "It increases food miles"],
+    id: 41,
+    module: 9,
+    text: "What is one of the main benefits of using herbs in traditional medicine?",
+    options: [
+      "Herbal remedies are always safer and more effective than conventional medicines",
+      "Herbs support health and well-being because they contain naturally occurring beneficial compounds",
+      "All herbs have the same medicinal properties, regardless of their species",
+    ],
+    images: [asset("herb_benefit_safer.jpg"), asset("herb_benefit_compounds.jpg"), asset("herb_benefit_same.jpg")],
     answer: 1,
-    explanation: "Seasonal produce is usually harvested closer to when it's eaten, so it retains more nutrients and flavour than food that's been stored or shipped long distances."
+    explanation: "Herbs contain natural compounds that support health and well-being, for example respiratory health, digestion or liver function. Their specific effects vary according to the plant species, its chemical composition and the way it is prepared and used."
   },
   {
-    id: 35,
-    module: 8,
-    text: "Which shopping habit best supports local, seasonal eating?",
-    options: ["Shopping at a farmers' market for what's currently in season", "Buying whatever fruit you want regardless of season", "Choosing pre-packaged imported produce", "Always picking the cheapest option regardless of origin"],
-    answer: 0,
-    explanation: "Farmers' markets typically sell what's currently in season and grown nearby, making it easy to shop in line with local, low-carbon eating."
+    id: 42,
+    module: 9,
+    text: "Which picture shows the correct way to store a prepared herbal product?",
+    options: [
+      "A closed but unlabelled container",
+      "An open jar exposed to moisture",
+      "A clean, tightly closed and labelled jar, stored away from sunlight",
+    ],
+    images: [asset("herb_store_unlabelled.jpg"), asset("herb_store_open.jpg"), asset("herb_store_labelled.jpg")],
+    answer: 2,
+    explanation: "Storing properly dried herbs in clean, tightly closed and labelled containers, preferably glass jars, preserves their quality, aroma and shelf life. Paper bags can also be used if kept in a cool, dry and dark place, protected from moisture."
+  },
+  {
+    id: 43,
+    module: 9,
+    text: "You have collected more herbs than you need. What is the most sustainable approach?",
+    options: [
+      "Dry all the herbs immediately, even if some will never be used.",
+      "Discard the extra herbs and collect fresh ones when needed.",
+      "Use what you need, preserve or share the surplus with family and friends.",
+    ],
+    answer: 2,
+    explanation: "Using, preserving or sharing surplus herbs reduces waste and makes better use of natural resources. Correctly identified, safely prepared and labelled herbal products also make thoughtful gifts. Sustainable harvesting means collecting only what is needed and letting plants regenerate."
+  },
+  {
+    id: 44,
+    module: 9,
+    text: "Which parts of a herb can be collected for herbal products?",
+    options: [
+      "Only the leaves and flowers, as other parts of herbs are generally unsuitable.",
+      "Leaves, flowers, seeds, roots or stems, depending on the plant species and intended use.",
+      "Any part of a herb, as long as the plant is collected during the flowering season.",
+    ],
+    answer: 1,
+    explanation: "Different herbs have different useful parts. Depending on the species, leaves, flowers, seeds, roots or stems may be collected. Correct identification and knowing which parts are safe to use are essential."
+  },
+  {
+    id: 45,
+    module: 9,
+    text: "Why is it important to dry herbs properly before storing them?",
+    options: [
+      "Drying removes all microorganisms and guarantees that herbs remain safe indefinitely.",
+      "Drying increases the concentration of every beneficial substance found in herbs.",
+      "Drying reduces moisture, helping prevent mould growth and extend shelf life.",
+    ],
+    answer: 2,
+    explanation: "Removing excess moisture limits microbial growth and deterioration. Herbs must still be stored correctly, and their quality decreases over time."
   },
 ];
 
 const PATH_NODES = [
-  { x:50, y:90 }, // 0 = START
-  { x:18, y:82 }, // 1
-  { x:72, y:74 }, // 2
-  { x:24, y:66 }, // 3
-  { x:70, y:58 }, // 4
-  { x:24, y:50 }, // 5
-  { x:68, y:42 }, // 6
-  { x:26, y:34 }, // 7
-  { x:60, y:26 }, // 8 = last module = FINISH
+  { x:50, y:92 }, // 0 = START
+  { x:18, y:84 }, // 1
+  { x:72, y:76 }, // 2
+  { x:24, y:68 }, // 3
+  { x:72, y:60 }, // 4
+  { x:24, y:52 }, // 5
+  { x:70, y:44 }, // 6
+  { x:26, y:36 }, // 7
+  { x:68, y:28 }, // 8
+  { x:42, y:20 }, // 9 = last module = FINISH
 ];
 
 function lerp(a,b,t){ return a+(b-a)*t; }
@@ -507,8 +731,22 @@ function GlobalStyles() {
   return (
     <style>{`
       * { margin:0; padding:0; box-sizing:border-box; }
-      body { font-family:'Nunito','Segoe UI',sans-serif; }
+      body { font-family:'Nunito','Segoe UI',sans-serif; background:#2d7d32; -webkit-tap-highlight-color:transparent; }
       #root { min-height:100vh; }
+      button { font-family:inherit; }
+      .gp-btn:focus-visible, .gp-opt:focus-visible, .gp-node:focus-visible {
+        outline:3px solid #fde047; outline-offset:2px;
+      }
+      /* Quiz columns scroll as a whole instead of squashing (and overlapping) their cards on short screens */
+      .gp-col > * { flex-shrink:0; }
+      .gp-input:focus { border-color:#4ade80 !important; box-shadow:0 0 0 3px rgba(74,222,128,0.18); }
+      .gp-input::placeholder { color:#86a993; }
+      .gp-lang-chip { transition:transform 0.15s, background 0.15s, border-color 0.15s; }
+      .gp-lang-chip:hover { transform:translateY(-2px); }
+      ${NATURE_SCENE_CSS}
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+      }
 
       @keyframes leafDrift  { 0%,100%{transform:translateY(0) rotate(-8deg)} 50%{transform:translateY(-14px) rotate(8deg)} }
       @keyframes charBob    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
@@ -576,61 +814,12 @@ function GlobalStyles() {
 }
 
 /* ═══════════════════════════════════════════════════
-   WATERFALL SVG
-═══════════════════════════════════════════════════ */
-function WaterfallSVG({ w = 100, h = 170 }) {
-  return (
-    <svg viewBox="0 0 80 160" style={{ width: w, height: h, overflow: "visible" }}>
-      <path d="M10 0 Q40-2 70 0 L72 42 Q40 38 8 42 Z" fill="#5a6978"/>
-      <path d="M18 4 Q40 2 62 4 L63 38 Q40 35 17 38 Z" fill="#4a5568"/>
-      <rect x="24" y="2" width="12" height="10" rx="2" fill="#374151"/>
-      <rect x="44" y="3" width="11" height="9" rx="2" fill="#374151"/>
-      <path d="M10 0 Q15 5 8 42" fill="none" stroke="#3a4550" strokeWidth="1.5" opacity="0.6"/>
-      <path d="M70 0 Q75 5 72 42" fill="none" stroke="#3a4550" strokeWidth="1.5" opacity="0.6"/>
-      <rect x="26" y="40" width="9" height="65" rx="4.5" fill="#7dd3fc" opacity="0.88"
-        style={{ animation:"wfStream 0.38s ease-in-out infinite alternate" }}/>
-      <rect x="43" y="40" width="7" height="58" rx="3.5" fill="#93c5fd" opacity="0.78"
-        style={{ animation:"wfStream 0.32s 0.1s ease-in-out infinite alternate" }}/>
-      <rect x="35" y="40" width="5" height="60" rx="2.5" fill="#bae6fd" opacity="0.65"
-        style={{ animation:"wfStream 0.42s 0.05s ease-in-out infinite alternate" }}/>
-      <rect x="20" y="44" width="4" height="40" rx="2" fill="#93c5fd" opacity="0.48"
-        style={{ animation:"wfStream 0.5s 0.18s ease-in-out infinite alternate" }}/>
-      <rect x="54" y="44" width="3.5" height="37" rx="1.75" fill="#7dd3fc" opacity="0.42"
-        style={{ animation:"wfStream 0.46s 0.24s ease-in-out infinite alternate" }}/>
-      {[28,33,38,43,48].map((x, i) => (
-        <circle key={i} cx={x} cy={55 + (i % 3) * 5} r="1.4" fill="#e0f2fe" opacity="0.8"
-          style={{ animation:`dropFall ${0.5+i*0.09}s ${i*0.1}s linear infinite` }}/>
-      ))}
-      <ellipse cx="40" cy="114" rx="26" ry="11" fill="#2563eb" opacity="0.38"
-        style={{ animation:"waterRipple 1.3s ease-in-out infinite" }}/>
-      <ellipse cx="40" cy="112" rx="20" ry="8" fill="#3b82f6" opacity="0.48"/>
-      <ellipse cx="40" cy="110" rx="13" ry="5" fill="#60a5fa" opacity="0.55"/>
-      <ellipse cx="40" cy="108" rx="7" ry="3" fill="#93c5fd" opacity="0.7"/>
-      {[30,35,40,45,50].map((x,i) => (
-        <circle key={i} cx={x} cy={99+(i%2)*3} r="1.6" fill="#bfdbfe" opacity="0.8"
-          style={{ animation:`splash ${0.28+i*0.06}s ${i*0.05}s ease-in-out infinite` }}/>
-      ))}
-      <ellipse cx="40" cy="120" rx="32" ry="13" fill="white" opacity="0.08"
-        style={{ animation:"mistFloat 2.2s ease-in-out infinite" }}/>
-      <ellipse cx="9"  cy="108" rx="9"  ry="14" fill="#15803d" opacity="0.78"/>
-      <ellipse cx="71" cy="105" rx="8"  ry="13" fill="#16a34a" opacity="0.72"/>
-      <ellipse cx="4"  cy="93"  rx="6"  ry="9"  fill="#166534" opacity="0.65"/>
-      <ellipse cx="76" cy="91"  rx="5"  ry="8"  fill="#15803d" opacity="0.6"/>
-      <rect x="11" y="118" width="2.5" height="12" rx="1.2" fill="#78350f" opacity="0.7"/>
-      <rect x="64" y="118" width="2.5" height="12" rx="1.2" fill="#78350f" opacity="0.7"/>
-      <text x="3"  y="104" fontSize="5" style={{ userSelect:"none" }}>🌸</text>
-      <text x="68" y="102" fontSize="5" style={{ userSelect:"none" }}>🌼</text>
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
    SHARED UI
 ═══════════════════════════════════════════════════ */
-function Btn({ children, onClick, color="#22c55e", style={}, disabled }) {
+function Btn({ children, onClick, color="#22c55e", style={}, disabled, type="button" }) {
   const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} disabled={disabled}
+    <button type={type} onClick={onClick} disabled={disabled} className="gp-btn"
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{
         background: disabled?"#1e293b":hov?color:color+"cc",
@@ -645,13 +834,14 @@ function Btn({ children, onClick, color="#22c55e", style={}, disabled }) {
 }
 
 function BackBtn({ onClick }) {
+  const t = useT();
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} className="gp-btn" style={{
       background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
       color:"#94a3b8", cursor:"pointer", fontSize:13, fontWeight:700,
       padding:"6px 14px", marginBottom:16, fontFamily:"inherit",
       borderRadius:10, transition:"all 0.15s",
-    }}>← Back</button>
+    }}>{t("common.back")}</button>
   );
 }
 
@@ -676,22 +866,15 @@ function CoinIcon({ size=28, style={} }) {
 function GardenWrap({ children, showWaterfall=true }) {
   return (
     <div style={{
-      minHeight:"100dvh",
+      minHeight:"100dvh", width:"100%",
       background:"linear-gradient(180deg,#6bbde8 0%,#a8ddb5 32%,#4caf50 65%,#2d7d32 100%)",
       display:"flex", alignItems:"center", justifyContent:"center",
       fontFamily:"'Nunito','Segoe UI',sans-serif", padding:16,
       position:"relative", overflow:"hidden",
     }}>
+      <NatureScene waterfall={showWaterfall}/>
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"38%",
-        background:"linear-gradient(180deg,transparent,#1b5e2099)", pointerEvents:"none", zIndex:0 }}/>
-      {showWaterfall && <>
-        <div style={{ position:"absolute", right:"1%", top:"4%", pointerEvents:"none", zIndex:0, opacity:0.85 }}>
-          <WaterfallSVG w={130} h={200}/>
-        </div>
-        <div style={{ position:"absolute", left:"-2%", top:"10%", pointerEvents:"none", zIndex:0, opacity:0.6 }}>
-          <WaterfallSVG w={100} h={160}/>
-        </div>
-      </>}
+        background:"linear-gradient(180deg,transparent,#1b5e2066)", pointerEvents:"none", zIndex:0 }}/>
       {["🍃","🌸","🌼","🍀","🌺","🦋"].map((e,i)=>(
         <span key={i} style={{
           position:"absolute", pointerEvents:"none",
@@ -730,10 +913,40 @@ const inputStyle = {
   background:"rgba(255,255,255,0.06)",
   border:"1px solid rgba(74,222,128,0.25)",
   borderRadius:12, padding:"12px 14px",
-  color:"#f0fdf4", fontSize:14, fontFamily:"inherit", outline:"none",
+  color:"#f0fdf4", fontSize:16, fontFamily:"inherit", outline:"none",
+  width:"100%", transition:"border-color 0.15s, box-shadow 0.15s",
 };
 
-function AuthScreen({ onAuth }) {
+/* Compact flag picker, so the very first screens are already in the player's language. */
+function LanguageChips({ value, onChange }) {
+  const t = useT();
+  return (
+    <div role="group" aria-label={t("lang.title")}
+      style={{ display:"flex", justifyContent:"center", gap:6, flexWrap:"wrap", marginBottom:18 }}>
+      {LANGUAGES.map(l => {
+        const active = l.id === value;
+        return (
+          <button key={l.id} type="button" className="gp-btn gp-lang-chip"
+            onClick={() => onChange(l)} aria-pressed={active} title={l.label}
+            style={{
+              display:"flex", alignItems:"center", gap:5, cursor:"pointer",
+              background: active ? `${l.color}33` : "rgba(255,255,255,0.05)",
+              border: `1.5px solid ${active ? l.color : "rgba(255,255,255,0.12)"}`,
+              color: active ? "#f0fdf4" : "#94a3b8",
+              borderRadius:999, padding:"4px 10px 4px 7px", fontSize:12, fontWeight:800,
+            }}>
+            <span style={{ fontSize:16, lineHeight:1 }}>{l.flag}</span>
+            {l.id === "gr" ? "EL" : l.id === "cz" ? "CS" : l.id.toUpperCase()}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function AuthScreen({ onAuth, languageId, onLanguageChange }) {
+  const t = useT();
+  const [showPw, setShowPw] = useState(false);
   const [mode, setMode] = useState("register"); // "register" | "login"
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -747,21 +960,26 @@ function AuthScreen({ onAuth }) {
     const uname = username.trim().toLowerCase();
 
     if (mode === "register") {
-      if (!fullName.trim() || !uname || !password) {
-        setError("Please fill in all fields.");
+      const name = cleanFullName(fullName);
+      if (!name || !uname || !password) {
+        setError("auth.errFill");
+        return;
+      }
+      if (name.length > FULLNAME_MAX) {
+        setError("auth.errName");
         return;
       }
       if (!USERNAME_RE.test(uname)) {
-        setError("Username must be 3-20 characters: letters, numbers, dots, hyphens or underscores.");
+        setError("auth.errUsername");
         return;
       }
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters.");
+      if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
+        setError("auth.errPassword");
         return;
       }
       setBusy(true);
       try {
-        const u = await registerUser(uname, password, fullName.trim());
+        const u = await registerUser(uname, password, name);
         onAuth(u);
       } catch (err) {
         setError(friendlyAuthError(err));
@@ -770,7 +988,11 @@ function AuthScreen({ onAuth }) {
       }
     } else {
       if (!uname || !password) {
-        setError("Please fill in all fields.");
+        setError("auth.errFill");
+        return;
+      }
+      if (!USERNAME_RE.test(uname) || password.length > PASSWORD_MAX) {
+        setError("auth.errIncorrect");
         return;
       }
       setBusy(true);
@@ -788,58 +1010,73 @@ function AuthScreen({ onAuth }) {
   return (
     <GardenWrap>
       <Panel>
+        <LanguageChips value={languageId} onChange={onLanguageChange}/>
         <div style={{ textAlign:"center", marginBottom:22 }}>
-          <div style={{ fontSize:44, marginBottom:8 }}>🔐</div>
+          <div style={{ fontSize:44, marginBottom:8 }}>{mode==="register" ? "🌱" : "🔐"}</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
-            {mode==="register" ? "Create Your Account" : "Welcome Back"}
+            {mode==="register" ? t("auth.registerTitle") : t("auth.loginTitle")}
           </h1>
           <p style={{ color:"#86efac", fontSize:13, marginTop:4 }}>
-            {mode==="register"
-              ? "We'll use your name on your completion certificate"
-              : "Log in to continue your garden journey"}
+            {mode==="register" ? t("auth.registerSub") : t("auth.loginSub")}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:12 }}>
           {mode==="register" && (
             <input
-              type="text" placeholder="Full name (for your certificate)"
+              type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
+              autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
               value={fullName} onChange={e=>setFullName(e.target.value)}
               style={inputStyle}
             />
           )}
           <input
-            type="text" placeholder="Username"
+            type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
+            autoComplete="username" className="gp-input" spellCheck={false} maxLength={20}
             value={username} onChange={e=>setUsername(e.target.value)}
             style={inputStyle} autoCapitalize="none"
           />
-          <input
-            type="password" placeholder="Password"
-            value={password} onChange={e=>setPassword(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={{ position:"relative" }}>
+            <input
+              type={showPw ? "text" : "password"} placeholder={t("auth.password")} aria-label={t("auth.password")}
+              autoComplete={mode==="register" ? "new-password" : "current-password"} className="gp-input"
+              maxLength={PASSWORD_MAX}
+              value={password} onChange={e=>setPassword(e.target.value)}
+              style={{ ...inputStyle, paddingRight:46 }}
+            />
+            <button type="button" className="gp-btn" onClick={()=>setShowPw(v=>!v)}
+              aria-label={showPw ? t("auth.hidePassword") : t("auth.showPassword")}
+              title={showPw ? t("auth.hidePassword") : t("auth.showPassword")}
+              style={{ position:"absolute", right:6, top:"50%", transform:"translateY(-50%)",
+                background:"none", border:"none", cursor:"pointer", fontSize:17, padding:"4px 8px",
+                opacity: showPw ? 1 : 0.6, borderRadius:8 }}>
+              {showPw ? "🙈" : "👁️"}
+            </button>
+          </div>
 
           {error && (
-            <div style={{ color:"#fca5a5", fontSize:13, textAlign:"center" }}>{error}</div>
+            <div role="alert" style={{ color:"#fecaca", fontSize:13, textAlign:"center",
+              background:"rgba(239,68,68,0.12)", border:"1px solid rgba(239,68,68,0.35)",
+              borderRadius:10, padding:"8px 10px", lineHeight:1.45 }}>{t(error)}</div>
           )}
 
-          <Btn onClick={()=>{}} disabled={busy} style={{ width:"100%", marginTop:6 }} color="#22c55e">
-            {busy ? "Please wait…" : mode==="register" ? "Create Account 🌱" : "Log In 🌿"}
+          <Btn type="submit" disabled={busy} style={{ width:"100%", marginTop:6 }} color="#22c55e">
+            {busy ? t("auth.wait") : mode==="register" ? t("auth.create") : t("auth.login")}
           </Btn>
         </form>
 
         <div style={{ textAlign:"center", marginTop:16 }}>
-          <button
+          <button type="button" className="gp-btn"
             onClick={()=>{ setMode(m=>m==="register"?"login":"register"); setError(""); }}
             style={{ background:"none", border:"none", color:"#86efac",
               fontSize:13, cursor:"pointer", textDecoration:"underline", fontFamily:"inherit" }}
           >
-            {mode==="register" ? "Already have an account? Log in" : "New here? Create an account"}
+            {mode==="register" ? t("auth.toLogin") : t("auth.toRegister")}
           </button>
         </div>
 
-        <p style={{ marginTop:18, color:"#475569", fontSize:11, textAlign:"center", lineHeight:1.5 }}>
-          Your account works on any device: just log in with the same username and password.
+        <p style={{ marginTop:18, color:"#86a993", fontSize:11, textAlign:"center", lineHeight:1.5 }}>
+          {t("auth.anyDevice")}
         </p>
       </Panel>
     </GardenWrap>
@@ -850,17 +1087,26 @@ function AuthScreen({ onAuth }) {
    LOADING SCREEN
 ═══════════════════════════════════════════════════ */
 function LoadingScreen({ onDone }) {
+  const t = useT();
   const [progress, setProgress] = useState(0);
 
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
   useEffect(() => {
+    let doneTimer;
     const id = setInterval(() => {
       setProgress(p => {
         const next = p + 1.4;
-        if (next >= 100) { clearInterval(id); setTimeout(()=>onDone(), 600); return 100; }
+        if (next >= 100) {
+          clearInterval(id);
+          clearTimeout(doneTimer);
+          doneTimer = setTimeout(()=>onDoneRef.current(), 600);
+          return 100;
+        }
         return next;
       });
     }, 38);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); clearTimeout(doneTimer); };
   }, []);
 
   return (
@@ -871,14 +1117,9 @@ function LoadingScreen({ onDone }) {
       alignItems:"center", justifyContent:"center",
       fontFamily:"'Nunito','Segoe UI',sans-serif", overflow:"hidden",
     }}>
-      <div style={{ position:"absolute", right:"2%", top:"3%", zIndex:0, opacity:0.9 }}>
-        <WaterfallSVG w={160} h={240}/>
-      </div>
-      <div style={{ position:"absolute", left:"0%", top:"8%", zIndex:0, opacity:0.65 }}>
-        <WaterfallSVG w={130} h={200}/>
-      </div>
+      <NatureScene/>
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"35%",
-        background:"linear-gradient(180deg,transparent,#1b5e2099)", zIndex:0, pointerEvents:"none" }}/>
+        background:"linear-gradient(180deg,transparent,#1b5e2066)", zIndex:0, pointerEvents:"none" }}/>
       {["🍃","🌸","🌼","🍀","🌺","🦋","🌿","🌻"].map((e,i)=>(
         <span key={i} style={{
           position:"absolute", zIndex:0, pointerEvents:"none",
@@ -889,69 +1130,91 @@ function LoadingScreen({ onDone }) {
         }}>{e}</span>
       ))}
 
-      <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
-        <div style={{ fontSize:56, marginBottom:6, filter:"drop-shadow(0 4px 16px rgba(0,0,0,0.4))" }}>🌿</div>
-        <h1 style={{ fontSize:38, fontWeight:900, color:"white",
-          textShadow:"0 3px 16px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.4)",
-          letterSpacing:-0.5, lineHeight:1.1, marginBottom:8 }}>Garden Quest</h1>
-        <p style={{ color:"#dcfce7", fontSize:14, fontWeight:600, opacity:0.85 }}>
-          Your journey through the garden begins…
-        </p>
-      </div>
+      {/* Soft light behind the centre so title and characters separate from the busy scenery */}
+      <div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none",
+        background:"radial-gradient(ellipse 60% 55% at 50% 50%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.18) 45%, transparent 75%)" }}/>
 
-      <div style={{
-        position:"relative",
-        zIndex:1,
-        display:"flex",
-        alignItems:"flex-end",
-        justifyContent:"center",
-        gap:30,
-        marginBottom:36,
-        flexWrap:"wrap"
-      }}>
-        {CHARACTERS.map((c, i) => (
-          <div key={c.id} style={{ textAlign:"center" }}>
-            <div style={{
-              background:`${c.color}20`,
-              border:`2px solid ${c.color}55`,
-              borderRadius:20,
-              padding:"10px 12px",
-              marginBottom:6
-            }}>
-              <img
-                src={c.idle}
-                alt={c.name}
-                style={{
-                  width:80,
-                  height:107,
-                  objectFit:"contain",
-                  display:"block",
-                  animation:`charBob 2.2s ${i * 0.3}s ease-in-out infinite`,
-                  filter:`drop-shadow(0 6px 18px ${c.color}70)`
-                }}
-              />
-            </div>
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center",
+        gap:"clamp(12px, 3.2vh, 34px)", width:"100%", maxWidth:900, padding:"0 12px" }}>
 
-            <div style={{
-              color:c.color,
-              fontWeight:900,
-              fontSize:12,
-              background:"rgba(0,0,0,0.35)",
-              borderRadius:8,
-              padding:"2px 8px"
-            }}>
-              {c.name}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ position:"relative", zIndex:1, width:280, textAlign:"center" }}>
-        <div style={{ fontSize:12, color:"#a7f3d0", fontWeight:700, marginBottom:8, letterSpacing:1 }}>
-          LOADING…
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:"clamp(36px, min(7vw, 8vh), 64px)", lineHeight:1, marginBottom:4,
+            filter:"drop-shadow(0 4px 12px rgba(0,0,0,0.35))" }}>🌿</div>
+          <h1 style={{ fontSize:"clamp(32px, min(7vw, 8vh), 60px)", fontWeight:900, color:"white",
+            textShadow:"0 3px 0 #166534, 0 6px 22px rgba(0,0,0,0.45)",
+            letterSpacing:-0.5, lineHeight:1.05, marginBottom:"clamp(6px, 1.2vh, 10px)" }}>GreenPath</h1>
+          <p style={{ display:"inline-block", color:"#f0fdf4", fontSize:"clamp(12px, 1.6vw, 15px)", fontWeight:800,
+            background:"rgba(20,83,45,0.72)", borderRadius:999, padding:"4px 14px", marginBottom:6,
+            boxShadow:"0 4px 14px rgba(0,0,0,0.18)" }}>
+            {t("brand.tagline")}
+          </p>
+          <p style={{ color:"#14532d", fontSize:"clamp(12px, 1.5vw, 15px)", fontWeight:800,
+            textShadow:"0 1px 0 rgba(255,255,255,0.7)" }}>
+            {t("loading.tagline")}
+          </p>
         </div>
-        <div style={{ height:22, borderRadius:999,
-          background:"rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.35)",
+
+        {/* Characters on bright stage cards: sized from both the width and height of the screen */}
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:`repeat(${CHARACTERS.length}, minmax(0, clamp(70px, min(19vw, 17vh), 165px)))`,
+          justifyContent:"center",
+          gap:"clamp(8px, 2.4vw, 28px)",
+          width:"100%",
+        }}>
+          {CHARACTERS.map((c, i) => (
+            <div key={c.id} style={{ display:"flex", flexDirection:"column", alignItems:"center", minWidth:0 }}>
+              <div style={{
+                position:"relative", width:"100%",
+                background:"linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.72) 60%, rgba(240,253,244,0.85) 100%)",
+                border:`3px solid ${c.color}`,
+                borderRadius:"clamp(14px, 2vw, 22px)",
+                padding:"clamp(6px, 1.2vw, 12px) clamp(4px, 1vw, 10px) clamp(4px, 0.8vw, 8px)",
+                boxShadow:`0 10px 26px rgba(0,0,0,0.22), 0 0 0 4px ${c.color}33, inset 0 -18px 30px ${c.color}22`,
+                overflow:"hidden",
+              }}>
+                {/* ground shadow */}
+                <div style={{ position:"absolute", left:"18%", right:"18%", bottom:"6%", height:"7%",
+                  borderRadius:"50%", background:"rgba(0,0,0,0.18)", filter:"blur(3px)" }}/>
+                <img
+                  src={c.idle}
+                  alt={c.name}
+                  draggable={false}
+                  style={{
+                    position:"relative",
+                    width:"100%",
+                    height:"auto", aspectRatio:"2 / 3",
+                    objectFit:"contain",
+                    display:"block",
+                    animation:`charBob 2.2s ${i * 0.3}s ease-in-out infinite`,
+                    filter:"drop-shadow(0 4px 6px rgba(0,0,0,0.25))",
+                  }}
+                />
+              </div>
+              <div style={{
+                marginTop:"clamp(-12px, -1.2vw, -8px)", position:"relative",
+                color:"#fff", background:c.color,
+                fontWeight:900, fontSize:"clamp(11px, 1.5vw, 15px)",
+                borderRadius:999, padding:"3px clamp(10px, 1.6vw, 16px)",
+                boxShadow:"0 4px 12px rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.9)",
+                textShadow:"0 1px 2px rgba(0,0,0,0.35)", whiteSpace:"nowrap",
+              }}>
+                {c.name}
+              </div>
+            </div>
+          ))}
+        </div>
+
+      <div style={{ width:"clamp(240px, 42vw, 400px)", textAlign:"center",
+        background:"rgba(255,255,255,0.78)", borderRadius:18, padding:"10px 16px 8px",
+        boxShadow:"0 8px 24px rgba(0,0,0,0.18)", border:"1px solid rgba(255,255,255,0.9)" }}>
+        <div style={{ fontSize:"clamp(11px, 1.3vw, 13px)", color:"#14532d", fontWeight:900, marginBottom:8, letterSpacing:1.5 }}>
+          {t("loading.label")}
+        </div>
+        <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}
+          style={{ height:"clamp(16px, 2.4vh, 22px)", borderRadius:999,
+          background:"rgba(20,83,45,0.45)", border:"2px solid rgba(255,255,255,0.8)",
+          boxShadow:"0 4px 14px rgba(0,0,0,0.18)",
           overflow:"hidden", position:"relative" }}>
           <div style={{
             position:"absolute", top:0, left:0, bottom:0,
@@ -975,9 +1238,10 @@ function LoadingScreen({ onDone }) {
             backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(255,255,255,0.05) 14px,rgba(255,255,255,0.05) 28px)",
           }}/>
         </div>
-        <div style={{ color:"#bae6fd", fontSize:14, marginTop:8, fontWeight:800 }}>
+        <div style={{ color:"#14532d", fontSize:14, marginTop:8, fontWeight:900 }}>
           {Math.round(progress)}%
         </div>
+      </div>
       </div>
     </div>
   );
@@ -986,23 +1250,27 @@ function LoadingScreen({ onDone }) {
 /* ═══════════════════════════════════════════════════
    LANGUAGE SCREEN
 ═══════════════════════════════════════════════════ */
-function LanguageScreen({ onSelect }) {
+function LanguageScreen({ onSelect, onBack, currentId }) {
+  const t = useT();
   return (
     <GardenWrap>
       <Panel>
+        {onBack && <BackBtn onClick={onBack}/>}
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <div style={{ fontSize:46, marginBottom:8 }}>🌍</div>
           <h1 style={{ fontSize:22, fontWeight:900, marginBottom:4, color:"#f0fdf4" }}>
-            Choose Your Language
+            {t("lang.title")}
           </h1>
-          <p style={{ color:"#86efac", fontSize:13 }}>Select a language to continue</p>
+          <p style={{ color:"#86efac", fontSize:13 }}>{t("lang.sub")}</p>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
           {LANGUAGES.map(lang=>(
-            <div key={lang.id} onClick={()=>onSelect(lang)}
+            <button type="button" className="gp-btn" key={lang.id} onClick={()=>onSelect(lang)}
+              aria-current={lang.id===currentId ? "true" : undefined}
               style={{
-                background:`${lang.color}14`,
-                border:`2px solid ${lang.color}44`,
+                width:"100%", textAlign:"left", color:"inherit", fontFamily:"inherit",
+                background:lang.id===currentId ? `${lang.color}30` : `${lang.color}14`,
+                border:`2px solid ${lang.id===currentId ? lang.color : lang.color+"44"}`,
                 borderRadius:16, padding:"14px 18px", cursor:"pointer",
                 display:"flex", alignItems:"center", gap:14, transition:"all 0.2s",
               }}
@@ -1012,15 +1280,17 @@ function LanguageScreen({ onSelect }) {
                 e.currentTarget.style.borderColor=lang.color;
               }}
               onMouseLeave={e=>{
-                e.currentTarget.style.background=`${lang.color}14`;
+                e.currentTarget.style.background=lang.id===currentId ? `${lang.color}30` : `${lang.color}14`;
                 e.currentTarget.style.transform="translateX(0)";
-                e.currentTarget.style.borderColor=`${lang.color}44`;
+                e.currentTarget.style.borderColor=lang.id===currentId ? lang.color : `${lang.color}44`;
               }}
             >
               <span style={{ fontSize:32 }}>{lang.flag}</span>
-              <span style={{ fontWeight:800, fontSize:16, color:"#f0fdf4" }}>{lang.label}</span>
-              <span style={{ marginLeft:"auto", color:"#64748b", fontSize:18 }}>›</span>
-            </div>
+              <span lang={LANGUAGE_META[lang.id].htmlLang} style={{ fontWeight:800, fontSize:16, color:"#f0fdf4" }}>{lang.label}</span>
+              <span style={{ marginLeft:"auto", color:lang.id===currentId ? "#4ade80" : "#64748b", fontSize:18 }}>
+                {lang.id===currentId ? "✓" : "›"}
+              </span>
+            </button>
           ))}
         </div>
       </Panel>
@@ -1030,15 +1300,14 @@ function LanguageScreen({ onSelect }) {
 
 /*AristotleIntro*/
 
-function AristotleIntro({ module, onStart }) {
+function AristotleIntro({ module, questionCount, onStart, onBack }) {
+  const t = useT();
   const [AristotleIn, setAristotleIn] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
 
+  // The component is keyed by module id, so state starts fresh for every module.
   useEffect(() => {
-    setAristotleIn(false);
-    setShowCloud(false);
-    setCanProceed(false);
     const t1 = setTimeout(() => setAristotleIn(true), 250);
     const t2 = setTimeout(() => setShowCloud(true), 1400);
     const t3 = setTimeout(() => setCanProceed(true), 1400 + 2500); // stays locked ~2.5s after text appears
@@ -1048,6 +1317,7 @@ function AristotleIntro({ module, onStart }) {
   return (
     <GardenWrap>
       <Panel>
+        {onBack && <BackBtn onClick={onBack}/>}
         <div style={{ textAlign: "center", marginBottom: 14 }}>
           <div style={{
             display:"inline-block", background:`${module.color}22`,
@@ -1055,12 +1325,17 @@ function AristotleIntro({ module, onStart }) {
             padding:"4px 14px", marginBottom:10,
           }}>
             <span style={{ color: module.color, fontWeight:900, fontSize:12, letterSpacing:0.5 }}>
-              {module.icon} MODULE {module.id}
+              {module.icon} {t("intro.module", { n: module.id })}
             </span>
           </div>
           <h2 style={{ color: "#fbbf24", fontWeight:900, fontSize:19, lineHeight:1.3 }}>
             {module.title}
           </h2>
+          {questionCount > 0 && (
+            <div style={{ color:"#86efac", fontSize:12, fontWeight:700, marginTop:4 }}>
+              {t("intro.questions", { n: questionCount })}
+            </div>
+          )}
         </div>
 
         {/* Aristotle appears */}
@@ -1090,7 +1365,7 @@ function AristotleIntro({ module, onStart }) {
                 textTransform:"uppercase", letterSpacing:1,
                 display:"flex", alignItems:"center", gap:6, justifyContent:"center",
               }}>
-                📜 Aristotle explains…
+                📜 {t("intro.explains")}
               </div>
               {module.info}
             </div>
@@ -1113,9 +1388,32 @@ function AristotleIntro({ module, onStart }) {
           </div>
         </div>
 
+        {/* "Did you know?" game facts from the info papers */}
+        {showCloud && module.facts?.length > 0 && (
+          <div style={{
+            background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.35)",
+            borderRadius:16, padding:"12px 14px", marginBottom:18,
+            animation:"panelSlideUp 0.5s ease",
+          }}>
+            <div style={{ color:"#fbbf24", fontWeight:900, fontSize:12, letterSpacing:0.6,
+              textTransform:"uppercase", marginBottom:8 }}>
+              💡 {t("intro.didYouKnow")}
+            </div>
+            <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:7 }}>
+              {/* Intro shows the first four; the results screen draws from the full list. */}
+              {module.facts.slice(0,4).map((f,i)=>(
+                <li key={i} style={{ display:"flex", gap:8, color:"#e2e8f0", fontSize:13, lineHeight:1.5 }}>
+                  <span style={{ color:module.color, flexShrink:0 }}>●</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div style={{ textAlign: "center" }}>
-          <Btn onClick={onStart} color="#fbbf24" disabled={!canProceed}>
-            {canProceed ? "Begin the Quest 🌿" : "Reading… ⏳"}
+          <Btn onClick={onStart} color="#fbbf24" disabled={!canProceed} style={{ minWidth:220 }}>
+            {canProceed ? t("intro.begin") : t("intro.reading")}
           </Btn>
         </div>
       </Panel>
@@ -1126,8 +1424,9 @@ function AristotleIntro({ module, onStart }) {
 /* ═══════════════════════════════════════════════════
    CHARACTER SCREEN
 ═══════════════════════════════════════════════════ */
-function CharacterScreen({ language, onSelect, onBack }) {
-  const [idx,     setIdx]     = useState(0);
+function CharacterScreen({ language, initialId, onSelect, onBack }) {
+  const t = useT();
+  const [idx,     setIdx]     = useState(()=>Math.max(0, CHARACTERS.findIndex(c=>c.id===initialId)));
   const [animDir, setAnimDir] = useState(null);
   const [animKey, setAnimKey] = useState(0);
   const touchStartX = useRef(null);
@@ -1151,15 +1450,15 @@ function CharacterScreen({ language, onSelect, onBack }) {
       <Panel>
         <BackBtn onClick={onBack}/>
         <div style={{ textAlign:"center", marginBottom:20 }}>
-          <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>Choose Your Character</h1>
+          <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>{t("char.title")}</h1>
           <p style={{ color:"#86efac", fontSize:13, marginTop:3 }}>
-            {language.flag} {language.label} · Swipe or use arrows to browse
+            {language.flag} {language.label} · {t("char.browse")}
           </p>
         </div>
 
         <div style={{ position:"relative" }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <button onClick={prev} style={{
-            position:"absolute", left:-16, top:"50%", transform:"translateY(-50%)",
+          <button type="button" className="gp-btn" onClick={prev} aria-label={t("char.prev")} style={{
+            position:"absolute", left:-10, top:"50%", transform:"translateY(-50%)",
             width:38, height:38, borderRadius:"50%", zIndex:10,
             background:"rgba(74,222,128,0.15)", border:"2px solid rgba(74,222,128,0.35)",
             color:"#4ade80", fontSize:20, cursor:"pointer",
@@ -1172,25 +1471,26 @@ function CharacterScreen({ language, onSelect, onBack }) {
               :animDir==="right"?"slideInLeft 0.32s ease":"none",
           }}>
             <div style={{ background:`${c.color}12`, border:`2px solid ${c.color}50`, borderRadius:22, padding:"24px 20px" }}>
-              <img src={c.idle} alt={c.name} style={{
-                width:140, height:187, objectFit:"contain", display:"block", margin:"0 auto 14px",
-                filter:`drop-shadow(0 10px 28px ${c.color}90)`,
+              <img src={c.idle} alt={c.name} draggable={false} style={{
+                height:"clamp(170px, 30vh, 260px)", width:"auto", aspectRatio:"2 / 3",
+                objectFit:"contain", display:"block", margin:"0 auto 14px",
+                filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 10px 24px ${c.color}90)`,
                 animation:"charIdle 3s ease-in-out infinite",
               }}/>
               <div style={{ fontWeight:900, fontSize:20, color:"#f0fdf4", marginBottom:3 }}>{c.name}</div>
               <div style={{
                 display:"inline-block", background:`${c.color}22`, border:`1px solid ${c.color}55`,
                 color:c.color, fontWeight:700, fontSize:12, borderRadius:8, padding:"3px 10px", marginBottom:10,
-              }}>{c.culture}</div>
+              }}>{t(`culture.${c.culture}`)}</div>
               <div style={{ color:"#94a3b8", fontSize:13, fontStyle:"italic",
                 background:"rgba(255,255,255,0.04)", borderRadius:12, padding:"8px 12px" }}>
-                "{c.bubble.idle}"
+                "{t(`char.${c.id}.idle`)}"
               </div>
             </div>
           </div>
 
-          <button onClick={next} style={{
-            position:"absolute", right:-16, top:"50%", transform:"translateY(-50%)",
+          <button type="button" className="gp-btn" onClick={next} aria-label={t("char.next")} style={{
+            position:"absolute", right:-10, top:"50%", transform:"translateY(-50%)",
             width:38, height:38, borderRadius:"50%", zIndex:10,
             background:"rgba(74,222,128,0.15)", border:"2px solid rgba(74,222,128,0.35)",
             color:"#4ade80", fontSize:20, cursor:"pointer",
@@ -1200,14 +1500,16 @@ function CharacterScreen({ language, onSelect, onBack }) {
 
         <div style={{ display:"flex", justifyContent:"center", gap:8, margin:"18px 0 20px" }}>
           {CHARACTERS.map((ch,i)=>(
-            <div key={i} onClick={()=>goTo(i,i>idx?"left":"right")}
-              style={{ width:i===idx?22:8, height:8, borderRadius:4, cursor:"pointer",
+            <button type="button" className="gp-btn" key={ch.id} aria-label={ch.name}
+              aria-current={i===idx ? "true" : undefined}
+              onClick={()=>i!==idx&&goTo(i,i>idx?"left":"right")}
+              style={{ width:i===idx?22:8, height:8, borderRadius:4, cursor:"pointer", border:"none", padding:0,
                 background:i===idx?c.color:"#334155", transition:"all 0.3s" }}/>
           ))}
         </div>
 
         <Btn onClick={()=>onSelect(c)} style={{ width:"100%" }} color={c.color}>
-          🌿 Start the Game with {c.name}!
+          {t("char.start", { name: c.name })}
         </Btn>
       </Panel>
     </GardenWrap>
@@ -1455,8 +1757,8 @@ function MapSVG({ completedModules }) {
 /* ═══════════════════════════════════════════════════
    MAP SCREEN
 ═══════════════════════════════════════════════════ */
-function MapScreen({ language, character, completedModules, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout }) {
-  const [charNode,        setCharNode]        = useState(prevCompleted);
+function MapScreen({ language, character, modules = MODULES, completedModules, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout, onChangeLanguage }) {
+  const t = useT();
   const [charPos,         setCharPos]         = useState(PATH_NODES[prevCompleted]);
   const [isWalking,       setIsWalking]       = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -1478,14 +1780,6 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     return { x:Math.min(Math.max(x,-ms),ms), y:Math.min(Math.max(y,-ms),ms) };
   }
 
-  useEffect(() => {
-    if (completedModules <= prevCompleted) return;
-    const queue = [];
-    for (let i=prevCompleted+1; i<=completedModules; i++) queue.push(i);
-    stepQueue.current = queue;
-    walkNextStep();
-  }, []);
-
   function walkNextStep() {
     if (stepQueue.current.length===0) {
       setIsWalking(false);
@@ -1498,7 +1792,6 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     const target = stepQueue.current.shift();
     animateTo(currentNodeRef.current, target, ()=>{
       currentNodeRef.current = target;
-      setCharNode(target);
       walkNextStep();
     });
   }
@@ -1519,6 +1812,16 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     animRef.current=requestAnimationFrame(step);
   }
   useEffect(()=>()=>cancelAnimationFrame(animRef.current),[]);
+
+  // Walk the character from its previous node to the newly unlocked one, once on mount.
+  useEffect(() => {
+    if (completedModules <= prevCompleted) return;
+    const queue = [];
+    for (let i=prevCompleted+1; i<=completedModules; i++) queue.push(i);
+    stepQueue.current = queue;
+    walkNextStep();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally mount-only
+  }, []);
 
   function onWheel(e) {
     e.preventDefault();
@@ -1562,6 +1865,7 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
     const el=mapContainerRef.current; if(!el) return;
     el.addEventListener("wheel",onWheel,{passive:false});
     return ()=>el.removeEventListener("wheel",onWheel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- listener only uses functional state updates
   },[]);
 
   function zoomIn()    { setZoom(z=>{ const nz=clampZoom(z+0.25); setPan(p=>clampPan(p.x,p.y,nz)); return nz; }); }
@@ -1569,24 +1873,33 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
   function zoomReset() { setZoom(1); setPan({x:0,y:0}); }
 
   return (
-    <GardenWrap showWaterfall={false}>
+    <GardenWrap>
       <Panel style={{ padding:0, overflow:"hidden" }}>
         {/* Header */}
         <div style={{ padding:"16px 20px 12px", borderBottom:"1px solid rgba(74,222,128,0.12)" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <BackBtn onClick={onBack}/>
-            <button onClick={onLogout} style={{
-              background:"none", border:"none", color:"#f87171", fontSize:12,
-              cursor:"pointer", textDecoration:"underline", fontFamily:"inherit", marginBottom:16,
-            }}>Log out</button>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+              <button type="button" className="gp-btn" onClick={onChangeLanguage}
+                aria-label={t("map.changeLang")} title={t("map.changeLang")}
+                style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)",
+                  borderRadius:10, padding:"5px 10px", cursor:"pointer", fontSize:13, color:"#cbd5e1",
+                  fontWeight:800, display:"flex", alignItems:"center", gap:5 }}>
+                <span style={{ fontSize:15 }}>{language.flag}</span> 🌐
+              </button>
+              <button type="button" className="gp-btn" onClick={onLogout} style={{
+                background:"none", border:"none", color:"#f87171", fontSize:12,
+                cursor:"pointer", textDecoration:"underline", fontFamily:"inherit",
+              }}>{t("map.logout")}</button>
+            </div>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <img src={character.idle} alt={character.name}
               style={{ width:42, height:56, objectFit:"contain", flexShrink:0 }}/>
             <div style={{ flex:1 }}>
-              <div style={{ fontWeight:900, fontSize:15, color:"#f0fdf4" }}>{character.name}'s Garden Journey</div>
+              <div style={{ fontWeight:900, fontSize:15, color:"#f0fdf4" }}>{t("map.journey", { name: character.name })}</div>
               <div style={{ color:"#86efac", fontSize:12 }}>
-                {language.flag} {language.label} · {completedModules}/{MODULES.length} completed
+                {language.flag} {language.label} · {t("map.completed", { done: completedModules, total: MODULES.length })}
               </div>
             </div>
             <div style={{ width:80 }}>
@@ -1622,8 +1935,9 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
             <MapSVG completedModules={completedModules}/>
 
             {/* Module nodes */}
-            {MODULES.map((mod,i)=>(
+            {modules.map((mod,i)=>(
               <MapNode key={mod.id} mod={mod} node={PATH_NODES[i+1]}
+                label={completedModules<i ? t("map.moduleLocked",{ n: mod.id }) : `${t("map.module",{ n: mod.id })}: ${mod.title}`}
                 done={completedModules>i} current={completedModules===i}
                 locked={completedModules<i}
                 onClick={()=>!isWalking&&completedModules>=i&&onStartModule(mod)}/>
@@ -1635,7 +1949,7 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
               fontSize:20, zIndex:6, filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.6))" }}>🏁</div>
             <div style={{ position:"absolute", left:`${PATH_NODES[0].x}%`, top:`${PATH_NODES[0].y+6}%`,
               transform:"translate(-50%,-50%)", fontSize:9, color:"#ffe066", fontWeight:900, zIndex:6,
-              letterSpacing:1, textShadow:"0 1px 4px rgba(0,0,0,0.8)" }}>START</div>
+              letterSpacing:1, textShadow:"0 1px 4px rgba(0,0,0,0.8)" }}>{t("map.start")}</div>
 
             {/* Walking character */}
             <div style={{
@@ -1673,8 +1987,8 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
 
           {/* Zoom controls */}
           <div style={{ position:"absolute",bottom:12,right:12,display:"flex",flexDirection:"column",gap:6,zIndex:30 }}>
-            {[{label:"+",fn:zoomIn},{label:"⟳",fn:zoomReset},{label:"−",fn:zoomOut}].map(({label,fn})=>(
-              <button key={label} onClick={fn} style={{
+            {[{label:"+",fn:zoomIn,aria:t("map.zoomIn")},{label:"⟳",fn:zoomReset,aria:t("map.zoomReset")},{label:"−",fn:zoomOut,aria:t("map.zoomOut")}].map(({label,fn,aria})=>(
+              <button type="button" className="gp-btn" key={label} onClick={fn} aria-label={aria} title={aria} style={{
                 width:36,height:36,borderRadius:10,
                 background:"rgba(15,30,15,0.85)",border:"1.5px solid rgba(74,222,128,0.3)",
                 color:"#86efac",fontSize:16,fontWeight:900,cursor:"pointer",
@@ -1687,22 +2001,22 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
             background:"rgba(15,30,15,0.7)",borderRadius:8,padding:"3px 9px",
             fontSize:10,color:"#4ade80",border:"1px solid rgba(74,222,128,0.25)",
             backdropFilter:"blur(8px)",zIndex:30 }}>
-            {Math.round(zoom*100)}% · scroll or pinch to zoom
+            {Math.round(zoom*100)}% · {t("map.zoomHint")}
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ padding:"10px 20px",borderTop:"1px solid rgba(74,222,128,0.12)",textAlign:"center" }}>
-          <p style={{ color:"#6b7280", fontSize:12 }}>
-            {isWalking&&`${character.name} is walking through the garden…`}
-            {!isWalking&&completedModules===0&&"👆 Tap Module 1 to begin, the Aristotle is waiting!"}
-            {!isWalking&&completedModules>0&&completedModules<MODULES.length&&"The Aristotle awaits your next lesson! 👆"}
-            {!isWalking&&completedModules===MODULES.length&&"🏆 You've mastered the entire garden journey!"}
+          <p aria-live="polite" style={{ color:"#9ca3af", fontSize:12 }}>
+            {isWalking&&t("map.walking", { name: character.name })}
+            {!isWalking&&completedModules===0&&t("map.tapFirst")}
+            {!isWalking&&completedModules>0&&completedModules<MODULES.length&&t("map.next")}
+            {!isWalking&&completedModules>=MODULES.length&&t("map.done")}
           </p>
-          {completedModules===MODULES.length && (
-            <div style={{ marginTop:10, display:"flex", gap:8, justifyContent:"center" }}>
-              <Btn onClick={onViewCertificate} color="#fbbf24">🏆 View Certificate</Btn>
-              <Btn onClick={onPlayAgain} color="#3b82f6">🔄 Play Again</Btn>
+          {completedModules>=MODULES.length && (
+            <div style={{ marginTop:10, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+              <Btn onClick={onViewCertificate} color="#fbbf24">{t("map.viewCert")}</Btn>
+              <Btn onClick={onPlayAgain} color="#3b82f6">{t("map.playAgain")}</Btn>
             </div>
           )}
         </div>
@@ -1712,17 +2026,19 @@ function MapScreen({ language, character, completedModules, prevCompleted, onSta
 }
 
 /* Map node */
-function MapNode({ mod, node, done, current, locked, onClick }) {
+function MapNode({ mod, node, done, current, locked, onClick, label }) {
   const [hov, setHov] = useState(false);
   const ring = done?"#4ade80":current?"#fbbf24":"#6b8f4a";
   const bg   = done?"linear-gradient(135deg,#166534,#22c55e)"
     :current?"linear-gradient(135deg,#78350f,#d97706)"
     :"linear-gradient(135deg,#1c3a10,#2d5a1b)";
   return (
-    <div onClick={onClick}
+    <button type="button" className="gp-node" onClick={onClick} disabled={locked}
+      aria-label={label} title={label}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ position:"absolute", left:`${node.x}%`, top:`${node.y}%`,
-        transform:"translate(-50%,-50%)", cursor:locked?"not-allowed":"pointer", zIndex:5 }}>
+        transform:"translate(-50%,-50%)", cursor:locked?"not-allowed":"pointer", zIndex:5,
+        background:"none", border:"none", padding:0, borderRadius:"50%", color:"inherit" }}>
       {(current||(!locked&&hov))&&(
         <div style={{ position:"absolute",width:68,height:68,borderRadius:"50%",
           top:"50%",left:"50%",transform:"translate(-50%,-50%)",
@@ -1743,13 +2059,25 @@ function MapNode({ mod, node, done, current, locked, onClick }) {
         border:`1px solid ${done?"#4ade8044":current?"#fbbf2444":"#3a5a2044"}` }}>
         M{mod.id}
       </div>
-    </div>
+    </button>
   );
 }
 /* ═══════════════════════════════════════════════════
    GAME SCREEN: cinematic encounter + quiz
 ═══════════════════════════════════════════════════ */
-function GameScreen({ mod, character, questions, onFinish }) {
+// Random permutation of 0..n-1 (Fisher-Yates).
+function randomPermutation(n) {
+  const idx = Array.from({ length:n }, (_,i)=>i);
+  for (let i=n-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [idx[i],idx[j]]=[idx[j],idx[i]];
+  }
+  return idx;
+}
+const OPTION_LETTERS = ["A","B","C","D","E","F"];
+
+function GameScreen({ mod, character, questions, onFinish, onExit }) {
+  const t = useT();
   const isMobile = useIsMobile();
   const [phase,     setPhase]     = useState("encounter");
   const [idx,       setIdx]       = useState(0);
@@ -1763,21 +2091,18 @@ function GameScreen({ mod, character, questions, onFinish }) {
   const [animKey,   setAnimKey]   = useState(0);
   const timers = useRef([]);
 
-const shuffled = useMemo(()=>questions.map(q=>{
-  const hasImages = Array.isArray(q.images);
-  const pairs = q.options.map((opt,i)=>({ opt, img: hasImages?q.images[i]:null }));
-  const correctPair = pairs[q.answer];
-  for (let i=pairs.length-1;i>0;i--) {
-    const j=Math.floor(Math.random()*(i+1));
-    [pairs[i],pairs[j]]=[pairs[j],pairs[i]];
-  }
-  return {
-    ...q,
-    options: pairs.map(p=>p.opt),
-    images: hasImages ? pairs.map(p=>p.img) : null,
-    answer: pairs.indexOf(correctPair),
-  };
-}),[questions]);
+  // Option order is shuffled once per play-through (images stay paired with their captions)
+  // and the correct answer's index is remapped to match.
+  const [perms] = useState(()=>questions.map(q=>randomPermutation(q.options.length)));
+  const shuffled = useMemo(()=>questions.map((q,qi)=>{
+    const perm = perms[qi] || q.options.map((_,i)=>i);
+    return {
+      ...q,
+      options: perm.map(i=>q.options[i]),
+      images: Array.isArray(q.images) ? perm.map(i=>q.images[i]) : null,
+      answer: perm.indexOf(q.answer),
+    };
+  }),[questions, perms]);
 
   const q     = shuffled[idx];
   const total = shuffled.length;
@@ -1786,7 +2111,6 @@ const shuffled = useMemo(()=>questions.map(q=>{
 
   useEffect(()=>{
     if (phase!=="encounter") return;
-    setAristotleIn(false); setShowCloud(false);
     clearTimers();
     const t1=setTimeout(()=>setAristotleIn(true),  300);
     const t2=setTimeout(()=>setShowCloud(true), 2200);
@@ -1834,277 +2158,10 @@ function handleNext() {
     }}>
       <GlobalStyles/>
 
-      {/* ═══ RICH GARDEN BACKGROUND ═══ */}
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:0 }}>
-
-        {/* Waterfall top-right */}
-        <div style={{ position:"absolute", right:"2%", top:"3%", opacity:0.75 }}>
-          <WaterfallSVG w={110} h={165}/>
-        </div>
-
-        {/* Sky clouds */}
-        <svg style={{ position:"absolute", top:0, left:0, width:"100%", height:"28%", zIndex:0 }}
-          viewBox="0 0 400 80" preserveAspectRatio="xMidYMid slice">
-          <ellipse cx="60"  cy="18" rx="38" ry="14" fill="white" opacity="0.5"/>
-          <ellipse cx="85"  cy="14" rx="26" ry="11" fill="white" opacity="0.42"/>
-          <ellipse cx="38"  cy="20" rx="22" ry="10" fill="white" opacity="0.38"/>
-          <ellipse cx="220" cy="22" rx="34" ry="12" fill="white" opacity="0.45"/>
-          <ellipse cx="248" cy="17" rx="22" ry="10" fill="white" opacity="0.38"/>
-          <ellipse cx="340" cy="15" rx="28" ry="11" fill="white" opacity="0.4"/>
-          <ellipse cx="362" cy="20" rx="18" ry="9"  fill="white" opacity="0.35"/>
-          {/* Birds */}
-          <text x="130" y="20" fontSize="10" style={{ userSelect:"none",
-            animation:"birdFly 2.2s ease-in-out infinite" }}>🐦</text>
-          <text x="175" y="14" fontSize="8"  style={{ userSelect:"none",
-            animation:"birdFly 1.9s 0.6s ease-in-out infinite" }}>🐦</text>
-          <text x="290" y="18" fontSize="9"  style={{ userSelect:"none",
-            animation:"birdFly 2.5s 1.1s ease-in-out infinite" }}>🦋</text>
-        </svg>
-
-        {/* Distant mountains */}
-        <svg style={{ position:"absolute", top:"12%", left:0, width:"100%", height:"22%", zIndex:0 }}
-          viewBox="0 0 400 60" preserveAspectRatio="xMidYMid slice">
-          <path d="M0 60 L30 15 L60 60 Z"  fill="#4a6741" opacity="0.32"/>
-          <path d="M40 60 L75 8  L110 60 Z" fill="#3d5a34" opacity="0.28"/>
-          <path d="M280 60 L320 12 L360 60 Z" fill="#4a6741" opacity="0.3"/>
-          <path d="M340 60 L370 20 L400 60 Z" fill="#3d5a34" opacity="0.26"/>
-          {/* Snow caps */}
-          <path d="M30 15 L36 26 L24 26 Z"  fill="white" opacity="0.5"/>
-          <path d="M75 8  L82 20 L68 20 Z"  fill="white" opacity="0.45"/>
-          <path d="M320 12 L327 24 L313 24 Z" fill="white" opacity="0.45"/>
-        </svg>
-
-        {/* Left tree cluster */}
-        <svg style={{ position:"absolute", left:0, bottom:"28%", width:"22%", height:"45%", zIndex:1 }}
-          viewBox="0 0 90 120" preserveAspectRatio="xMidYMax meet">
-          {/* Big oak */}
-          <rect x="18" y="62" width="8"   height="38" rx="3"  fill="#5c3a10"/>
-          <ellipse cx="22" cy="58" rx="18" ry="24" fill="#1a5c0a"/>
-          <ellipse cx="22" cy="52" rx="13" ry="18" fill="#22701a"/>
-          <ellipse cx="22" cy="47" rx="8"  ry="12" fill="#2d8520"/>
-          {/* Pine */}
-          <rect x="52" y="70" width="5"   height="30" rx="2"  fill="#5c3a10"/>
-          <path d="M54.5 70 L42 90 L67 90 Z" fill="#064e1a"/>
-          <path d="M54.5 62 L44 78 L65 78 Z" fill="#0a6622"/>
-          <path d="M54.5 54 L46 68 L63 68 Z" fill="#0d7a28"/>
-          <path d="M54.5 47 L48 59 L61 59 Z" fill="#0f8830"/>
-          {/* Small shrubs */}
-          <ellipse cx="8"  cy="98" rx="8"  ry="5"  fill="#166534" opacity="0.8"/>
-          <ellipse cx="5"  cy="95" rx="5"  ry="4"  fill="#15803d" opacity="0.7"/>
-          <ellipse cx="75" cy="96" rx="7"  ry="4.5" fill="#166534" opacity="0.75"/>
-          {/* Flowers on ground */}
-          <text x="0"  y="108" fontSize="9" style={{ userSelect:"none" }}>🌸</text>
-          <text x="28" y="112" fontSize="8" style={{ userSelect:"none" }}>🌼</text>
-          <text x="60" y="110" fontSize="9" style={{ userSelect:"none" }}>🌺</text>
-        </svg>
-
-        {/* Right tree cluster */}
-        <svg style={{ position:"absolute", right:0, bottom:"28%", width:"18%", height:"40%", zIndex:1 }}
-          viewBox="0 0 75 110" preserveAspectRatio="xMidYMax meet">
-          <rect x="30" y="55" width="7"   height="35" rx="2.5" fill="#5c3a10"/>
-          <ellipse cx="33" cy="52" rx="16" ry="20" fill="#166534"/>
-          <ellipse cx="33" cy="46" rx="11" ry="15" fill="#1a7a3a"/>
-          <ellipse cx="33" cy="41" rx="7"  ry="10" fill="#22891a"/>
-          {/* Fruit tree */}
-          <rect x="55" y="60" width="5"   height="28" rx="2"  fill="#78350f"/>
-          <ellipse cx="57" cy="57" rx="12" ry="14" fill="#16a34a"/>
-          <text x="51" y="58" fontSize="7" style={{ userSelect:"none" }}>🍎</text>
-          <text x="57" y="52" fontSize="6" style={{ userSelect:"none" }}>🍎</text>
-          {/* Ground shrubs */}
-          <ellipse cx="10" cy="95" rx="10" ry="6"  fill="#166534" opacity="0.75"/>
-          <ellipse cx="7"  cy="92" rx="6"  ry="4.5" fill="#15803d" opacity="0.65"/>
-          <text x="2"  y="104" fontSize="8" style={{ userSelect:"none" }}>🌻</text>
-          <text x="20" y="108" fontSize="7" style={{ userSelect:"none" }}>🌷</text>
-        </svg>
-
-        {/* Ground gradient */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"38%",
-          background:"linear-gradient(180deg,transparent,#1b5e20bb)" }}/>
-
-        {/* Ground foliage strip */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"26%" }}>
-          {["🌳","🌲","🌿","🌾","🌳","🌲","🌿","🌾"].map((e,i)=>(
-            <span key={i} style={{
-              position:"absolute", bottom:`${1+i%3*2}%`, left:`${i*13+1}%`,
-              fontSize:20+(i%3)*7, opacity:0.55, userSelect:"none",
-            }}>{e}</span>
-          ))}
-        </div>
-
-        {/* ─── RIVER (full width, mid-lower scene) ─── */}
-        <svg style={{ position:"absolute", bottom:"24%", left:0, width:"100%", height:"52px", zIndex:2, overflow:"visible" }}
-          viewBox="0 0 400 52" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="gameRiverG" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.9"/>
-              <stop offset="50%"  stopColor="#3b82f6" stopOpacity="1"/>
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85"/>
-            </linearGradient>
-          </defs>
-
-          {/* Left bank (grass) */}
-          <path d="M0 10 Q100 6 200 10 Q300 14 400 10 L400 0 L0 0 Z"
-            fill="#2d6b10" opacity="0.7"/>
-          {/* Right bank (grass) */}
-          <path d="M0 36 Q100 40 200 36 Q300 32 400 36 L400 52 L0 52 Z"
-            fill="#2d6b10" opacity="0.7"/>
-
-          {/* Main river body */}
-          <path d="M0 10 Q100 6 200 10 Q300 14 400 10 L400 36 Q300 32 200 36 Q100 40 0 36 Z"
-            fill="url(#gameRiverG)"/>
-
-          {/* River surface shimmer */}
-          <path d="M0 18 Q50 14 100 18 Q150 22 200 18 Q250 14 300 18 Q350 22 400 18"
-            stroke="white" strokeWidth="1.8" fill="none" opacity="0.3"
-            strokeDasharray="8,6"
-            style={{ animation:"riverFlow 1.8s linear infinite" }}/>
-          <path d="M0 26 Q50 22 100 26 Q150 30 200 26 Q250 22 300 26 Q350 30 400 26"
-            stroke="white" strokeWidth="1.2" fill="none" opacity="0.2"
-            strokeDasharray="5,8"
-            style={{ animation:"riverFlow 2.4s 0.4s linear infinite" }}/>
-
-          {/* Deep channel */}
-          <path d="M0 22 Q100 18 200 22 Q300 26 400 22"
-            stroke="#1d4ed8" strokeWidth="3" fill="none" opacity="0.35"/>
-
-          {/* Reeds - left bank */}
-          {[20,55,95,140,185,230,270,315,360].map((x,i)=>(
-            <g key={i}>
-              <rect x={x}   y={4}  width="1.2" height="7"  rx="0.6" fill="#15803d" opacity="0.9"/>
-              <rect x={x+4} y={3}  width="1"   height="8"  rx="0.5" fill="#166534" opacity="0.8"/>
-              <ellipse cx={x}   cy={4}  rx="2.5" ry="1" fill="#4ade80" opacity="0.55"/>
-              <ellipse cx={x+4} cy={3}  rx="2"   ry="1" fill="#4ade80" opacity="0.5"/>
-            </g>
-          ))}
-          {/* Reeds - right bank */}
-          {[30,75,120,165,210,255,300,345,385].map((x,i)=>(
-            <g key={i}>
-              <rect x={x}   y={38} width="1.2" height="7"  rx="0.6" fill="#15803d" opacity="0.85"/>
-              <rect x={x+5} y={39} width="1"   height="6"  rx="0.5" fill="#166534" opacity="0.75"/>
-              <ellipse cx={x}   cy={45} rx="2.5" ry="1" fill="#4ade80" opacity="0.5"/>
-            </g>
-          ))}
-
-          {/* Lily pads */}
-          <ellipse cx="80"  cy="22" rx="6" ry="2.5" fill="#16a34a" opacity="0.75"/>
-          <ellipse cx="160" cy="26" rx="5" ry="2"   fill="#16a34a" opacity="0.7"/>
-          <ellipse cx="250" cy="20" rx="6" ry="2.5" fill="#16a34a" opacity="0.72"/>
-          <ellipse cx="330" cy="25" rx="5" ry="2"   fill="#16a34a" opacity="0.68"/>
-          <text x="77"  y="24" fontSize="7" style={{ userSelect:"none" }}>🌸</text>
-          <text x="157" y="28" fontSize="6" style={{ userSelect:"none" }}>🌸</text>
-          <text x="247" y="22" fontSize="7" style={{ userSelect:"none" }}>🌸</text>
-          <text x="327" y="27" fontSize="6" style={{ userSelect:"none" }}>🌸</text>
-
-          {/* Small fish glimpse */}
-          <text x="110" y="30" fontSize="7" style={{ userSelect:"none", opacity:0.6 }}>🐟</text>
-          <text x="290" y="19" fontSize="6" style={{ userSelect:"none", opacity:0.5 }}>🐟</text>
-        </svg>
-
-        {/* ─── STONE BRIDGE (over the river, center-left) ─── */}
-        <svg style={{ position:"absolute", bottom:"24%", left:"30%", width:"22%", height:"68px",
-          zIndex:3, overflow:"visible" }}
-          viewBox="0 0 100 68" preserveAspectRatio="none">
-          {/* Bridge shadow */}
-          <ellipse cx="50" cy="56" rx="46" ry="5" fill="#0f172a" opacity="0.22"/>
-          {/* Bridge arch (stone arch under the road) */}
-          <path d="M12 52 Q50 28 88 52" fill="#7a6040" opacity="0.5"/>
-          <path d="M16 52 Q50 32 84 52" fill="#92714a" opacity="0.35"/>
-          {/* Arch keystone */}
-          <path d="M46 30 L54 30 L52 38 L48 38 Z" fill="#a0845a" opacity="0.7"/>
-          {/* Stone pillars */}
-          <rect x="10" y="38" width="12" height="18" rx="2" fill="#8b7355"/>
-          <rect x="78" y="38" width="12" height="18" rx="2" fill="#8b7355"/>
-          {/* Pillar stone texture */}
-          {[40,44,48,52].map(y=>(
-            <g key={y}>
-              <rect x="10" y={y} width="12" height="1" fill="#6b5535" opacity="0.35"/>
-              <rect x="78" y={y} width="12" height="1" fill="#6b5535" opacity="0.35"/>
-            </g>
-          ))}
-          {/* Bridge road surface */}
-          <rect x="8" y="30" width="84" height="10" rx="2" fill="#c8a96e"/>
-          {/* Road stone blocks */}
-          {[10,22,34,46,58,70,82].map(x=>(
-            <rect key={x} x={x} y="30" width="10" height="10" rx="1"
-              fill="#b8956a" opacity="0.45"/>
-          ))}
-          {/* Road center line worn texture */}
-          <rect x="8" y="34.5" width="84" height="1" fill="#e5d5b0" opacity="0.3"/>
-          {/* Left railing */}
-          <rect x="8"  y="26" width="84" height="5" rx="2.5" fill="#d4b896"/>
-          {/* Right railing */}
-          <rect x="8"  y="39" width="84" height="5" rx="2.5" fill="#c4a882"/>
-          {/* Railing posts */}
-          {[9,20,31,42,53,64,75,86].map(x=>(
-            <rect key={x} x={x} y="24" width="3" height="22" rx="1.5" fill="#b8965a"/>
-          ))}
-          {/* Post caps */}
-          {[9,20,31,42,53,64,75,86].map(x=>(
-            <ellipse key={x} cx={x+1.5} cy="24" rx="2.5" ry="1.5" fill="#d4b896"/>
-          ))}
-          {/* Moss & vines on bridge */}
-          <text x="4"  y="48" fontSize="8" style={{ userSelect:"none" }}>🌿</text>
-          <text x="84" y="46" fontSize="8" style={{ userSelect:"none" }}>🌿</text>
-          <text x="44" y="26" fontSize="6" style={{ userSelect:"none" }}>🌱</text>
-        </svg>
-
-        {/* ─── FLOWER PATCHES (scattered on ground) ─── */}
-        {/* Left side flowers */}
-        <div style={{ position:"absolute", bottom:"38%", left:"2%", display:"flex", gap:6 }}>
-          {["🌸","🌼","🌺","🌷","🌻"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:16+(i%2)*4, userSelect:"none", opacity:0.85,
-              animation:`leafDrift ${3+i*0.4}s ${i*0.3}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* Right side flowers */}
-        <div style={{ position:"absolute", bottom:"38%", right:"2%", display:"flex", gap:6 }}>
-          {["🌻","🌷","🌺","🌼","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:14+(i%2)*5, userSelect:"none", opacity:0.8,
-              animation:`leafDrift ${3.5+i*0.3}s ${i*0.4}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* Center-bottom flower row */}
-        <div style={{ position:"absolute", bottom:"28%", left:"50%", transform:"translateX(-50%)",
-          display:"flex", gap:10 }}>
-          {["🌸","🌼","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:12, userSelect:"none", opacity:0.7,
-              animation:`leafDrift ${2.8+i*0.5}s ${i*0.2}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* River bank flowers */}
-        <div style={{ position:"absolute", bottom:"46%", left:"5%", display:"flex", gap:8 }}>
-          {["🌷","🌸","🌼","🌺"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:13+(i%2)*3, userSelect:"none", opacity:0.75,
-              animation:`leafDrift ${3+i*0.6}s ${i*0.25}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        <div style={{ position:"absolute", bottom:"46%", right:"5%", display:"flex", gap:8 }}>
-          {["🌺","🌻","🌷","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:12+(i%2)*4, userSelect:"none", opacity:0.75,
-              animation:`leafDrift ${3.2+i*0.5}s ${i*0.35}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-
-        {/* Floating leaves */}
-        {["🍃","🌸","🍀","🌺","🍃"].map((e,i)=>(
-          <span key={i} style={{
-            position:"absolute", left:`${8+i*20}%`, top:`${5+i%3*5}%`,
-            fontSize:15+(i%2)*5, opacity:0.38, userSelect:"none",
-            animation:`leafDrift ${5+i}s ease-in-out infinite`,
-            animationDelay:`${i*0.9}s`,
-          }}>{e}</span>
-        ))}
-      </div>
+      {/* ═══ RICH GARDEN BACKGROUND ═══
+          The same living landscape as every other screen (see NatureScene.jsx):
+          mountains, forests, waterfall, river, pond, meadow flowers, butterflies. */}
+      <NatureScene/>
 
       {/* Progress bar */}
       <div style={{ position:"absolute",top:0,left:0,right:0,height:6,zIndex:20 }}>
@@ -2121,10 +2178,21 @@ function handleNext() {
         padding:"0 16px",zIndex:20 }}>
         <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
           color:"#86efac",fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
-          border:"1px solid rgba(74,222,128,0.2)" }}>Q {idx+1}/{total}</div>
-        <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
-          fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
-          border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24" }}>⭐ {score}</div>
+          border:"1px solid rgba(74,222,128,0.2)" }}>{t("game.q", { n: idx+1, total })}</div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
+            fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
+            border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24" }}>⭐ {score}</div>
+          {onExit && (
+            <button type="button" className="gp-btn"
+              onClick={()=>{ if (window.confirm(t("game.exitConfirm"))) { clearTimers(); onExit(); } }}
+              style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
+                fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",cursor:"pointer",
+                border:"1px solid rgba(255,255,255,0.18)",color:"#e2e8f0" }}>
+              {t("game.exit")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ═══ ENCOUNTER PHASE ═══ */}
@@ -2136,12 +2204,13 @@ function handleNext() {
     <div style={{ position:"absolute",left:"8%",bottom:"32%",
       textAlign:"center",animation:"slideInLeft 0.5s ease" }}>
       <img src={character.idle} alt={character.name} style={{
-        width:90,height:120,objectFit:"contain",
-        filter:`drop-shadow(0 8px 24px ${character.color}aa)`,
+        height:"clamp(120px, 22vh, 220px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",display:"block",
+        filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 8px 20px ${character.color}aa)`,
         animation:"charIdle 3s ease-in-out infinite",
       }}/>
-      <div style={{ background:"white",color:"#0f172a",borderRadius:8,
-        padding:"3px 10px",fontSize:11,fontWeight:900,marginTop:4,
+      <div style={{ background:character.color,color:"#fff",borderRadius:999,border:"2px solid #fff",
+        padding:"3px 12px",fontSize:"clamp(11px, 1.3vw, 14px)",fontWeight:900,marginTop:4,display:"inline-block",
+        textShadow:"0 1px 2px rgba(0,0,0,0.3)",
         boxShadow:`0 2px 10px ${character.color}88` }}>{character.name}</div>
     </div>
 
@@ -2181,7 +2250,7 @@ function handleNext() {
         <div style={{ color:"#7c3aed",fontSize:11,fontWeight:900,
           marginBottom:8,textTransform:"uppercase",letterSpacing:1.2,
           display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
-          <span>📜</span> The Aristotle asks…
+          <span>📜</span> {t("game.asksCloud")}
         </div>
         <div style={{ color:"#1e293b",fontSize:15,fontWeight:800,lineHeight:1.6 }}>
           {q.text}
@@ -2198,24 +2267,25 @@ function handleNext() {
       textAlign:"center",
     }}>
       <img src={asset("Aristotle.png")} alt="Aristotle" style={{
-        width:88,height:117,objectFit:"contain",
-        filter:"drop-shadow(0 8px 28px rgba(139,92,246,0.65))",
+        height:"clamp(120px, 22vh, 220px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",display:"block",
+        filter:"drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 8px 24px rgba(139,92,246,0.6))",
         animation:AristotleIn?"walkBob 0.55s ease-in-out infinite":"none",
       }}/>
-      <div style={{ color:"#c4b5fd",fontWeight:900,fontSize:11,marginTop:4,
-        background:"rgba(0,0,0,0.45)",borderRadius:8,padding:"2px 10px" }}>
+      <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.3vw, 14px)",marginTop:4,display:"inline-block",
+        background:"#7c3aed",borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+        textShadow:"0 1px 2px rgba(0,0,0,0.3)" }}>
         Aristotle
       </div>
     </div>
 
     {/* Skip */}
     <div style={{ position:"absolute",bottom:18,right:16 }}>
-      <button onClick={()=>{ clearTimers(); setAristotleIn(true); setShowCloud(true);
-        setTimeout(()=>setPhase("question"),400); }}
+      <button type="button" className="gp-btn" onClick={()=>{ clearTimers(); setAristotleIn(true); setShowCloud(true);
+        timers.current.push(setTimeout(()=>setPhase("question"),400)); }}
         style={{ background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.2)",
           color:"#94a3b8",fontSize:11,cursor:"pointer",borderRadius:10,
           padding:"6px 12px",fontFamily:"inherit" }}>
-        Skip intro ›
+        {t("game.skip")}
       </button>
     </div>
   </div>
@@ -2225,47 +2295,52 @@ function handleNext() {
 {/* ═══ QUESTION PHASE ═══ */}
       {phase==="question"&&(
         <div style={{ position:"absolute",inset:0,display:"flex",
-          flexDirection:isMobile?"column":"row",alignItems:"stretch",
-          zIndex:10,padding:isMobile?"46px 10px 10px":"50px 12px 16px",gap:isMobile?8:0 }}>
+          flexDirection:isMobile?"column":"row",alignItems:"stretch",justifyContent:"center",
+          zIndex:10,padding:isMobile?"46px clamp(10px, 4vw, 40px) 10px":"clamp(50px, 7vh, 72px) clamp(12px, 3vw, 48px) 16px",
+          gap:isMobile?8:"clamp(8px, 2vw, 32px)",
+          maxWidth:1500,margin:"0 auto" }}>
           {/* Left: Character */}
-          <div style={{ width:isMobile?"100%":"28%",display:"flex",
+          <div style={{ width:isMobile?"100%":"clamp(150px, 24%, 340px)",display:"flex",
             flexDirection:isMobile?"row":"column",flexShrink:0,
             alignItems:"center",justifyContent:isMobile?"flex-start":"flex-end",
             gap:isMobile?10:0,paddingBottom:isMobile?0:12,
             animation:"slideInLeft 0.4s ease" }}>
             <img src={charImg} alt={character.name} style={{
-              width:isMobile?54:80,height:isMobile?72:107,objectFit:"contain",flexShrink:0,
-              filter:`drop-shadow(0 6px 18px ${character.color}99)`,
+              height:isMobile?"clamp(76px, 11vh, 100px)":"clamp(110px, 21vh, 200px)",width:"auto",aspectRatio:"2 / 3",
+              objectFit:"contain",flexShrink:0,
+              filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 6px 16px ${character.color}99)`,
               animation:"idleFloat 3s ease-in-out infinite",
             }}/>
             <div style={{ display:"flex",flexDirection:"column",
               alignItems:isMobile?"flex-start":"center" }}>
-              <div style={{ color:character.color,fontWeight:900,fontSize:11,
-                background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
+              <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.2vw, 14px)",
+                background:character.color,borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+                textShadow:"0 1px 2px rgba(0,0,0,0.3)",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
-              <div style={{ color:"#94a3b8",fontSize:10,textAlign:isMobile?"left":"center",
-                marginTop:6,fontStyle:"italic",padding:"0 4px",lineHeight:1.4,
+              <div style={{ color:"#e2e8f0",fontSize:"clamp(10px, 1vw, 12px)",textAlign:isMobile?"left":"center",
+                marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
+                background:"rgba(0,0,0,0.45)",borderRadius:8,
                 maxWidth:isMobile?180:undefined }}>
-                "{character.bubble.idle}"
+                "{t(`char.${character.id}.idle`)}"
               </div>
             </div>
           </div>
 
           {/* Right: Q+A panel */}
-          <div style={{ flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8,
+          <div className="gp-col" style={{ flex:1,minWidth:0,maxWidth:isMobile?undefined:920,display:"flex",flexDirection:"column",gap:"clamp(8px, 1.2vh, 14px)",overflowY:"auto",
             animation:"slideInRight 0.4s ease" }}>
             <div style={{ background:"rgba(10,20,10,0.82)",backdropFilter:"blur(16px)",
               border:"1px solid rgba(74,222,128,0.22)",borderRadius:18,padding:"12px 14px" }}>
               <div style={{ display:"flex",gap:10,alignItems:"flex-start" }}>
                 <img src={asset("Aristotle.png")} alt="Aristotle" style={{
-                  width:44,height:59,objectFit:"contain",flexShrink:0,
+                  height:isMobile?59:"clamp(59px, 8vh, 86px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   animation:"idleFloat 3s ease-in-out infinite",
                   filter:"drop-shadow(0 4px 12px rgba(139,92,246,0.5))",
                 }}/>
                 <div>
-                  <div style={{ color:"#a78bfa",fontWeight:900,fontSize:10,
-                    marginBottom:5,letterSpacing:0.5 }}>📜 Aristotle ASKS:</div>
-                  <div style={{ color:"#f0fdf4",fontWeight:800,fontSize:14,lineHeight:1.55 }}>
+                  <div style={{ color:"#a78bfa",fontWeight:900,
+                    marginBottom:5,letterSpacing:0.5,textTransform:"uppercase",fontSize:"clamp(10px, 0.9vw, 13px)" }}>📜 {t("game.asksPanel")}</div>
+                  <div style={{ color:"#f0fdf4",fontWeight:800,fontSize:"clamp(15px, 1.35vw, 22px)",lineHeight:1.5 }}>
                     {q.text}
                   </div>
                 </div>
@@ -2278,31 +2353,33 @@ function handleNext() {
                 gap:isMobile?8:10,justifyContent:"center",
                 flex:1,alignContent:"center",maxHeight:"100%",overflow:"auto" }}>
                 {q.images.map((img,i)=>(
-                  <div key={i} onClick={()=>handleAnswer(i)}
-                    style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",
+                  <button type="button" className="gp-opt" key={i} onClick={()=>handleAnswer(i)}
+                    aria-label={`${OPTION_LETTERS[i]}: ${q.options[i]}`}
+                    style={{ borderRadius:12,overflow:"hidden",cursor:"pointer",padding:0,color:"inherit",
                       border:"1.5px solid rgba(74,222,128,0.18)",transition:"all 0.15s",
-                      background:"rgba(10,25,10,0.4)",display:"flex",flexDirection:"column",
-                      width:"clamp(100px, 15vw, 190px)" }}
+                      background:"rgba(10,25,10,0.55)",display:"flex",flexDirection:"column",
+                      width:isMobile?"clamp(120px, 38vw, 220px)":"clamp(120px, 13vw, 240px)" }}
                     onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.03)"; e.currentTarget.style.borderColor="#22c55e88"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; }}
                   >
-                    <img src={img} alt={q.options[i]} style={{
+                    <img src={img} alt="" draggable={false} style={{
                       width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block" }}/>
-                    <div style={{ fontSize:"clamp(9px, 1.1vw, 12px)",fontWeight:700,color:"#e2e8f0",
-                      textAlign:"center",padding:"3px 4px",lineHeight:1.2 }}>
+                    <div style={{ fontSize:"clamp(11px, 0.95vw, 15px)",fontWeight:700,color:"#e2e8f0",
+                      textAlign:"center",padding:"4px 5px",lineHeight:1.25 }}>
                       {q.options[i]}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
               <div style={{ display:"flex",flexDirection:"column",gap:7,flex:1,justifyContent:"center" }}>
                 {q.options.map((opt,i)=>(
-                  <div key={i} onClick={()=>handleAnswer(i)}
-                    style={{ background:"rgba(10,25,10,0.78)",backdropFilter:"blur(12px)",
+                  <button type="button" className="gp-opt" key={i} onClick={()=>handleAnswer(i)}
+                    style={{ width:"100%",textAlign:"left",fontFamily:"inherit",
+                      background:"rgba(10,25,10,0.78)",backdropFilter:"blur(12px)",
                       border:"1.5px solid rgba(74,222,128,0.18)",
                       borderRadius:13,padding:"11px 14px",cursor:"pointer",
-                      fontSize:13,fontWeight:700,color:"#e2e8f0",transition:"all 0.15s",
+                      fontSize:"clamp(13px, 1.1vw, 18px)",fontWeight:700,color:"#e2e8f0",transition:"all 0.15s",
                       display:"flex",alignItems:"center",gap:10 }}
                     onMouseEnter={e=>{ e.currentTarget.style.background="rgba(34,197,94,0.15)"; e.currentTarget.style.borderColor="#22c55e55"; e.currentTarget.style.transform="translateX(4px)"; }}
                     onMouseLeave={e=>{ e.currentTarget.style.background="rgba(10,25,10,0.78)"; e.currentTarget.style.borderColor="rgba(74,222,128,0.18)"; e.currentTarget.style.transform="translateX(0)"; }}
@@ -2311,10 +2388,10 @@ function handleNext() {
                       background:"rgba(74,222,128,0.12)",border:"1.5px solid rgba(74,222,128,0.3)",
                       display:"flex",alignItems:"center",justifyContent:"center",
                       fontSize:11,fontWeight:900,color:"#4ade80" }}>
-                      {["A","B","C","D"][i]}
+                      {OPTION_LETTERS[i]}
                     </span>
                     {opt}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -2325,10 +2402,12 @@ function handleNext() {
       {/* ═══ FEEDBACK PHASE ═══ */}
       {phase==="feedback"&&(
         <div style={{ position:"absolute",inset:0,display:"flex",
-          flexDirection:isMobile?"column":"row",alignItems:"stretch",
-          zIndex:10,padding:isMobile?"46px 10px 10px":"50px 12px 16px",gap:isMobile?8:0 }}>
+          flexDirection:isMobile?"column":"row",alignItems:"stretch",justifyContent:"center",
+          zIndex:10,padding:isMobile?"46px clamp(10px, 4vw, 40px) 10px":"clamp(50px, 7vh, 72px) clamp(12px, 3vw, 48px) 16px",
+          gap:isMobile?8:"clamp(8px, 2vw, 32px)",
+          maxWidth:1500,margin:"0 auto" }}>
           {/* Left: Character reacting */}
-          <div style={{ width:isMobile?"100%":"28%",display:"flex",
+          <div style={{ width:isMobile?"100%":"clamp(150px, 24%, 340px)",display:"flex",
             flexDirection:isMobile?"row":"column",flexShrink:0,
             alignItems:"center",justifyContent:isMobile?"flex-start":"flex-end",
             gap:isMobile?10:0,paddingBottom:isMobile?0:12,
@@ -2342,25 +2421,28 @@ function handleNext() {
             }}><CoinIcon size={24}/></div>
             )}
             <img key={animKey} src={charImg} alt={character.name} style={{
-              width:isMobile?56:82,height:isMobile?75:110,objectFit:"contain",flexShrink:0,
-              filter:`drop-shadow(0 6px 18px ${character.color}bb)`,
+              height:isMobile?"clamp(76px, 11vh, 100px)":"clamp(110px, 21vh, 200px)",width:"auto",aspectRatio:"2 / 3",
+              objectFit:"contain",flexShrink:0,
+              filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 6px 16px ${character.color}bb)`,
               animation:correct?"cBounce 0.65s ease":"cShake 0.5s ease",
             }}/>
             <div style={{ display:"flex",flexDirection:"column",
               alignItems:isMobile?"flex-start":"center" }}>
-              <div style={{ color:character.color,fontWeight:900,fontSize:11,
-                background:"rgba(0,0,0,0.5)",borderRadius:8,padding:"3px 10px",
+              <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.2vw, 14px)",
+                background:character.color,borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
+                textShadow:"0 1px 2px rgba(0,0,0,0.3)",
                 marginTop:isMobile?0:5,textAlign:isMobile?"left":"center" }}>{character.name}</div>
               <div style={{ color:correct?"#86efac":"#fca5a5",fontSize:10,textAlign:isMobile?"left":"center",
-                marginTop:6,fontStyle:"italic",padding:"0 4px",lineHeight:1.4,
+                marginTop:6,fontStyle:"italic",padding:"2px 8px",lineHeight:1.4,
+                background:"rgba(0,0,0,0.5)",borderRadius:8,
                 maxWidth:isMobile?180:undefined }}>
-                "{correct?character.bubble.happy:character.bubble.sad}"
+                "{t(`char.${character.id}.${correct?"happy":"sad"}`)}"
               </div>
             </div>
           </div>
 
           {/* Right: Aristotle reaction + revealed answers */}
-<div style={{ flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8 }}>
+<div className="gp-col" style={{ flex:1,minWidth:0,maxWidth:isMobile?undefined:920,display:"flex",flexDirection:"column",gap:"clamp(8px, 1.2vh, 14px)",overflowY:"auto",paddingBottom:4 }}>
             <div style={{
               background:correct?"rgba(22,101,52,0.72)":"rgba(127,29,29,0.72)",
               backdropFilter:"blur(16px)",
@@ -2376,24 +2458,22 @@ function handleNext() {
               )}
               <div style={{ display:"flex",gap:10,alignItems:"center" }}>
                 <img src={AristotleImg} alt="Aristotle" style={{
-                  width:54,height:72,objectFit:"contain",flexShrink:0,
+                  height:isMobile?68:"clamp(68px, 9vh, 96px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   filter:`drop-shadow(0 4px 14px ${correct?"rgba(34,197,94,0.7)":"rgba(239,68,68,0.7)"})`,
                   animation:correct?"AristotleBounce 0.7s ease":"AristotleShake 0.6s ease",
                 }}/>
                 <div>
-                  <div style={{ fontWeight:900,fontSize:11,letterSpacing:0.5,
+                  <div style={{ fontWeight:900,fontSize:"clamp(11px, 0.95vw, 14px)",letterSpacing:0.5,
                     color:correct?"#4ade80":"#f87171",marginBottom:4 }}>
-                    {correct?"🌟 Aristotle IS HAPPY!":"😤 Aristotle IS DISAPPOINTED!"}
+                    {correct?t("game.happy"):t("game.disappointed")}
                   </div>
-                  <div style={{ color:correct?"#bbf7d0":"#fecaca",fontSize:13,fontStyle:"italic" }}>
-                    {correct
-                      ?"Excellent! The garden blooms with your wisdom! 🌸"
-                      :"Hmm… not quite. The plants whisper differently… 🍃"}
+                  <div style={{ color:correct?"#bbf7d0":"#fecaca",fontSize:"clamp(13px, 1.05vw, 17px)",fontStyle:"italic" }}>
+                    {correct?t("game.praise"):t("game.notQuite")}
                   </div>
                   {correct&&(
                     <div style={{ color:"#fbbf24",fontSize:11,fontWeight:800,marginTop:5,
                       display:"flex",alignItems:"center",gap:5 }}>
-                      <CoinIcon size={14}/> Coin flying to your pocket!
+                      <CoinIcon size={14}/> {t("game.coin")}
                     </div>
                     )}
                 </div>
@@ -2412,7 +2492,7 @@ function handleNext() {
                   const labelCol = i===q.answer?"#bbf7d0":i===selected?"#fecaca":"#94a3b8";
                   return (
                     <div key={i} style={{ borderRadius:12,overflow:"hidden",border,
-                      display:"flex",flexDirection:"column",width:"clamp(85px, 12vw, 160px)" }}>
+                      display:"flex",flexDirection:"column",width:isMobile?"clamp(95px, 28vw, 170px)":"clamp(95px, 10vw, 190px)" }}>
                       <div style={{ position:"relative" }}>
                         <img src={img} alt={q.options[i]} style={{
                           width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block",
@@ -2424,7 +2504,7 @@ function handleNext() {
                           </div>
                         )}
                       </div>
-                      <div style={{ fontSize:"clamp(9px, 1vw, 11px)",fontWeight:700,textAlign:"center",
+                      <div style={{ fontSize:"clamp(10px, 0.9vw, 14px)",fontWeight:700,textAlign:"center",
                         padding:"3px 4px",lineHeight:1.2,color:labelCol,background:labelBg }}>
                         {q.options[i]}
                       </div>
@@ -2437,12 +2517,12 @@ function handleNext() {
                 {q.options.map((opt,i)=>{
                   let bg="rgba(10,25,10,0.6)";
                   let border="1px solid rgba(255,255,255,0.06)";
-                  let col="#475569";
+                  let col="#94a3b8";
                   if (i===q.answer)      { bg="rgba(22,101,52,0.7)"; border="1px solid #22c55e88"; col="#bbf7d0"; }
                   else if (i===selected) { bg="rgba(127,29,29,0.7)"; border="1px solid #ef444488"; col="#fecaca"; }
                   return (
                     <div key={i} style={{ background:bg,border,borderRadius:12,
-                      padding:"9px 13px",fontSize:12,fontWeight:700,color:col,
+                      padding:"9px 13px",fontSize:"clamp(12px, 1vw, 16px)",fontWeight:700,color:col,
                       display:"flex",alignItems:"center",gap:8 }}>
                       <span style={{ fontSize:14 }}>
                         {i===q.answer?"✅":i===selected?"❌":"  "}
@@ -2454,13 +2534,14 @@ function handleNext() {
               </div>
             )}
 
-            <div style={{ background:"rgba(251,191,36,0.14)",border:"1.5px solid rgba(251,191,36,0.45)",
-              borderRadius:12,padding:"10px 13px",fontSize:12.5,fontWeight:600,color:"#2c32efff",lineHeight:1.55 }}>
+            <div role="status" style={{ background:"rgba(255,251,235,0.96)",border:"1.5px solid #fbbf24",
+              borderRadius:12,padding:"10px 13px",fontSize:"clamp(13px, 1.05vw, 17px)",fontWeight:700,color:"#1e3a8a",lineHeight:1.55,
+              boxShadow:"0 6px 20px rgba(0,0,0,0.18)",maxHeight:isMobile?"30vh":undefined,overflowY:"auto" }}>
               💡 {q.explanation}
             </div>
 
             <Btn onClick={handleNext} color={mod.color} style={{ width:"100%" }}>
-              {idx===total-1?"Finish Module 🎉":"Next Question →"}
+              {idx===total-1?t("game.finish"):t("game.next")}
             </Btn>
           </div>
         </div>
@@ -2471,8 +2552,11 @@ function handleNext() {
 /* ═══════════════════════════════════════════════════
    RESULTS SCREEN
 ═══════════════════════════════════════════════════ */
-function ResultsScreen({ mod, character, score, total, onContinue }) {
+function ResultsScreen({ mod, character, score, total, onContinue, saveError }) {
+  const t = useT();
   const pass  = score >= total - 1;
+  const [factIdx] = useState(()=>Math.floor(Math.random()*Math.max(mod.facts?.length||0,1)));
+  const fact = mod.facts?.[factIdx];
   const stars = score===total?3:pass?2:score>0?1:0;
 
   return (
@@ -2482,7 +2566,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
           {score===total?"🏆":pass?"🎉":"💪"}
         </div>
         <h2 style={{ fontSize:22, fontWeight:900, marginBottom:4, color:"#f0fdf4" }}>
-          {pass?"Module Complete!":"Keep Practicing!"}
+          {pass?t("results.complete"):t("results.keep")}
         </h2>
         <p style={{ color:"#86efac", fontSize:13, marginBottom:20 }}>{mod.title}</p>
 
@@ -2498,7 +2582,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
           border:`2px solid ${pass?"#22c55e":"#f59e0b"}`,
           borderRadius:18, padding:"14px 32px", marginBottom:20 }}>
           <div style={{ fontSize:42, fontWeight:900, color:pass?"#22c55e":"#f59e0b" }}>{score}/{total}</div>
-          <div style={{ color:"#64748b", fontSize:13 }}>correct</div>
+          <div style={{ color:"#94a3b8", fontSize:13 }}>{t("results.correct")}</div>
         </div>
 
         <div style={{ display:"flex", gap:12, alignItems:"center",
@@ -2508,11 +2592,9 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
             style={{ width:52, height:69, objectFit:"contain", flexShrink:0,
               animation:pass?"AristotleBounce 0.7s ease":"none" }}/>
           <div>
-            <div style={{ color:"#4ade80", fontWeight:900, fontSize:12, marginBottom:3 }}>Aristotle says:</div>
+            <div style={{ color:"#4ade80", fontWeight:900, fontSize:12, marginBottom:3 }}>{t("results.says")}</div>
             <div style={{ color:"#cbd5e1", fontSize:13, fontStyle:"italic" }}>
-              {pass
-                ?"The garden flourishes with your knowledge! Well done! 🌿"
-                :"The plants need more tending. Come back and try again! 🌱"}
+              {pass?t("results.praise"):t("results.retry")}
             </div>
           </div>
         </div>
@@ -2524,18 +2606,29 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
             style={{ width:60, height:80, objectFit:"contain", flexShrink:0,
               animation:pass?"cBounce 0.7s ease":"cShake 0.5s ease" }}/>
           <div style={{ color:"#cbd5e1", fontSize:13, fontStyle:"italic" }}>
-            "{pass?character.bubble.happy:character.bubble.sad}"
+            "{t(`char.${character.id}.${pass?"happy":"sad"}`)}"
             <div style={{ color:character.color, fontSize:12, marginTop:4 }}>— {character.name}</div>
           </div>
         </div>
 
+        {fact && (
+          <div style={{ background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)",
+            borderRadius:14, padding:"10px 14px", marginBottom:20, textAlign:"left",
+            color:"#e2e8f0", fontSize:13, lineHeight:1.5 }}>
+            <span style={{ color:"#fbbf24", fontWeight:900 }}>💡 {t("intro.didYouKnow")} </span>{fact}
+          </div>
+        )}
+
         <Btn onClick={onContinue} style={{ width:"100%" }} color={pass?"#22c55e":"#f59e0b"}>
-          {pass?"Continue Journey 🗺️":"Try Again 🔄"}
+          {pass?t("results.continue"):t("results.tryAgain")}
         </Btn>
         {!pass&&(
-          <p style={{ marginTop:12, color:"#475569", fontSize:12 }}>
-            You need at least <strong style={{ color:"#f59e0b" }}>{Math.max(total-1,0)} out of {total}</strong> correct to unlock the next level.
+          <p style={{ marginTop:12, color:"#94a3b8", fontSize:12 }}>
+            {t("results.need", { n: Math.max(total-1,0), total })}
           </p>
+        )}
+        {saveError&&(
+          <p role="alert" style={{ marginTop:12, color:"#fca5a5", fontSize:12 }}>{t("results.saveError")}</p>
         )}
       </Panel>
     </GardenWrap>
@@ -2546,6 +2639,7 @@ function ResultsScreen({ mod, character, score, total, onContinue }) {
    CERTIFICATE SCREEN
 ═══════════════════════════════════════════════════ */
 function CertificateScreen({ user, language, onBack }) {
+  const t = useT();
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -2700,7 +2794,7 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.textAlign = "center";
 
     /* ── Wordmark ── */
-    const wmWidth = spacedText("GARDEN QUEST", cx, 96, "700 22px Georgia", GREEN, 4);
+    const wmWidth = spacedText("GREENPATH", cx, 96, "700 22px Georgia", GREEN, 4);
     leaf(cx-wmWidth/2-22, 94, 200, 8, GREEN_LIGHT);
     leaf(cx-wmWidth/2-34, 98, 195, 6, GREEN);
     leaf(cx+wmWidth/2+22, 94, 20, 8, GREEN_LIGHT);
@@ -2708,28 +2802,29 @@ function CertificateScreen({ user, language, onBack }) {
     divider(122, 170);
 
     /* ── Title ── */
+    const MAXW = W - 220; // keeps longer translations inside the border
     ctx.fillStyle = "rgba(15,23,42,0.12)"; ctx.font = "700 46px Georgia";
-    ctx.fillText("Certificate of Achievement", cx+2, 192);
+    ctx.fillText(t("cert.heading"), cx+2, 192, MAXW);
     ctx.fillStyle = INK;
-    ctx.fillText("Certificate of Achievement", cx, 190);
+    ctx.fillText(t("cert.heading"), cx, 190, MAXW);
 
     ctx.fillStyle = GRAY; ctx.font = "italic 20px Georgia";
-    ctx.fillText("This certifies that", cx, 236);
+    ctx.fillText(t("cert.certifies"), cx, 236, MAXW);
 
     /* ── Name ── */
     ctx.fillStyle = GREEN; ctx.font = "italic 700 50px Georgia";
-    ctx.fillText(user.fullName, cx, 306);
-    const nameWidth = ctx.measureText(user.fullName).width;
+    ctx.fillText(user.fullName, cx, 306, MAXW);
+    const nameWidth = Math.min(ctx.measureText(user.fullName).width, MAXW);
     divider(328, Math.min(Math.max(nameWidth+70,260),520));
 
     /* ── Body ── */
     ctx.fillStyle = GRAY; ctx.font = "21px Georgia";
-    ctx.fillText(`has successfully completed all ${MODULES.length} modules of Garden Quest`, cx, 374);
+    ctx.fillText(t("cert.completed", { n: MODULES.length }), cx, 374, MAXW);
     ctx.font = "italic 21px Georgia";
-    ctx.fillText(`in ${language.label}`, cx, 402);
+    ctx.fillText(t("cert.inLang", { lang: language.label }), cx, 402, MAXW);
 
     /* ── Module badges ── */
-    spacedText("MODULES COMPLETED", cx, 440, "700 12px Georgia", GOLD_DARK, 2);
+    spacedText(t("cert.modules"), cx, 440, "700 12px Georgia", GOLD_DARK, 2);
     const R = 19, GAP = 13;
     const total = MODULES.length*(2*R) + (MODULES.length-1)*GAP;
     const startX = cx - total/2 + R;
@@ -2761,23 +2856,23 @@ function CertificateScreen({ user, language, onBack }) {
     ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
 
     ctx.save(); ctx.translate(cx,sealY);
-    arcText("GARDEN QUEST", sealR-13, "700 10px Georgia", "#5c3d0a", 16);
+    arcText("GREENPATH", sealR-13, "700 10px Georgia", "#5c3d0a", 18);
     ctx.restore();
     star(cx, sealY+3, 15, 6.5, "#5c3d0a");
 
     /* ── Footer ── */
-    const dateStr = new Date().toLocaleDateString(undefined, {
+    const dateStr = new Date().toLocaleDateString(LANGUAGE_META[language.id]?.locale, {
       year:"numeric", month:"long", day:"numeric"
     });
-    signatureBlock(90, "Garden Quest", "italic 26px Georgia", "PROGRAMME DIRECTOR", "left");
-    signatureBlock(W-90, dateStr, "italic 20px Georgia", "DATE OF COMPLETION", "right");
+    signatureBlock(90, "GreenPath", "italic 26px Georgia", t("cert.director"), "left");
+    signatureBlock(W-90, dateStr, "italic 20px Georgia", t("cert.date"), "right");
     ctx.textAlign = "center";
-  }, [user, language]);
+  }, [user, language, t]);
 
   function download() {
     const canvas = canvasRef.current;
     const link = document.createElement("a");
-    link.download = `${user.fullName.replace(/\s+/g,"_")}_GardenQuest_Certificate.png`;
+    link.download = `${user.fullName.replace(/\s+/g,"_")}_GreenPath_Certificate.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -2786,24 +2881,26 @@ function CertificateScreen({ user, language, onBack }) {
     <GardenWrap>
       <Panel style={{ maxWidth: 620 }}>
         <div style={{ textAlign:"center", marginBottom:16 }}>
+          <div style={{ fontSize:44, marginBottom:4 }}>🏆</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
-            Certificate of Achievement
+            {t("cert.heading")}
           </h1>
           <p style={{ color:"#86efac", fontSize:13 }}>
-            {user.fullName} has completed the Garden Quest programme.
+            {t("cert.sub", { name: user.fullName })}
           </p>
         </div>
 
         <div style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(74,222,128,0.25)", marginBottom:18 }}>
-          <canvas ref={canvasRef} style={{ width:"100%", display:"block" }} />
+          <canvas ref={canvasRef} role="img" aria-label={`${t("cert.heading")}: ${user.fullName}`}
+            style={{ width:"100%", display:"block" }} />
         </div>
 
-        <div style={{ display:"flex", gap:10 }}>
-          <Btn onClick={download} style={{ flex:1 }} color="#fbbf24">
-            Download Certificate
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          <Btn onClick={download} style={{ flex:"1 1 180px" }} color="#fbbf24">
+            {t("cert.download")}
           </Btn>
-          <Btn onClick={onBack} style={{ flex:1 }} color="#22c55e">
-            Back to Map
+          <Btn onClick={onBack} style={{ flex:"1 1 180px" }} color="#22c55e">
+            {t("cert.backMap")}
           </Btn>
         </div>
       </Panel>
@@ -2819,20 +2916,51 @@ export default function App() {
   const [screen,           setScreen]           = useState("loading");
   const [user,             setUser]             = useState(null);
   const [language,         setLanguage]         = useState(null);
+  // Language for the UI before (and independent of) the saved game language.
+  const [uiLangId,         setUiLangId]         = useState(initialLanguageId);
   const [character,        setCharacter]        = useState(null);
   const [completedModules, setCompletedModules] = useState(0);
   const [prevCompleted,    setPrevCompleted]    = useState(0);
   const [activeModule,     setActiveModule]     = useState(null);
   const [lastScore,        setLastScore]        = useState(null);
+  const [saveError,        setSaveError]        = useState(false);
+  const [langReturnTo,     setLangReturnTo]     = useState(null);
 
   const [loadingDone, setLoadingDone] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [destination, setDestination] = useState(null);
   const initialAuthCheckedRef = useRef(false);
 
+  const langId = language?.id || uiLangId;
+
+  // Keep <html lang> in sync for screen readers, hyphenation and fonts.
+  useEffect(() => {
+    document.documentElement.lang = LANGUAGE_META[langId]?.htmlLang || "en";
+  }, [langId]);
+
   const moduleQuestions = useMemo(()=>
-    activeModule ? QUESTIONS.filter(q=>q.module===activeModule.id) : [],
-  [activeModule]);
+    activeModule ? QUESTIONS.filter(q=>q.module===activeModule.id).map(q=>localizeQuestion(q, langId)) : [],
+  [activeModule, langId]);
+  const localizedModule = useMemo(()=>
+    activeModule ? localizeModule(activeModule, langId) : null,
+  [activeModule, langId]);
+
+  function chooseUiLanguage(lang) {
+    setUiLangId(lang.id);
+    rememberLanguage(lang.id);
+  }
+
+  function persistProgress(patch) {
+    if (!user) return;
+    const progress = {
+      languageId: language?.id,
+      characterId: character?.id,
+      completedModules,
+      ...patch,
+    };
+    setSaveError(false);
+    saveProgress(user.uid, progress).catch(()=>setSaveError(true));
+  }
 
   function handleAuth(u) {
     setUser(u);
@@ -2883,11 +3011,11 @@ export default function App() {
     return unsub;
   }, []);
 
-  useEffect(() => {
-    if (loadingDone && authChecked && destination) setScreen(destination);
-  }, [loadingDone, authChecked, destination]);
+  // While the splash is up, move on as soon as both the animation and the auth check are done.
+  const currentScreen = (screen==="loading" && loadingDone && authChecked && destination) ? destination : screen;
+  function go(next) { setScreen(next); }
 
-  function handleFinish(score) { setLastScore(score); setScreen("results"); }
+  function handleFinish(score) { setLastScore(score); go("results"); }
 
   function handleContinue() {
     const isNextModule = activeModule.id === completedModules+1;
@@ -2898,28 +3026,30 @@ export default function App() {
 
     setPrevCompleted(completedModules);
     setCompletedModules(newCompleted);
-
-    if (user) {
-      saveProgress(user.uid, {
-        languageId: language.id,
-        characterId: character.id,
-        completedModules: newCompleted,
-      });
-    }
-    setScreen("map");
+    persistProgress({ completedModules: newCompleted });
+    // Failed attempts go straight back to the module so the "Try Again" button means what it says.
+    if (!pass) { go("intro"); return; }
+    go("map");
   }
 
   function handlePlayAgain() {
     setPrevCompleted(0);
     setCompletedModules(0);
-    if (user) {
-      saveProgress(user.uid, {
-        languageId: language.id,
-        characterId: character.id,
-        completedModules: 0,
-      });
+    persistProgress({ completedModules: 0 });
+    go("map");
+  }
+
+  function handleLanguageSelected(lang) {
+    setLanguage(lang);
+    chooseUiLanguage(lang);
+    if (langReturnTo === "map" && character) {
+      setLangReturnTo(null);
+      setPrevCompleted(completedModules);
+      persistProgress({ languageId: lang.id });
+      go("map");
+      return;
     }
-    setScreen("map");
+    go("character");
   }
 
   async function handleLogout() {
@@ -2931,52 +3061,65 @@ export default function App() {
     setPrevCompleted(0);
     setActiveModule(null);
     setLastScore(null);
-    setScreen("auth");
+    setSaveError(false);
+    go("auth");
   }
 
+  const mapModules = useMemo(()=>MODULES.map(m=>localizeModule(m, langId)), [langId]);
+
   return (
-    <>
+    <LangCtx.Provider value={langId}>
       <GlobalStyles/>
-      {screen==="loading"&&(
+      {currentScreen==="loading"&&(
         <LoadingScreen onDone={()=>setLoadingDone(true)}/>
       )}
-      {screen==="auth"&&(
-        <AuthScreen onAuth={handleAuth}/>
+      {currentScreen==="auth"&&(
+        <AuthScreen onAuth={handleAuth} languageId={uiLangId} onLanguageChange={chooseUiLanguage}/>
       )}
-      {screen==="language"&&(
-        <LanguageScreen onSelect={l=>{ setLanguage(l); setScreen("character"); }}/>
+      {currentScreen==="language"&&(
+        <LanguageScreen currentId={langId} onSelect={handleLanguageSelected}
+          onBack={langReturnTo==="map" ? ()=>{ setLangReturnTo(null); go("map"); } : undefined}/>
       )}
-      {screen==="character"&&(
-        <CharacterScreen language={language}
-          onSelect={c=>{ setCharacter(c); setScreen("map"); }}
-          onBack={()=>setScreen("language")}/>
+      {currentScreen==="character"&&language&&(
+        <CharacterScreen language={language} initialId={character?.id}
+          onSelect={c=>{
+            setCharacter(c);
+            setPrevCompleted(completedModules);
+            persistProgress({ characterId: c.id, languageId: language.id });
+            go("map");
+          }}
+          onBack={()=>go("language")}/>
       )}
-      {screen==="map"&&(
-        <MapScreen language={language} character={character}
+      {currentScreen==="map"&&language&&character&&(
+        <MapScreen language={language} character={character} modules={mapModules}
           completedModules={completedModules} prevCompleted={prevCompleted}
-          onStartModule={mod=>{ setActiveModule(mod); setScreen("intro"); }}
-          onBack={()=>setScreen("character")}
-          onViewCertificate={()=>setScreen("certificate")}
+          onStartModule={mod=>{ setActiveModule(mod); go("intro"); }}
+          onBack={()=>go("character")}
+          onChangeLanguage={()=>{ setLangReturnTo("map"); go("language"); }}
+          onViewCertificate={()=>go("certificate")}
           onPlayAgain={handlePlayAgain}
           onLogout={handleLogout}/>
       )}
-      {screen==="intro"&&activeModule&&(
-        <AristotleIntro module={activeModule}
-          onStart={()=>setScreen("game")}/>
+      {currentScreen==="intro"&&localizedModule&&(
+        <AristotleIntro key={localizedModule.id} module={localizedModule} questionCount={moduleQuestions.length}
+          onBack={()=>{ setPrevCompleted(completedModules); go("map"); }}
+          onStart={()=>go("game")}/>
       )}
-      {screen==="game"&&activeModule&&(
-        <GameScreen mod={activeModule} character={character}
-          questions={moduleQuestions} onFinish={handleFinish}/>
+      {currentScreen==="game"&&localizedModule&&(
+        <GameScreen key={localizedModule.id}
+          mod={localizedModule} character={character}
+          questions={moduleQuestions} onFinish={handleFinish}
+          onExit={()=>{ setPrevCompleted(completedModules); go("map"); }}/>
       )}
-      {screen==="results"&&activeModule&&(
-        <ResultsScreen mod={activeModule} character={character}
-          score={lastScore} total={moduleQuestions.length}
+      {currentScreen==="results"&&localizedModule&&(
+        <ResultsScreen mod={localizedModule} character={character}
+          score={lastScore} total={moduleQuestions.length} saveError={saveError}
           onContinue={handleContinue}/>
       )}
-      {screen==="certificate"&&user&&(
+      {currentScreen==="certificate"&&user&&language&&(
         <CertificateScreen user={user} language={language}
-          onBack={()=>setScreen("map")}/>
+          onBack={()=>go("map")}/>
       )}
-    </>
+    </LangCtx.Provider>
   );
 }

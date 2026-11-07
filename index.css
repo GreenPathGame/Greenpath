@@ -13,32 +13,20 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: var(--text);
+html, body {
+  /* Matches the bottom of the garden gradient, so overscroll never flashes another colour */
+  background: #2d7d32;
 }
 
-/* center app */
+body {
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every screen draws its own full-size garden background, so #root just needs to fill the page. */
 #root {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* ✨ animated background */
-body::before {
-  content: "";
-  position: fixed;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(139,92,246,0.2), transparent 70%);
-  animation: moveBg 12s linear infinite;
-  z-index: -1;
-}
-
-@keyframes moveBg {
-  from { transform: translate(0,0); }
-  to { transform: translate(-300px, -300px); }
+  min-height: 100dvh;
+  width: 100%;
 }

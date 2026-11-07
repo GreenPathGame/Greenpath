@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// GreenPath – Firestore security rules
+//
+// The game stores one document per player: users/{uid}
+//   { username, fullName, progress: null | { languageId, characterId, completedModules } }
+//
+// What these rules guarantee:
+//  - Nobody can read or change another player's data (only the signed-in owner).
+//  - Nothing else in the database can be read or written at all.
+//  - Every write is checked: only the expected fields, with the expected types,
+//    lengths and values (so no one can stuff junk or huge data into the database).
+//  - The username in the document must match the account it belongs to and can't
+//    be changed later.
+//  - Progress can only go up one module per save (or back to 0 for "Play again"),
+//    so a player can't jump straight to the certificate.
+//
+// Deploy: Firebase console -> Firestore Database -> Rules -> paste this file -> Publish,
+// or `npx firebase-tools deploy --only firestore:rules` from this folder.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validProgress(p) {
+      return p == null || (
+        p is map
+        && p.keys().hasOnly(['languageId', 'characterId', 'completedModules'])
+        && p.keys().hasAll(['languageId', 'characterId', 'completedModules'])
+        && p.languageId in ['en', 'gr', 'it', 'ro', 'cz']
+        && p.characterId in ['Manos', 'Roxana', 'Rino', 'Jana']
+        && p.completedModules is int
+        && p.completedModules >= 0
+        && p.completedModules <= 9
+      );
+    }
+
+    function validUser(d) {
+      return d.keys().hasOnly(['username', 'fullName', 'progress'])
+        && d.keys().hasAll(['username', 'fullName'])
+        && d.username is string
+        && d.username.matches('^[a-z0-9_.-]{3,20}$')
+        && d.fullName is string
+        && d.fullName.size() >= 1
+        && d.fullName.size() <= 60
+        && validProgress(d.get('progress', null));
+    }
+
+    function completed(d) {
+      let p = d.get('progress', null);
+      return p == null ? 0 : p.get('completedModules', 0);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && validUser(request.resource.data)
+        && request.auth.token.email == request.resource.data.username + '@gardenquest.local';
+
+      allow update: if isOwner(uid)
+        && validUser(request.resource.data)
+        && request.resource.data.username == resource.data.username
+        && (completed(request.resource.data) <= completed(resource.data) + 1
+            || completed(request.resource.data) == 0);
+
+      allow delete: if isOwner(uid);
+    }
+
+    // Everything else is closed. (Rules deny by default; this makes it explicit.)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

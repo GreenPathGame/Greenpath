@@ -1,0 +1,27 @@
+name: Firestore rules tests
+
+# Checks firestore.rules against tests/firestore.rules.test.mjs using the Firebase emulator.
+# Runs on every push and pull request; it does not deploy anything and does not block the site deploy.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - run: npm run test:rules
