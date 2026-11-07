@@ -1873,7 +1873,7 @@ function MapScreen({ language, character, modules = MODULES, completedModules, p
   function zoomReset() { setZoom(1); setPan({x:0,y:0}); }
 
   return (
-    <GardenWrap showWaterfall={false}>
+    <GardenWrap>
       <Panel style={{ padding:0, overflow:"hidden" }}>
         {/* Header */}
         <div style={{ padding:"16px 20px 12px", borderBottom:"1px solid rgba(74,222,128,0.12)" }}>
