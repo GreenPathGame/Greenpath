@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef, useContext, useCallback, createContext } from "react";
 import { translate, LANGUAGE_META } from "./i18n.js";
+import NatureScene, { NATURE_SCENE_CSS } from "./NatureScene.jsx";
 import trGr from "./translations/gr.js";
 import trIt from "./translations/it.js";
 import trRo from "./translations/ro.js";
@@ -182,6 +183,12 @@ const MODULES = [
       "Trees, shrubs, and perennial plants help retain water and reduce drought impacts.",
       "One seed can produce hundreds of new seeds in a single growing season.",
       "Growing diverse local plants supports pollinators such as bees, butterflies, and other beneficial insects.",
+      "Biodiverse gardens with local trees, shrubs, and perennials are more resilient to climate change.",
+      "Traditional seeds help preserve biodiversity and local food heritage.",
+      "Saving local seeds supports climate-resilient agriculture and future food security.",
+      "Exchanging seeds between gardeners and farmers has helped preserve traditional crops for generations.",
+      "Many traditional seed varieties are naturally adapted to local climates and require fewer chemical inputs.",
+      "Many Carpathian and Mediterranean plant varieties have been cultivated and passed down for hundreds of years.",
     ],
   },
   // Topics 3 & 7 on the list: IT Practice 1 (Handmade Sustainable Greenhouses) + IT Practice 2 (biological control against the Woolly aphid)
@@ -228,6 +235,8 @@ const MODULES = [
       "Clay's tiny pores let food breathe, slowing spoilage.",
       "In Greece, kitchen textiles were once handwoven and given as dowry gifts.",
       "Folk schools in Iași, Romania, turn fabric scraps into reusable kitchen cloths.",
+      "Terracotta storage jars have been used around the Mediterranean for over 6,000 years.",
+      "A single plastic bag can take up to 1,000 years to break down in landfill.",
     ],
   },
   // Topic 9 on the list: GR Traditional food pickling, sun-drying, and oil-based methods
@@ -288,6 +297,7 @@ const MODULES = [
       "In Mediterranean regions, grape must is slowly boiled into a thick, sweet syrup without added sugar.",
       "In Greece, melitzanosalata is a paste of baked eggplant, garlic, olive oil, lemon or vinegar and herbs.",
       "In Italy, Sicilian caponata slow-cooks eggplant, tomatoes, onions, peppers, celery, olives and capers.",
+      "In the Czech Republic, the closest traditional product to zacusca is lečo, a stew-like vegetable dish preserved for the winter.",
     ],
   },
   // LTTA Italy info paper: From Herbs to Traditional Products
@@ -709,6 +719,7 @@ function GlobalStyles() {
       .gp-input::placeholder { color:#86a993; }
       .gp-lang-chip { transition:transform 0.15s, background 0.15s, border-color 0.15s; }
       .gp-lang-chip:hover { transform:translateY(-2px); }
+      ${NATURE_SCENE_CSS}
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
       }
@@ -779,55 +790,6 @@ function GlobalStyles() {
 }
 
 /* ═══════════════════════════════════════════════════
-   WATERFALL SVG
-═══════════════════════════════════════════════════ */
-function WaterfallSVG({ w = 100, h = 170 }) {
-  return (
-    <svg viewBox="0 0 80 160" style={{ width: w, height: h, overflow: "visible" }}>
-      <path d="M10 0 Q40-2 70 0 L72 42 Q40 38 8 42 Z" fill="#5a6978"/>
-      <path d="M18 4 Q40 2 62 4 L63 38 Q40 35 17 38 Z" fill="#4a5568"/>
-      <rect x="24" y="2" width="12" height="10" rx="2" fill="#374151"/>
-      <rect x="44" y="3" width="11" height="9" rx="2" fill="#374151"/>
-      <path d="M10 0 Q15 5 8 42" fill="none" stroke="#3a4550" strokeWidth="1.5" opacity="0.6"/>
-      <path d="M70 0 Q75 5 72 42" fill="none" stroke="#3a4550" strokeWidth="1.5" opacity="0.6"/>
-      <rect x="26" y="40" width="9" height="65" rx="4.5" fill="#7dd3fc" opacity="0.88"
-        style={{ animation:"wfStream 0.38s ease-in-out infinite alternate" }}/>
-      <rect x="43" y="40" width="7" height="58" rx="3.5" fill="#93c5fd" opacity="0.78"
-        style={{ animation:"wfStream 0.32s 0.1s ease-in-out infinite alternate" }}/>
-      <rect x="35" y="40" width="5" height="60" rx="2.5" fill="#bae6fd" opacity="0.65"
-        style={{ animation:"wfStream 0.42s 0.05s ease-in-out infinite alternate" }}/>
-      <rect x="20" y="44" width="4" height="40" rx="2" fill="#93c5fd" opacity="0.48"
-        style={{ animation:"wfStream 0.5s 0.18s ease-in-out infinite alternate" }}/>
-      <rect x="54" y="44" width="3.5" height="37" rx="1.75" fill="#7dd3fc" opacity="0.42"
-        style={{ animation:"wfStream 0.46s 0.24s ease-in-out infinite alternate" }}/>
-      {[28,33,38,43,48].map((x, i) => (
-        <circle key={i} cx={x} cy={55 + (i % 3) * 5} r="1.4" fill="#e0f2fe" opacity="0.8"
-          style={{ animation:`dropFall ${0.5+i*0.09}s ${i*0.1}s linear infinite` }}/>
-      ))}
-      <ellipse cx="40" cy="114" rx="26" ry="11" fill="#2563eb" opacity="0.38"
-        style={{ animation:"waterRipple 1.3s ease-in-out infinite" }}/>
-      <ellipse cx="40" cy="112" rx="20" ry="8" fill="#3b82f6" opacity="0.48"/>
-      <ellipse cx="40" cy="110" rx="13" ry="5" fill="#60a5fa" opacity="0.55"/>
-      <ellipse cx="40" cy="108" rx="7" ry="3" fill="#93c5fd" opacity="0.7"/>
-      {[30,35,40,45,50].map((x,i) => (
-        <circle key={i} cx={x} cy={99+(i%2)*3} r="1.6" fill="#bfdbfe" opacity="0.8"
-          style={{ animation:`splash ${0.28+i*0.06}s ${i*0.05}s ease-in-out infinite` }}/>
-      ))}
-      <ellipse cx="40" cy="120" rx="32" ry="13" fill="white" opacity="0.08"
-        style={{ animation:"mistFloat 2.2s ease-in-out infinite" }}/>
-      <ellipse cx="9"  cy="108" rx="9"  ry="14" fill="#15803d" opacity="0.78"/>
-      <ellipse cx="71" cy="105" rx="8"  ry="13" fill="#16a34a" opacity="0.72"/>
-      <ellipse cx="4"  cy="93"  rx="6"  ry="9"  fill="#166534" opacity="0.65"/>
-      <ellipse cx="76" cy="91"  rx="5"  ry="8"  fill="#15803d" opacity="0.6"/>
-      <rect x="11" y="118" width="2.5" height="12" rx="1.2" fill="#78350f" opacity="0.7"/>
-      <rect x="64" y="118" width="2.5" height="12" rx="1.2" fill="#78350f" opacity="0.7"/>
-      <text x="3"  y="104" fontSize="5" style={{ userSelect:"none" }}>🌸</text>
-      <text x="68" y="102" fontSize="5" style={{ userSelect:"none" }}>🌼</text>
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
    SHARED UI
 ═══════════════════════════════════════════════════ */
 function Btn({ children, onClick, color="#22c55e", style={}, disabled, type="button" }) {
@@ -886,16 +848,9 @@ function GardenWrap({ children, showWaterfall=true }) {
       fontFamily:"'Nunito','Segoe UI',sans-serif", padding:16,
       position:"relative", overflow:"hidden",
     }}>
+      <NatureScene waterfall={showWaterfall}/>
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"38%",
-        background:"linear-gradient(180deg,transparent,#1b5e2099)", pointerEvents:"none", zIndex:0 }}/>
-      {showWaterfall && <>
-        <div style={{ position:"absolute", right:"1%", top:"4%", pointerEvents:"none", zIndex:0, opacity:0.85 }}>
-          <WaterfallSVG w={130} h={200}/>
-        </div>
-        <div style={{ position:"absolute", left:"-2%", top:"10%", pointerEvents:"none", zIndex:0, opacity:0.6 }}>
-          <WaterfallSVG w={100} h={160}/>
-        </div>
-      </>}
+        background:"linear-gradient(180deg,transparent,#1b5e2066)", pointerEvents:"none", zIndex:0 }}/>
       {["🍃","🌸","🌼","🍀","🌺","🦋"].map((e,i)=>(
         <span key={i} style={{
           position:"absolute", pointerEvents:"none",
@@ -1128,14 +1083,9 @@ function LoadingScreen({ onDone }) {
       alignItems:"center", justifyContent:"center",
       fontFamily:"'Nunito','Segoe UI',sans-serif", overflow:"hidden",
     }}>
-      <div style={{ position:"absolute", right:"2%", top:"3%", zIndex:0, opacity:0.9 }}>
-        <WaterfallSVG w={160} h={240}/>
-      </div>
-      <div style={{ position:"absolute", left:"0%", top:"8%", zIndex:0, opacity:0.65 }}>
-        <WaterfallSVG w={130} h={200}/>
-      </div>
+      <NatureScene/>
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"35%",
-        background:"linear-gradient(180deg,transparent,#1b5e2099)", zIndex:0, pointerEvents:"none" }}/>
+        background:"linear-gradient(180deg,transparent,#1b5e2066)", zIndex:0, pointerEvents:"none" }}/>
       {["🍃","🌸","🌼","🍀","🌺","🦋","🌿","🌻"].map((e,i)=>(
         <span key={i} style={{
           position:"absolute", zIndex:0, pointerEvents:"none",
@@ -1166,9 +1116,9 @@ function LoadingScreen({ onDone }) {
         display:"flex",
         alignItems:"flex-end",
         justifyContent:"center",
-        gap:30,
+        gap:"clamp(8px, 3vw, 30px)",
         marginBottom:36,
-        flexWrap:"wrap"
+        padding:"0 8px",
       }}>
         {CHARACTERS.map((c, i) => (
           <div key={c.id} style={{ textAlign:"center" }}>
@@ -1176,15 +1126,15 @@ function LoadingScreen({ onDone }) {
               background:`${c.color}20`,
               border:`2px solid ${c.color}55`,
               borderRadius:20,
-              padding:"10px 12px",
+              padding:"clamp(6px, 2vw, 10px) clamp(6px, 2vw, 12px)",
               marginBottom:6
             }}>
               <img
                 src={c.idle}
                 alt={c.name}
                 style={{
-                  width:80,
-                  height:107,
+                  width:"clamp(52px, 16vw, 80px)",
+                  height:"auto", aspectRatio:"80 / 107",
                   objectFit:"contain",
                   display:"block",
                   animation:`charBob 2.2s ${i * 0.3}s ease-in-out infinite`,
@@ -1398,7 +1348,8 @@ function AristotleIntro({ module, questionCount, onStart, onBack }) {
               💡 {t("intro.didYouKnow")}
             </div>
             <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:7 }}>
-              {module.facts.map((f,i)=>(
+              {/* Intro shows the first four; the results screen draws from the full list. */}
+              {module.facts.slice(0,4).map((f,i)=>(
                 <li key={i} style={{ display:"flex", gap:8, color:"#e2e8f0", fontSize:13, lineHeight:1.5 }}>
                   <span style={{ color:module.color, flexShrink:0 }}>●</span>
                   <span>{f}</span>
@@ -2154,277 +2105,10 @@ function handleNext() {
     }}>
       <GlobalStyles/>
 
-      {/* ═══ RICH GARDEN BACKGROUND ═══ */}
-      <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:0 }}>
-
-        {/* Waterfall top-right */}
-        <div style={{ position:"absolute", right:"2%", top:"3%", opacity:0.75 }}>
-          <WaterfallSVG w={110} h={165}/>
-        </div>
-
-        {/* Sky clouds */}
-        <svg style={{ position:"absolute", top:0, left:0, width:"100%", height:"28%", zIndex:0 }}
-          viewBox="0 0 400 80" preserveAspectRatio="xMidYMid slice">
-          <ellipse cx="60"  cy="18" rx="38" ry="14" fill="white" opacity="0.5"/>
-          <ellipse cx="85"  cy="14" rx="26" ry="11" fill="white" opacity="0.42"/>
-          <ellipse cx="38"  cy="20" rx="22" ry="10" fill="white" opacity="0.38"/>
-          <ellipse cx="220" cy="22" rx="34" ry="12" fill="white" opacity="0.45"/>
-          <ellipse cx="248" cy="17" rx="22" ry="10" fill="white" opacity="0.38"/>
-          <ellipse cx="340" cy="15" rx="28" ry="11" fill="white" opacity="0.4"/>
-          <ellipse cx="362" cy="20" rx="18" ry="9"  fill="white" opacity="0.35"/>
-          {/* Birds */}
-          <text x="130" y="20" fontSize="10" style={{ userSelect:"none",
-            animation:"birdFly 2.2s ease-in-out infinite" }}>🐦</text>
-          <text x="175" y="14" fontSize="8"  style={{ userSelect:"none",
-            animation:"birdFly 1.9s 0.6s ease-in-out infinite" }}>🐦</text>
-          <text x="290" y="18" fontSize="9"  style={{ userSelect:"none",
-            animation:"birdFly 2.5s 1.1s ease-in-out infinite" }}>🦋</text>
-        </svg>
-
-        {/* Distant mountains */}
-        <svg style={{ position:"absolute", top:"12%", left:0, width:"100%", height:"22%", zIndex:0 }}
-          viewBox="0 0 400 60" preserveAspectRatio="xMidYMid slice">
-          <path d="M0 60 L30 15 L60 60 Z"  fill="#4a6741" opacity="0.32"/>
-          <path d="M40 60 L75 8  L110 60 Z" fill="#3d5a34" opacity="0.28"/>
-          <path d="M280 60 L320 12 L360 60 Z" fill="#4a6741" opacity="0.3"/>
-          <path d="M340 60 L370 20 L400 60 Z" fill="#3d5a34" opacity="0.26"/>
-          {/* Snow caps */}
-          <path d="M30 15 L36 26 L24 26 Z"  fill="white" opacity="0.5"/>
-          <path d="M75 8  L82 20 L68 20 Z"  fill="white" opacity="0.45"/>
-          <path d="M320 12 L327 24 L313 24 Z" fill="white" opacity="0.45"/>
-        </svg>
-
-        {/* Left tree cluster */}
-        <svg style={{ position:"absolute", left:0, bottom:"28%", width:"22%", height:"45%", zIndex:1 }}
-          viewBox="0 0 90 120" preserveAspectRatio="xMidYMax meet">
-          {/* Big oak */}
-          <rect x="18" y="62" width="8"   height="38" rx="3"  fill="#5c3a10"/>
-          <ellipse cx="22" cy="58" rx="18" ry="24" fill="#1a5c0a"/>
-          <ellipse cx="22" cy="52" rx="13" ry="18" fill="#22701a"/>
-          <ellipse cx="22" cy="47" rx="8"  ry="12" fill="#2d8520"/>
-          {/* Pine */}
-          <rect x="52" y="70" width="5"   height="30" rx="2"  fill="#5c3a10"/>
-          <path d="M54.5 70 L42 90 L67 90 Z" fill="#064e1a"/>
-          <path d="M54.5 62 L44 78 L65 78 Z" fill="#0a6622"/>
-          <path d="M54.5 54 L46 68 L63 68 Z" fill="#0d7a28"/>
-          <path d="M54.5 47 L48 59 L61 59 Z" fill="#0f8830"/>
-          {/* Small shrubs */}
-          <ellipse cx="8"  cy="98" rx="8"  ry="5"  fill="#166534" opacity="0.8"/>
-          <ellipse cx="5"  cy="95" rx="5"  ry="4"  fill="#15803d" opacity="0.7"/>
-          <ellipse cx="75" cy="96" rx="7"  ry="4.5" fill="#166534" opacity="0.75"/>
-          {/* Flowers on ground */}
-          <text x="0"  y="108" fontSize="9" style={{ userSelect:"none" }}>🌸</text>
-          <text x="28" y="112" fontSize="8" style={{ userSelect:"none" }}>🌼</text>
-          <text x="60" y="110" fontSize="9" style={{ userSelect:"none" }}>🌺</text>
-        </svg>
-
-        {/* Right tree cluster */}
-        <svg style={{ position:"absolute", right:0, bottom:"28%", width:"18%", height:"40%", zIndex:1 }}
-          viewBox="0 0 75 110" preserveAspectRatio="xMidYMax meet">
-          <rect x="30" y="55" width="7"   height="35" rx="2.5" fill="#5c3a10"/>
-          <ellipse cx="33" cy="52" rx="16" ry="20" fill="#166534"/>
-          <ellipse cx="33" cy="46" rx="11" ry="15" fill="#1a7a3a"/>
-          <ellipse cx="33" cy="41" rx="7"  ry="10" fill="#22891a"/>
-          {/* Fruit tree */}
-          <rect x="55" y="60" width="5"   height="28" rx="2"  fill="#78350f"/>
-          <ellipse cx="57" cy="57" rx="12" ry="14" fill="#16a34a"/>
-          <text x="51" y="58" fontSize="7" style={{ userSelect:"none" }}>🍎</text>
-          <text x="57" y="52" fontSize="6" style={{ userSelect:"none" }}>🍎</text>
-          {/* Ground shrubs */}
-          <ellipse cx="10" cy="95" rx="10" ry="6"  fill="#166534" opacity="0.75"/>
-          <ellipse cx="7"  cy="92" rx="6"  ry="4.5" fill="#15803d" opacity="0.65"/>
-          <text x="2"  y="104" fontSize="8" style={{ userSelect:"none" }}>🌻</text>
-          <text x="20" y="108" fontSize="7" style={{ userSelect:"none" }}>🌷</text>
-        </svg>
-
-        {/* Ground gradient */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"38%",
-          background:"linear-gradient(180deg,transparent,#1b5e20bb)" }}/>
-
-        {/* Ground foliage strip */}
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"26%" }}>
-          {["🌳","🌲","🌿","🌾","🌳","🌲","🌿","🌾"].map((e,i)=>(
-            <span key={i} style={{
-              position:"absolute", bottom:`${1+i%3*2}%`, left:`${i*13+1}%`,
-              fontSize:20+(i%3)*7, opacity:0.55, userSelect:"none",
-            }}>{e}</span>
-          ))}
-        </div>
-
-        {/* ─── RIVER (full width, mid-lower scene) ─── */}
-        <svg style={{ position:"absolute", bottom:"24%", left:0, width:"100%", height:"52px", zIndex:2, overflow:"visible" }}
-          viewBox="0 0 400 52" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="gameRiverG" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.9"/>
-              <stop offset="50%"  stopColor="#3b82f6" stopOpacity="1"/>
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85"/>
-            </linearGradient>
-          </defs>
-
-          {/* Left bank (grass) */}
-          <path d="M0 10 Q100 6 200 10 Q300 14 400 10 L400 0 L0 0 Z"
-            fill="#2d6b10" opacity="0.7"/>
-          {/* Right bank (grass) */}
-          <path d="M0 36 Q100 40 200 36 Q300 32 400 36 L400 52 L0 52 Z"
-            fill="#2d6b10" opacity="0.7"/>
-
-          {/* Main river body */}
-          <path d="M0 10 Q100 6 200 10 Q300 14 400 10 L400 36 Q300 32 200 36 Q100 40 0 36 Z"
-            fill="url(#gameRiverG)"/>
-
-          {/* River surface shimmer */}
-          <path d="M0 18 Q50 14 100 18 Q150 22 200 18 Q250 14 300 18 Q350 22 400 18"
-            stroke="white" strokeWidth="1.8" fill="none" opacity="0.3"
-            strokeDasharray="8,6"
-            style={{ animation:"riverFlow 1.8s linear infinite" }}/>
-          <path d="M0 26 Q50 22 100 26 Q150 30 200 26 Q250 22 300 26 Q350 30 400 26"
-            stroke="white" strokeWidth="1.2" fill="none" opacity="0.2"
-            strokeDasharray="5,8"
-            style={{ animation:"riverFlow 2.4s 0.4s linear infinite" }}/>
-
-          {/* Deep channel */}
-          <path d="M0 22 Q100 18 200 22 Q300 26 400 22"
-            stroke="#1d4ed8" strokeWidth="3" fill="none" opacity="0.35"/>
-
-          {/* Reeds - left bank */}
-          {[20,55,95,140,185,230,270,315,360].map((x,i)=>(
-            <g key={i}>
-              <rect x={x}   y={4}  width="1.2" height="7"  rx="0.6" fill="#15803d" opacity="0.9"/>
-              <rect x={x+4} y={3}  width="1"   height="8"  rx="0.5" fill="#166534" opacity="0.8"/>
-              <ellipse cx={x}   cy={4}  rx="2.5" ry="1" fill="#4ade80" opacity="0.55"/>
-              <ellipse cx={x+4} cy={3}  rx="2"   ry="1" fill="#4ade80" opacity="0.5"/>
-            </g>
-          ))}
-          {/* Reeds - right bank */}
-          {[30,75,120,165,210,255,300,345,385].map((x,i)=>(
-            <g key={i}>
-              <rect x={x}   y={38} width="1.2" height="7"  rx="0.6" fill="#15803d" opacity="0.85"/>
-              <rect x={x+5} y={39} width="1"   height="6"  rx="0.5" fill="#166534" opacity="0.75"/>
-              <ellipse cx={x}   cy={45} rx="2.5" ry="1" fill="#4ade80" opacity="0.5"/>
-            </g>
-          ))}
-
-          {/* Lily pads */}
-          <ellipse cx="80"  cy="22" rx="6" ry="2.5" fill="#16a34a" opacity="0.75"/>
-          <ellipse cx="160" cy="26" rx="5" ry="2"   fill="#16a34a" opacity="0.7"/>
-          <ellipse cx="250" cy="20" rx="6" ry="2.5" fill="#16a34a" opacity="0.72"/>
-          <ellipse cx="330" cy="25" rx="5" ry="2"   fill="#16a34a" opacity="0.68"/>
-          <text x="77"  y="24" fontSize="7" style={{ userSelect:"none" }}>🌸</text>
-          <text x="157" y="28" fontSize="6" style={{ userSelect:"none" }}>🌸</text>
-          <text x="247" y="22" fontSize="7" style={{ userSelect:"none" }}>🌸</text>
-          <text x="327" y="27" fontSize="6" style={{ userSelect:"none" }}>🌸</text>
-
-          {/* Small fish glimpse */}
-          <text x="110" y="30" fontSize="7" style={{ userSelect:"none", opacity:0.6 }}>🐟</text>
-          <text x="290" y="19" fontSize="6" style={{ userSelect:"none", opacity:0.5 }}>🐟</text>
-        </svg>
-
-        {/* ─── STONE BRIDGE (over the river, center-left) ─── */}
-        <svg style={{ position:"absolute", bottom:"24%", left:"30%", width:"22%", height:"68px",
-          zIndex:3, overflow:"visible" }}
-          viewBox="0 0 100 68" preserveAspectRatio="none">
-          {/* Bridge shadow */}
-          <ellipse cx="50" cy="56" rx="46" ry="5" fill="#0f172a" opacity="0.22"/>
-          {/* Bridge arch (stone arch under the road) */}
-          <path d="M12 52 Q50 28 88 52" fill="#7a6040" opacity="0.5"/>
-          <path d="M16 52 Q50 32 84 52" fill="#92714a" opacity="0.35"/>
-          {/* Arch keystone */}
-          <path d="M46 30 L54 30 L52 38 L48 38 Z" fill="#a0845a" opacity="0.7"/>
-          {/* Stone pillars */}
-          <rect x="10" y="38" width="12" height="18" rx="2" fill="#8b7355"/>
-          <rect x="78" y="38" width="12" height="18" rx="2" fill="#8b7355"/>
-          {/* Pillar stone texture */}
-          {[40,44,48,52].map(y=>(
-            <g key={y}>
-              <rect x="10" y={y} width="12" height="1" fill="#6b5535" opacity="0.35"/>
-              <rect x="78" y={y} width="12" height="1" fill="#6b5535" opacity="0.35"/>
-            </g>
-          ))}
-          {/* Bridge road surface */}
-          <rect x="8" y="30" width="84" height="10" rx="2" fill="#c8a96e"/>
-          {/* Road stone blocks */}
-          {[10,22,34,46,58,70,82].map(x=>(
-            <rect key={x} x={x} y="30" width="10" height="10" rx="1"
-              fill="#b8956a" opacity="0.45"/>
-          ))}
-          {/* Road center line worn texture */}
-          <rect x="8" y="34.5" width="84" height="1" fill="#e5d5b0" opacity="0.3"/>
-          {/* Left railing */}
-          <rect x="8"  y="26" width="84" height="5" rx="2.5" fill="#d4b896"/>
-          {/* Right railing */}
-          <rect x="8"  y="39" width="84" height="5" rx="2.5" fill="#c4a882"/>
-          {/* Railing posts */}
-          {[9,20,31,42,53,64,75,86].map(x=>(
-            <rect key={x} x={x} y="24" width="3" height="22" rx="1.5" fill="#b8965a"/>
-          ))}
-          {/* Post caps */}
-          {[9,20,31,42,53,64,75,86].map(x=>(
-            <ellipse key={x} cx={x+1.5} cy="24" rx="2.5" ry="1.5" fill="#d4b896"/>
-          ))}
-          {/* Moss & vines on bridge */}
-          <text x="4"  y="48" fontSize="8" style={{ userSelect:"none" }}>🌿</text>
-          <text x="84" y="46" fontSize="8" style={{ userSelect:"none" }}>🌿</text>
-          <text x="44" y="26" fontSize="6" style={{ userSelect:"none" }}>🌱</text>
-        </svg>
-
-        {/* ─── FLOWER PATCHES (scattered on ground) ─── */}
-        {/* Left side flowers */}
-        <div style={{ position:"absolute", bottom:"38%", left:"2%", display:"flex", gap:6 }}>
-          {["🌸","🌼","🌺","🌷","🌻"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:16+(i%2)*4, userSelect:"none", opacity:0.85,
-              animation:`leafDrift ${3+i*0.4}s ${i*0.3}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* Right side flowers */}
-        <div style={{ position:"absolute", bottom:"38%", right:"2%", display:"flex", gap:6 }}>
-          {["🌻","🌷","🌺","🌼","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:14+(i%2)*5, userSelect:"none", opacity:0.8,
-              animation:`leafDrift ${3.5+i*0.3}s ${i*0.4}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* Center-bottom flower row */}
-        <div style={{ position:"absolute", bottom:"28%", left:"50%", transform:"translateX(-50%)",
-          display:"flex", gap:10 }}>
-          {["🌸","🌼","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:12, userSelect:"none", opacity:0.7,
-              animation:`leafDrift ${2.8+i*0.5}s ${i*0.2}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        {/* River bank flowers */}
-        <div style={{ position:"absolute", bottom:"46%", left:"5%", display:"flex", gap:8 }}>
-          {["🌷","🌸","🌼","🌺"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:13+(i%2)*3, userSelect:"none", opacity:0.75,
-              animation:`leafDrift ${3+i*0.6}s ${i*0.25}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-        <div style={{ position:"absolute", bottom:"46%", right:"5%", display:"flex", gap:8 }}>
-          {["🌺","🌻","🌷","🌸"].map((f,i)=>(
-            <span key={i} style={{
-              fontSize:12+(i%2)*4, userSelect:"none", opacity:0.75,
-              animation:`leafDrift ${3.2+i*0.5}s ${i*0.35}s ease-in-out infinite`,
-            }}>{f}</span>
-          ))}
-        </div>
-
-        {/* Floating leaves */}
-        {["🍃","🌸","🍀","🌺","🍃"].map((e,i)=>(
-          <span key={i} style={{
-            position:"absolute", left:`${8+i*20}%`, top:`${5+i%3*5}%`,
-            fontSize:15+(i%2)*5, opacity:0.38, userSelect:"none",
-            animation:`leafDrift ${5+i}s ease-in-out infinite`,
-            animationDelay:`${i*0.9}s`,
-          }}>{e}</span>
-        ))}
-      </div>
+      {/* ═══ RICH GARDEN BACKGROUND ═══
+          The same living landscape as every other screen (see NatureScene.jsx):
+          mountains, forests, waterfall, river, pond, meadow flowers, butterflies. */}
+      <NatureScene/>
 
       {/* Progress bar */}
       <div style={{ position:"absolute",top:0,left:0,right:0,height:6,zIndex:20 }}>

@@ -10,6 +10,12 @@ export default {
         "Copacii, arbuștii și plantele perene ajută la reținerea apei și reduc efectele secetei.",
         "O singură sămânță poate produce sute de semințe noi într-un singur sezon de creștere.",
         "Cultivarea unor plante locale diverse sprijină polenizatorii, precum albinele, fluturii și alte insecte utile.",
+        "Grădinile bogate în biodiversitate, cu copaci, arbuști și plante perene locale, sunt mai rezistente la schimbările climatice.",
+        "Semințele tradiționale ajută la păstrarea biodiversității și a moștenirii alimentare locale.",
+        "Păstrarea semințelor locale sprijină o agricultură rezistentă la climă și securitatea alimentară viitoare.",
+        "Schimbul de semințe între grădinari și fermieri a păstrat culturile tradiționale de-a lungul generațiilor.",
+        "Multe soiuri tradiționale de semințe sunt adaptate natural la clima locală și au nevoie de mai puține substanțe chimice.",
+        "Multe soiuri de plante din Carpați și din zona mediteraneeană sunt cultivate și transmise de sute de ani.",
       ],
     },
     2: {
@@ -38,6 +44,8 @@ export default {
         "Porii mici ai lutului lasă alimentele să „respire”, încetinind alterarea.",
         "În Grecia, textilele de bucătărie erau odinioară țesute de mână și dăruite ca zestre.",
         "Școlile populare din Iași transformă resturile de material textil în cârpe de bucătărie reutilizabile.",
+        "Vasele de teracotă sunt folosite pentru depozitare în jurul Mediteranei de peste 6.000 de ani.",
+        "O singură pungă de plastic poate avea nevoie de până la 1.000 de ani ca să se descompună într-un depozit de deșeuri.",
       ],
     },
     5: {
@@ -74,6 +82,7 @@ export default {
         "În regiunile mediteraneene, mustul de struguri este fiert încet până devine un sirop gros și dulce, fără zahăr adăugat.",
         "În Grecia, melitzanosalata este o pastă din vinete coapte, usturoi, ulei de măsline, lămâie sau oțet și verdețuri.",
         "În Italia, caponata siciliană gătește încet vinete, roșii, ceapă, ardei, țelină, măsline și capere.",
+        "În Cehia, produsul tradițional cel mai apropiat de zacuscă este lečo, un preparat din legume asemănător unei tocănițe, păstrat pentru iarnă.",
       ],
     },
     9: {

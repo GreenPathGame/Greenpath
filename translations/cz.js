@@ -10,6 +10,12 @@ export default {
         "Stromy, keře a trvalky pomáhají zadržovat vodu a zmírňují dopady sucha.",
         "Jedno semínko může během jediné sezony vyprodukovat stovky nových semen.",
         "Pěstování rozmanitých místních rostlin podporuje opylovače, jako jsou včely, motýli a další užitečný hmyz.",
+        "Rozmanité zahrady s místními stromy, keři a trvalkami jsou odolnější vůči změně klimatu.",
+        "Tradiční semena pomáhají chránit biodiverzitu a místní potravinové dědictví.",
+        "Uchovávání místních semen podporuje zemědělství odolné vůči klimatu a budoucí potravinovou bezpečnost.",
+        "Výměna semen mezi zahrádkáři a zemědělci pomáhá po generace uchovávat tradiční plodiny.",
+        "Mnoho tradičních odrůd je přirozeně přizpůsobeno místnímu klimatu a potřebuje méně chemie.",
+        "Mnoho karpatských a středomořských odrůd rostlin se pěstuje a předává už stovky let.",
       ],
     },
     2: {
@@ -38,6 +44,8 @@ export default {
         "Drobné póry hlíny nechávají jídlo „dýchat“, a tím zpomalují jeho kažení.",
         "V Řecku se kuchyňské textilie kdysi tkaly ručně a dávaly se jako věno.",
         "Lidové školy v rumunském Iași přeměňují zbytky látek na opakovaně použitelné kuchyňské utěrky.",
+        "Terakotové zásobnice se ve Středomoří používají už přes 6 000 let.",
+        "Jedna plastová taška se na skládce může rozkládat až 1 000 let.",
       ],
     },
     5: {
@@ -74,6 +82,7 @@ export default {
         "Ve středomořských oblastech se hroznový mošt pomalu vaří na hustý sladký sirup bez přidaného cukru.",
         "V Řecku je melitzanosalata pasta z pečeného lilku, česneku, olivového oleje, citronu nebo octa a bylinek.",
         "V Itálii se sicilská caponata pomalu vaří z lilku, rajčat, cibule, paprik, celeru, oliv a kaparů.",
+        "V Česku je zacusce nejbližším tradičním produktem lečo, zeleninové jídlo podobné dušenému, které se zavařuje na zimu.",
       ],
     },
     9: {

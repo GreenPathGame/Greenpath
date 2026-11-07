@@ -10,6 +10,12 @@ export default {
         "Alberi, arbusti e piante perenni aiutano a trattenere l'acqua e a ridurre gli effetti della siccità.",
         "Un solo seme può produrre centinaia di nuovi semi in un'unica stagione di crescita.",
         "Coltivare piante locali diverse aiuta gli impollinatori come api, farfalle e altri insetti utili.",
+        "I giardini ricchi di biodiversità, con alberi, arbusti e piante perenni locali, resistono meglio ai cambiamenti climatici.",
+        "I semi tradizionali aiutano a preservare la biodiversità e il patrimonio alimentare locale.",
+        "Conservare i semi locali sostiene un'agricoltura resiliente al clima e la sicurezza alimentare futura.",
+        "Lo scambio di semi tra giardinieri e agricoltori ha preservato le colture tradizionali per generazioni.",
+        "Molte varietà di semi tradizionali sono naturalmente adattate al clima locale e richiedono meno prodotti chimici.",
+        "Molte varietà vegetali dei Carpazi e del Mediterraneo vengono coltivate e tramandate da centinaia di anni.",
       ],
     },
     2: {
@@ -38,6 +44,8 @@ export default {
         "I minuscoli pori dell'argilla fanno «respirare» il cibo, rallentandone il deterioramento.",
         "In Grecia, i tessuti da cucina un tempo venivano tessuti a mano e donati come dote.",
         "Le scuole popolari di Iași, in Romania, trasformano ritagli di stoffa in panni da cucina riutilizzabili.",
+        "Le giare di terracotta si usano per conservare il cibo nel Mediterraneo da oltre 6.000 anni.",
+        "Un sacchetto di plastica può impiegare fino a 1.000 anni per decomporsi in discarica.",
       ],
     },
     5: {
@@ -74,6 +82,7 @@ export default {
         "Nelle regioni mediterranee il mosto d'uva viene bollito lentamente fino a diventare uno sciroppo denso e dolce, senza zucchero aggiunto (il vincotto).",
         "In Grecia, la melitzanosalata è una crema di melanzane al forno, aglio, olio d'oliva, limone o aceto ed erbe.",
         "In Italia, la caponata siciliana cuoce lentamente melanzane, pomodori, cipolle, peperoni, sedano, olive e capperi.",
+        "In Repubblica Ceca, il prodotto tradizionale più simile alla zacusca è il lečo, un piatto di verdure simile a uno stufato, conservato per l'inverno.",
       ],
     },
     9: {

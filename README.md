@@ -2,12 +2,13 @@
 
 A free, browser-based learning game about sustainable food, gardening and food traditions from the Carpathian and Mediterranean regions. Players pick a language and a character, walk a garden map with Aristotle as their guide, answer questions in 9 modules, and download a personal certificate at the end.
 
-Deployed automatically to GitHub Pages from `main` by GitHub Actions (`.github/workflows/deploy.yml`).
+**Live:** https://greenpathgame.github.io/Greenpath/ (deployed automatically to GitHub Pages from `main` by GitHub Actions, `.github/workflows/deploy.yml`).
 
 ## Features
 
 - **5 languages:** English, Ελληνικά (Greek), Italiano, Română, Čeština. All UI text, module introductions, "Did you know?" facts, questions, answers, explanations and the certificate are translated. The language can be changed at any time from the map.
 - **4 characters:** Manos (GR), Roxana (RO), Rino (IT), Jana (CZ), each with idle, happy and sad reactions.
+- **Living garden world:** mountains, forests, a waterfall, river, pond and flower meadows with butterflies, birds and a duck, drawn in `NatureScene.jsx` behind every screen.
 - **9 modules, 38 questions:** multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
 - **Accounts:** username + password (Firebase Auth). Progress, language and character sync across devices.
 - **Certificate:** generated in the player's language with their full name and the date, downloadable as a PNG.
@@ -31,6 +32,7 @@ Deployed automatically to GitHub Pages from `main` by GitHub Actions (`.github/w
 
 ```
 file.jsx              The whole game: data (MODULES, QUESTIONS), screens and App
+NatureScene.jsx       Animated landscape background (pure SVG, no image files)
 i18n.js               UI strings for all 5 languages + translate()
 translations/*.js     Module and question translations (gr, it, ro, cz), keyed by id
 firebase.js           Firebase app / auth / Firestore setup
