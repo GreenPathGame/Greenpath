@@ -815,21 +815,11 @@ function BackBtn({ onClick }) {
 }
 
 function CoinIcon({ size=28, style={} }) {
+  // The game's coin artwork (public/coin.png, 160×160 with transparent background).
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" style={{ display:"block", ...style }}>
-      <defs>
-        <radialGradient id="coinGrad" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#fff7cc"/>
-          <stop offset="45%" stopColor="#ffd54a"/>
-          <stop offset="100%" stopColor="#d68a12"/>
-        </radialGradient>
-      </defs>
-      <circle cx="20" cy="20" r="18" fill="url(#coinGrad)" stroke="#b8720a" strokeWidth="2"/>
-      <circle cx="20" cy="20" r="13" fill="none" stroke="#b8720a" strokeWidth="1.4" opacity="0.55"/>
-      {/* Leaf stamp (GreenPath), so a coin can never be mistaken for a star */}
-      <path d="M20 12.5 C26.5 15 27.5 22.5 20 27.5 C12.5 22.5 13.5 15 20 12.5 Z" fill="#b8720a" opacity="0.85"/>
-      <path d="M20 14.5 L20 26.5 M20 19 L23 16.8 M20 22.5 L16.8 20.2" stroke="#ffe08a" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
-    </svg>
+    <img src={asset("coin.png")} alt="" aria-hidden="true" draggable={false}
+      width={size} height={size}
+      style={{ display:"block", width:size, height:size, objectFit:"contain", ...style }}/>
   );
 }
 
