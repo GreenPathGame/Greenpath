@@ -826,8 +826,9 @@ function CoinIcon({ size=28, style={} }) {
       </defs>
       <circle cx="20" cy="20" r="18" fill="url(#coinGrad)" stroke="#b8720a" strokeWidth="2"/>
       <circle cx="20" cy="20" r="13" fill="none" stroke="#b8720a" strokeWidth="1.4" opacity="0.55"/>
-      <polygon points="20,14 21.8,17.8 26,18.3 22.9,21.1 23.8,25.3 20,23.1 16.2,25.3 17.1,21.1 14,18.3 18.2,17.8"
-        fill="#b8720a" opacity="0.85"/>
+      {/* Leaf stamp (GreenPath), so a coin can never be mistaken for a star */}
+      <path d="M20 12.5 C26.5 15 27.5 22.5 20 27.5 C12.5 22.5 13.5 15 20 12.5 Z" fill="#b8720a" opacity="0.85"/>
+      <path d="M20 14.5 L20 26.5 M20 19 L23 16.8 M20 22.5 L16.8 20.2" stroke="#ffe08a" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
     </svg>
   );
 }
@@ -1147,7 +1148,7 @@ function LoadingScreen({ onDone }) {
                   borderRadius:"50%", background:"rgba(0,0,0,0.18)", filter:"blur(3px)" }}/>
                 <img
                   src={c.idle}
-                  alt={c.name}
+                  alt={t(`name.${c.id}`)}
                   draggable={false}
                   style={{
                     position:"relative",
@@ -1168,7 +1169,7 @@ function LoadingScreen({ onDone }) {
                 boxShadow:"0 4px 12px rgba(0,0,0,0.25)", border:"2px solid rgba(255,255,255,0.9)",
                 textShadow:"0 1px 2px rgba(0,0,0,0.35)", whiteSpace:"nowrap",
               }}>
-                {c.name}
+                {t(`name.${c.id}`)}
               </div>
             </div>
           ))}
@@ -1340,7 +1341,7 @@ function AristotleIntro({ module, questionCount, onStart, onBack }) {
             </div>
           )}
 
-          <img src={asset("Aristotle.png")} alt="Aristotle" style={{
+          <img src={asset("Aristotle.png")} alt={t("name.Aristotle")} style={{
             width:100, height:133, objectFit:"contain",
             opacity: AristotleIn ? 1 : 0,
             transform: AristotleIn ? "translateY(0)" : "translateY(20px)",
@@ -1353,7 +1354,7 @@ function AristotleIntro({ module, questionCount, onStart, onBack }) {
             background:"rgba(0,0,0,0.35)", borderRadius:8, padding:"2px 12px",
             opacity: AristotleIn ? 1 : 0, transition:"opacity 0.4s ease 0.3s",
           }}>
-            Aristotle
+            {t("name.Aristotle")}
           </div>
         </div>
 
@@ -1440,13 +1441,13 @@ function CharacterScreen({ language, initialId, onSelect, onBack }) {
               :animDir==="right"?"slideInLeft 0.32s ease":"none",
           }}>
             <div style={{ background:`${c.color}12`, border:`2px solid ${c.color}50`, borderRadius:22, padding:"24px 20px" }}>
-              <img src={c.idle} alt={c.name} draggable={false} style={{
+              <img src={c.idle} alt={t(`name.${c.id}`)} draggable={false} style={{
                 height:"clamp(170px, 30vh, 260px)", width:"auto", aspectRatio:"2 / 3",
                 objectFit:"contain", display:"block", margin:"0 auto 14px",
                 filter:`drop-shadow(0 0 1.5px #fff) drop-shadow(0 10px 24px ${c.color}90)`,
                 animation:"charIdle 3s ease-in-out infinite",
               }}/>
-              <div style={{ fontWeight:900, fontSize:20, color:"#f0fdf4", marginBottom:3 }}>{c.name}</div>
+              <div style={{ fontWeight:900, fontSize:20, color:"#f0fdf4", marginBottom:3 }}>{t(`name.${c.id}`)}</div>
               <div style={{
                 display:"inline-block", background:`${c.color}22`, border:`1px solid ${c.color}55`,
                 color:c.color, fontWeight:700, fontSize:12, borderRadius:8, padding:"3px 10px", marginBottom:10,
@@ -1469,7 +1470,7 @@ function CharacterScreen({ language, initialId, onSelect, onBack }) {
 
         <div style={{ display:"flex", justifyContent:"center", gap:8, margin:"18px 0 20px" }}>
           {CHARACTERS.map((ch,i)=>(
-            <button type="button" className="gp-btn" key={ch.id} aria-label={ch.name}
+            <button type="button" className="gp-btn" key={ch.id} aria-label={t(`name.${ch.id}`)}
               aria-current={i===idx ? "true" : undefined}
               onClick={()=>i!==idx&&goTo(i,i>idx?"left":"right")}
               style={{ width:i===idx?22:8, height:8, borderRadius:4, cursor:"pointer", border:"none", padding:0,
@@ -1478,7 +1479,7 @@ function CharacterScreen({ language, initialId, onSelect, onBack }) {
         </div>
 
         <Btn onClick={()=>onSelect(c)} style={{ width:"100%" }} color={c.color}>
-          {t("char.start", { name: c.name })}
+          {t("char.start", { name: t(`name.${c.id}`) })}
         </Btn>
       </Panel>
     </GardenWrap>
@@ -1943,12 +1944,12 @@ function MapScreen({ language, character, modules = MODULES, completedModules, p
             {showCelebration&&(
               <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",
                 alignItems:"center",justifyContent:"center",zIndex:20,pointerEvents:"none" }}>
-                {["🎉","⭐","🌟","🎊","✨"].map((e,i)=>(
+                {["🎉","coin","coin","🎊","✨"].map((e,i)=>(
                   <span key={i} style={{
                     position:"absolute", left:`${15+i*16}%`, top:`${20+i*8}%`,
                     fontSize:28, animation:"celebPop 2.2s ease forwards",
                     animationDelay:`${i*0.15}s`,
-                  }}>{e}</span>
+                  }}>{e==="coin" ? <CoinIcon size={30}/> : e}</span>
                 ))}
               </div>
             )}
@@ -1996,6 +1997,7 @@ function MapScreen({ language, character, modules = MODULES, completedModules, p
 
 /* Map node */
 function MapNode({ mod, node, done, current, locked, onClick, label }) {
+  const t = useT();
   const [hov, setHov] = useState(false);
   const ring = done?"#4ade80":current?"#fbbf24":"#6b8f4a";
   const bg   = done?"linear-gradient(135deg,#166534,#22c55e)"
@@ -2026,7 +2028,7 @@ function MapNode({ mod, node, done, current, locked, onClick, label }) {
         color:done?"#4ade80":current?"#fbbf24":"#6b8f4a",
         background:"rgba(0,0,0,0.7)",borderRadius:5,padding:"2px 7px",
         border:`1px solid ${done?"#4ade8044":current?"#fbbf2444":"#3a5a2044"}` }}>
-        M{mod.id}
+        {t("map.short", { n: mod.id })}
       </div>
     </button>
   );
@@ -2151,7 +2153,8 @@ function handleNext() {
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
           <div style={{ background:"rgba(0,0,0,0.45)",borderRadius:10,padding:"4px 10px",
             fontSize:12,fontWeight:800,backdropFilter:"blur(6px)",
-            border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24" }}>⭐ {score}</div>
+            border:"1px solid rgba(74,222,128,0.2)",color:"#fbbf24",
+            display:"flex",alignItems:"center",gap:5 }}><CoinIcon size={16}/> {score}</div>
           {onExit && (
             <button type="button" className="gp-btn"
               onClick={()=>{ if (window.confirm(t("game.exitConfirm"))) { clearTimers(); onExit(); } }}
@@ -2235,7 +2238,7 @@ function handleNext() {
       transition:AristotleIn?"none":"right 0s",
       textAlign:"center",
     }}>
-      <img src={asset("Aristotle.png")} alt="Aristotle" style={{
+      <img src={asset("Aristotle.png")} alt={t("name.Aristotle")} style={{
         height:"clamp(120px, 22vh, 220px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",display:"block",
         filter:"drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 8px 24px rgba(139,92,246,0.6))",
         animation:AristotleIn?"walkBob 0.55s ease-in-out infinite":"none",
@@ -2243,7 +2246,7 @@ function handleNext() {
       <div style={{ color:"#fff",fontWeight:900,fontSize:"clamp(11px, 1.3vw, 14px)",marginTop:4,display:"inline-block",
         background:"#7c3aed",borderRadius:999,padding:"3px 12px",border:"2px solid #fff",
         textShadow:"0 1px 2px rgba(0,0,0,0.3)" }}>
-        Aristotle
+        {t("name.Aristotle")}
       </div>
     </div>
 
@@ -2301,7 +2304,7 @@ function handleNext() {
             <div style={{ background:"rgba(10,20,10,0.82)",backdropFilter:"blur(16px)",
               border:"1px solid rgba(74,222,128,0.22)",borderRadius:18,padding:"12px 14px" }}>
               <div style={{ display:"flex",gap:10,alignItems:"flex-start" }}>
-                <img src={asset("Aristotle.png")} alt="Aristotle" style={{
+                <img src={asset("Aristotle.png")} alt={t("name.Aristotle")} style={{
                   height:isMobile?59:"clamp(59px, 8vh, 86px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   animation:"idleFloat 3s ease-in-out infinite",
                   filter:"drop-shadow(0 4px 12px rgba(139,92,246,0.5))",
@@ -2426,7 +2429,7 @@ function handleNext() {
                 }}><CoinIcon size={30}/></div>
               )}
               <div style={{ display:"flex",gap:10,alignItems:"center" }}>
-                <img src={AristotleImg} alt="Aristotle" style={{
+                <img src={AristotleImg} alt={t("name.Aristotle")} style={{
                   height:isMobile?68:"clamp(68px, 9vh, 96px)",width:"auto",aspectRatio:"2 / 3",objectFit:"contain",flexShrink:0,
                   filter:`drop-shadow(0 4px 14px ${correct?"rgba(34,197,94,0.7)":"rgba(239,68,68,0.7)"})`,
                   animation:correct?"AristotleBounce 0.7s ease":"AristotleShake 0.6s ease",
@@ -2526,7 +2529,7 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError }) 
   const pass  = score >= total - 1;
   const [factIdx] = useState(()=>Math.floor(Math.random()*Math.max(mod.facts?.length||0,1)));
   const fact = mod.facts?.[factIdx];
-  const stars = score===total?3:pass?2:score>0?1:0;
+  const coins = score===total?3:pass?2:score>0?1:0;
 
   return (
     <GardenWrap>
@@ -2541,9 +2544,9 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError }) 
 
         <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:20 }}>
           {[1,2,3].map(s=>(
-            <span key={s} style={{ fontSize:32, opacity:s<=stars?1:0.18,
-              filter:s<=stars?"drop-shadow(0 0 8px #fbbf24)":"none",
-              animation:s<=stars?`bounceIn 0.4s ${s*0.1}s ease both`:"none" }}>⭐</span>
+            <span key={s} style={{ display:"inline-flex", opacity:s<=coins?1:0.18,
+              filter:s<=coins?"drop-shadow(0 0 8px #fbbf24)":"grayscale(1)",
+              animation:s<=coins?`bounceIn 0.4s ${s*0.1}s ease both`:"none" }}><CoinIcon size={36}/></span>
           ))}
         </div>
 
@@ -2557,7 +2560,7 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError }) 
         <div style={{ display:"flex", gap:12, alignItems:"center",
           background:"rgba(255,255,255,0.04)", borderRadius:16,
           padding:14, marginBottom:20, textAlign:"left" }}>
-          <img src={pass?asset("happy_Aristotle.png"):asset("Aristotle.png")} alt="Aristotle"
+          <img src={pass?asset("happy_Aristotle.png"):asset("Aristotle.png")} alt={t("name.Aristotle")}
             style={{ width:52, height:69, objectFit:"contain", flexShrink:0,
               animation:pass?"AristotleBounce 0.7s ease":"none" }}/>
           <div>
@@ -2905,7 +2908,13 @@ export default function App() {
   // Keep <html lang> in sync for screen readers, hyphenation and fonts.
   useEffect(() => {
     document.documentElement.lang = LANGUAGE_META[langId]?.htmlLang || "en";
+    document.title = translate(langId, "page.title");
   }, [langId]);
+
+  // The chosen character with its name in the current language.
+  const localChar = useMemo(()=>
+    character ? { ...character, name: translate(langId, `name.${character.id}`) } : null,
+  [character, langId]);
 
   const moduleQuestions = useMemo(()=>
     activeModule ? QUESTIONS.filter(q=>q.module===activeModule.id).map(q=>localizeQuestion(q, langId)) : [],
@@ -3060,7 +3069,7 @@ export default function App() {
           onBack={()=>go("language")}/>
       )}
       {currentScreen==="map"&&language&&character&&(
-        <MapScreen language={language} character={character} modules={mapModules}
+        <MapScreen language={language} character={localChar} modules={mapModules}
           completedModules={completedModules} prevCompleted={prevCompleted}
           onStartModule={mod=>{ setActiveModule(mod); go("intro"); }}
           onBack={()=>go("character")}
@@ -3076,12 +3085,12 @@ export default function App() {
       )}
       {currentScreen==="game"&&localizedModule&&(
         <GameScreen key={localizedModule.id}
-          mod={localizedModule} character={character}
+          mod={localizedModule} character={localChar}
           questions={moduleQuestions} onFinish={handleFinish}
           onExit={()=>{ setPrevCompleted(completedModules); go("map"); }}/>
       )}
       {currentScreen==="results"&&localizedModule&&(
-        <ResultsScreen mod={localizedModule} character={character}
+        <ResultsScreen mod={localizedModule} character={localChar}
           score={lastScore} total={moduleQuestions.length} saveError={saveError}
           onContinue={handleContinue}/>
       )}
