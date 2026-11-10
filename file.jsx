@@ -525,6 +525,18 @@ const QUESTIONS = [
     explanation: "The Green Dot does not always mean packaging is recyclable. It shows that the producer contributes to a recovery system. Consumers should still verify the actual recycling information."
   },
   {
+    id: 29,
+    module: 6,
+    text: "What Is Greywater?",
+    options: [
+      "Clean drinking water from the tap that is safe for drinking, cooking, and other everyday household uses.",
+      "Household wastewater from washing fruits and vegetables, showers, baths, sinks, and similar sources that may be reused after appropriate treatment.",
+      "Wastewater containing toilet sewage."
+    ],
+    answer: 1,
+    explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
+  },
+  {
     id: 28,
     module: 6,
     text: "Which home uses water more sustainably?",
@@ -536,18 +548,6 @@ const QUESTIONS = [
     images: [asset("1.png"), asset("2.png"), asset("3.png")],
     answer: 0,
     explanation: "Reusing appropriately treated greywater for suitable non-drinking purposes can reduce drinking-water consumption and support more sustainable water management."
-  },
-  {
-    id: 29,
-    module: 6,
-    text: "What Is Greywater?",
-    options: [
-      "Clean drinking water from the tap that is safe for drinking, cooking, and other everyday household uses.",
-      "Household wastewater from washing fruits and vegetables, showers, baths, sinks, and similar sources that may be reused after appropriate treatment.",
-      "Wastewater containing toilet sewage."
-    ],
-    answer: 1,
-    explanation: "Greywater comes from everyday household activities such as washing, bathing, and using sinks. If it is not heavily contaminated with harmful chemicals, it can be appropriately treated and reused for non-drinking purposes, helping to save drinking water."
   },
   // MODULE 7
   {
