@@ -70,7 +70,7 @@ export default {
     },
     6: {
       title: "Ambalaje sustenabile și reutilizarea apei",
-      info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
+      info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere. Greenwashing-ul înseamnă că o companie face un produs să pară mai prietenos cu mediul decât este în realitate, folosind cuvinte vagi precum „eco” sau „natural”, culori verzi sau imagini din natură, fără dovezi reale; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
       facts: [
         "Nu orice afirmație „verde” este adevărată.",
         "Certificările oficiale sunt mai de încredere decât cuvintele de marketing.",
