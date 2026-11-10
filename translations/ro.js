@@ -37,7 +37,7 @@ export default {
         "În zona Carpaților se folosește o soluție de urzică pentru a îndepărta afidele.",
         "În regiunile mediteraneene se folosește o soluție pe bază de usturoi pentru a îndepărta afidele.",
         "Atât în Carpați, cât și în zona mediteraneeană, se folosește o soluție de săpun moale pentru a îndepărta afidele.",
-        "În ambele regiuni, grădinarii atrag buburuze și crisope verzi, dușmani naturali ai afidelor, plantând plante aromatice înflorite precum mărar, fenicul, coriandru și coada-șoricelului.",
+        "În ambele regiuni, grădinarii atrag buburuze și crisope verzi, dușmani naturali ai afidelor, plantând plante aromatice precum mărar, fenicul, coriandru și coada-șoricelului.",
         "Porumbul, fasolea și dovleacul cresc bine împreună: porumbul susține fasolea urcătoare, fasolea îmbogățește solul cu azot, iar dovleacul acoperă solul, reducând evaporarea și buruienile (România).",
         "Usturoiul sau ceapa plantate lângă morcovi și varză alungă prin mirosul lor puternic musca morcovului, dăunătorii verzei și afidele (România, Cehia).",
         "Busuiocul plantat lângă roșii ajută la îndepărtarea muștelor albe și a tripșilor, atrage polenizatorii și poate îmbunătăți creșterea roșiilor (Italia, Grecia).",
@@ -117,7 +117,7 @@ export default {
       explanation: "Grădinile diverse sunt mai rezistente, deoarece rețin apa, sprijină fauna sălbatică și se adaptează mai bine la schimbările climatice.",
     },
     6: {
-      text: "Ce alegere ajută la reducerea emisiilor din transportul alimentelor?",
+      text: "Ce alegere ajută la reducerea emisiilor pentru transportul alimentelor?",
       options: ["Alimente ambalate importate", "Hrană crescută într-o grădină comestibilă sălbatică locală"],
       explanation: "Hrana locală parcurge distanțe mai mici, reducând emisiile, deșeurile de ambalaje și consumul de energie. Sistemele alimentare locale sprijină și biodiversitatea și comunitățile sustenabile.",
     },
@@ -209,7 +209,7 @@ export default {
     11: {
       text: "De ce este bună pentru climă reutilizarea cojilor de citrice?",
       options: ["Creează mai mult plastic", "Ține resturile departe de depozitele de deșeuri care produc metan", "Consumă mai multă energie", "Are nevoie de refrigerare"],
-      explanation: "Reutilizarea cojilor de citrice ține resturile alimentare valoroase departe de depozitele de deșeuri, unde putrezesc încet și eliberează metan dăunător.",
+      explanation: "Reutilizarea cojilor de citrice ține resturile alimentare departe de depozitele de deșeuri, unde putrezesc încet și eliberează metan dăunător.",
     },
     20: {
       text: "Ce ar trebui să verifice consumatorii pentru a evita greenwashing-ul?",
