@@ -284,7 +284,7 @@ const MODULES = [
     title: "Sustainable Packaging & Water Reuse",
     icon: "♻️",
     color: "#0ea5e9",
-    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint.",
+    info: "Sustainable packaging protects food, reduces waste and limits environmental impact, but not every “green” claim on it is reliable. Greenwashing is when a company makes a product look more environmentally friendly than it really is, using vague words like “eco” or “natural”, green colours or nature images without real proof; official certifications matter more than colourful marketing. Reusing appropriately treated greywater (wastewater from showers, sinks, baths and laundry) for suitable non-drinking purposes like toilet flushing is another simple way to cut a household's environmental footprint.",
     // First four: "DID YOU KNOW (GAME FACTS)" from IT (TalentWay) Info Paper 3; the last restates the LTTA Romania explanations.
     facts: [
       "Not every “green” claim is true.",

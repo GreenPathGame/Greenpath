@@ -3,8 +3,8 @@
 export default {
   modules: {
     1: {
-      title: "Grădini pentru fauna sălbatică",
-      info: "Grădinile pentru fauna sălbatică sunt spații naturale sau seminaturale în care plantele comestibile cresc în armonie cu ecosistemele locale, imitând straturile și biodiversitatea unei păduri, cu o intervenție umană minimă. Semințele tradiționale sunt puterea ascunsă a acestor grădini: păstrarea, schimbul și cultivarea unor soiuri locale diverse protejează moștenirea culturală și întăresc reziliența climatică pentru generațiile viitoare.",
+      title: "Grădini comestibile sălbatice",
+      info: "Grădinile comestibile sălbatice sunt spații naturale sau seminaturale în care plantele comestibile cresc în armonie cu ecosistemele locale, imitând straturile și biodiversitatea unei păduri, cu o intervenție umană minimă. Semințele tradiționale sunt puterea ascunsă a acestor grădini: păstrarea, schimbul și cultivarea unor soiuri locale diverse protejează moștenirea culturală și întăresc reziliența climatică pentru generațiile viitoare.",
       facts: [
         "Hrana locală reduce semnificativ emisiile generate de transport.",
         "Copacii, arbuștii și plantele perene ajută la reținerea apei și reduc efectele secetei.",
@@ -20,24 +20,24 @@ export default {
     },
     2: {
       title: "Practici agricole tradiționale, grădinărit ecologic, agricultură și agroecologie",
-      info: "Mini-serele sustenabile (tunel, hidroponice, solare pasive sau verticale) protejează plantele de frig, vânt, ploaie și stres climatic, ajutând la cultivarea hranei la nivel local cu materiale cu impact redus. Combaterea integrată și biologică, de exemplu prin încurajarea buburuzelor, a crisopelor și a viespilor parazitoide, ține sub control dăunători precum păduchele lânos (Eriosoma lanigerum) fără a depinde în principal de pesticide chimice.",
+      info: "Mini-serele sustenabile (tunel, hidroponice, solare pasive sau verticale) protejează plantele de frig, vânt, ploaie și stres climatic, ajutând la cultivarea hranei la nivel local cu materiale cu impact redus. Combaterea integrată și biologică, de exemplu prin încurajarea buburuzelor, a crisopelor verzi și a viespilor parazitoide, ține sub control dăunători precum păduchele lânos (Eriosoma lanigerum) fără a depinde în principal de pesticide chimice.",
       facts: [
         "Cultivarea la scară mică poate reduce dependența de transportul pe distanțe lungi.",
         "Materialele reutilizate fac serele mai ieftine și mai sustenabile.",
         "Sistemele verticale și hidroponice sunt utile acolo unde terenul sau apa sunt puține.",
         "Eriosoma lanigerum arată ca niște grupuri mici, albe, ca de vată, pe ramuri și frunze.",
         "Eriosoma lanigerum slăbește copacii hrănindu-se cu seva lor.",
-        "Buburuzele, crisopele și viespile parazitoide ajută la controlul natural al afidelor.",
+        "Buburuzele, crisopele verzi și viespile parazitoide ajută la controlul natural al afidelor.",
       ],
     },
     3: {
       title: "Combaterea ecologică a dăunătorilor și culturile asociate",
-      info: "Combaterea naturală a dăunătorilor, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic. Culturile asociate completează aceste metode, împerechind plante care se protejează reciproc: crăițele, busuiocul, lavanda, arpagicul, usturoiul și condurul-doamnei îndepărtează insectele nedorite, iar combinații clasice precum roșii cu busuioc, morcovi cu ceapă și porumb cu fasole îmbunătățesc rezistența și productivitatea.",
+      info: "Combaterea naturală a dăunătorilor, pregătită în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile, ardeiul iute sau soluțiile de săpun pentru a ține sub control dăunătorii din grădină fără substanțe chimice de sinteză. Aceste metode sunt prietenoase cu mediul, accesibile și biodegradabile, protejează insectele utile și sprijină grădinăritul sustenabil și ecologic. Culturile asociate completează aceste metode, împerechind plante care se protejează reciproc: crăițele, busuiocul, lavanda, arpagicul, usturoiul și condurul-doamnei îndepărtează insectele nedorite, iar combinații clasice precum roșii cu busuioc, morcovi cu ceapă și porumb cu fasole îmbunătățesc rezistența și productivitatea.",
       facts: [
         "În zona Carpaților se folosește o soluție de urzică pentru a îndepărta afidele.",
         "În regiunile mediteraneene se folosește o soluție pe bază de usturoi pentru a îndepărta afidele.",
         "Atât în Carpați, cât și în zona mediteraneeană, se folosește o soluție de săpun moale pentru a îndepărta afidele.",
-        "În ambele regiuni, grădinarii atrag buburuze și crisope, dușmani naturali ai afidelor, plantând plante aromatice înflorite precum mărar, fenicul, coriandru și coada-șoricelului.",
+        "În ambele regiuni, grădinarii atrag buburuze și crisope verzi, dușmani naturali ai afidelor, plantând plante aromatice înflorite precum mărar, fenicul, coriandru și coada-șoricelului.",
         "Porumbul, fasolea și dovleacul cresc bine împreună: porumbul susține fasolea urcătoare, fasolea îmbogățește solul cu azot, iar dovleacul acoperă solul, reducând evaporarea și buruienile (România).",
         "Usturoiul sau ceapa plantate lângă morcovi și varză alungă prin mirosul lor puternic musca morcovului, dăunătorii verzei și afidele (România, Cehia).",
         "Busuiocul plantat lângă roșii ajută la îndepărtarea muștelor albe și a tripșilor, atrage polenizatorii și poate îmbunătăți creșterea roșiilor (Italia, Grecia).",
@@ -48,7 +48,7 @@ export default {
       title: "Alternative reutilizabile pentru o bucătărie fără plastic",
       info: "Meșteșugul vaselor din lut readuce la viață arta străveche de a modela recipiente din teracotă pentru păstrarea alimentelor: vase rezistente, care „respiră”, pentru cereale, leguminoase și murături, care păstrează hrana proaspătă mai mult timp, fără pic de plastic. Hainele vechi și resturile de in primesc și ele o a doua viață, cusute în sacoșe reutilizabile rezistente pentru cumpărături, legume, fructe și pâine, readucând la viață tehnicile tradiționale de cusut și înlocuind plasticul de unică folosință.",
       facts: [
-        "În Maramureș, olarii încă fac borcane de lut pentru murături și leguminoase.",
+        "În Maramureș, olarii încă fac vase de lut pentru murături și leguminoase.",
         "Porii mici ai lutului lasă alimentele să „respire”, încetinind alterarea.",
         "În Grecia, textilele de bucătărie erau odinioară țesute de mână și dăruite ca zestre.",
         "Școlile populare din Iași transformă resturile de material textil în cârpe de bucătărie reutilizabile.",
@@ -70,7 +70,7 @@ export default {
     },
     6: {
       title: "Ambalaje sustenabile și reutilizarea apei",
-      info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
+      info: "Ambalajele sustenabile protejează alimentele, reduc deșeurile și limitează impactul asupra mediului, dar nu orice afirmație „verde” de pe ele este de încredere. Greenwashing-ul înseamnă că o companie face un produs să pară mai prietenos cu mediul decât este în realitate, folosind cuvinte vagi precum „eco” sau „natural”, culori verzi sau imagini din natură, fără dovezi reale; certificările oficiale contează mai mult decât marketingul colorat. Reutilizarea apelor gri tratate corespunzător (din dușuri, chiuvete, căzi și mașina de spălat) pentru utilizări nepotabile potrivite, precum apa de la toaletă, este încă o metodă simplă prin care o gospodărie își reduce amprenta asupra mediului.",
       facts: [
         "Nu orice afirmație „verde” este adevărată.",
         "Certificările oficiale sunt mai de încredere decât cuvintele de marketing.",
@@ -81,7 +81,7 @@ export default {
     },
     7: {
       title: "Gătit sezonier și conștient: păstrarea moștenirii culturale",
-      info: "Tehnicile ancestrale de conservare transformă recoltele de sezon în hrană pentru iarnă. Silvoița românească este un gem de prune fără zahăr, fiert încet împreună cu coaja până se îngroașă și pus fierbinte în borcane sterilizate; zacusca este o pastă din vinete și ardei copți, ceapă, suc de roșii și condimente, fiartă la foc mic și închisă în borcane. Folosirea surplusului local și a borcanelor reutilizabile reduce emisiile din transport, ambalajele și risipa alimentară.",
+      info: "Tehnicile ancestrale de conservare transformă recoltele de sezon în hrană pentru iarnă. Silvoița este un gem tradițional românesc, preparat din prune, fără adaos de zahăr. Prunele se fierb lent, împreună cu coaja, până când amestecul devine gros și consistent. Gemul obținut se toarnă fierbinte în borcane sterilizate, pentru a fi păstrat mai mult timp. Zacusca este o pastă din vinete și ardei copți, ceapă, suc de roșii și condimente, fiartă la foc mic și închisă în borcane. Folosirea surplusului local și a borcanelor reutilizabile reduce emisiile din transport, ambalajele și risipa alimentară.",
       facts: [
         "În Cehia, o tehnică asemănătoare de fierbere lentă este folosită pentru švestková povidla (magiun de prune).",
         "În regiunile mediteraneene, mustul de struguri este fiert încet până devine un sirop gros și dulce, fără zahăr adăugat.",
@@ -92,9 +92,9 @@ export default {
     },
     8: {
       title: "De la plante medicinale la produse tradiționale",
-      info: "Plantele aromatice și medicinale, sălbatice sau din grădină, pot fi transformate în ceaiuri, remedii și alte produse tradiționale. Recoltarea sustenabilă înseamnă să culegem doar cantități mici din populații bogate de plante, să folosim părțile potrivite ale fiecărei specii și să uscăm bine plantele înainte de a le păstra în borcane curate, închise și etichetate, pentru ca ele să crească în continuare pentru generațiile viitoare.",
+      info: "Plantele aromatice și medicinale, sălbatice sau din grădină, pot fi transformate în ceaiuri, remedii și alte produse tradiționale. Recoltarea durabilă înseamnă să culegem doar cantități mici de plante din zonele cu vegetație abundentă, să folosim părțile potrivite ale fiecărei specii și să uscăm corect plantele înainte de a le depozita în borcane curate, închise și etichetate corespunzător. Astfel, protejăm plantele și le permitem să crească și să se înmulțească, pentru ca și generațiile viitoare să se poată bucura de ele.",
       facts: [
-        "Dacă se culege doar puțin din populațiile bogate, plantele continuă să crească și să se înmulțească.",
+        "Dacă se culege doar puțin din zonele cu vegetație abundentă, plantele continuă să crească și să se înmulțească.",
         "În funcție de specie, se pot culege frunze, flori, semințe, rădăcini sau tulpini.",
       ],
     },
@@ -118,7 +118,7 @@ export default {
     },
     6: {
       text: "Ce alegere ajută la reducerea emisiilor din transportul alimentelor?",
-      options: ["Alimente ambalate importate", "Hrană crescută într-o grădină comestibilă locală pentru fauna sălbatică"],
+      options: ["Alimente ambalate importate", "Hrană crescută într-o grădină comestibilă sălbatică locală"],
       explanation: "Hrana locală parcurge distanțe mai mici, reducând emisiile, deșeurile de ambalaje și consumul de energie. Sistemele alimentare locale sprijină și biodiversitatea și comunitățile sustenabile.",
     },
     7: {
@@ -149,7 +149,7 @@ export default {
     27: {
       text: "ADEVĂRAT sau FALS: combaterea biologică folosește insecte utile pentru a reduce populațiile de dăunători.",
       options: ["Adevărat", "Fals"],
-      explanation: "Combaterea biologică folosește dușmanii naturali ai dăunătorilor. Buburuzele, crisopele și viespile parazitoide pot reduce populațiile de afide. Astfel culturile sunt protejate fără a depinde în principal de substanțe chimice.",
+      explanation: "Combaterea biologică folosește dușmanii naturali ai dăunătorilor. Buburuzele, crisopele verzi și viespile parazitoide pot reduce populațiile de afide. Astfel culturile sunt protejate fără a depinde în principal de substanțe chimice.",
     },
     1: {
       text: "Care dintre următoarele substanțe din bucătăria noastră ne poate ajuta să eliminăm dăunătorii din grădină?",
@@ -157,9 +157,9 @@ export default {
       explanation: "Atât în Carpați, cât și în zona mediteraneeană, o soluție de săpun moale este folosită pentru a îndepărta afidele, în timp ce în alte zone soluțiile de urzică și usturoi servesc aceluiași scop.",
     },
     2: {
-      text: "ADEVĂRAT sau FALS: metodele naturale de combatere a dăunătorilor, făcute în casă, înlocuiesc complet pesticidele chimice?",
+      text: "ADEVĂRAT sau FALS: metodele naturale de combatere a dăunătorilor, preparate în casă, înlocuiesc complet pesticidele chimice?",
       options: ["Adevărat", "Fals"],
-      explanation: "Combaterea naturală, făcută în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile și soluțiile de săpun în locul substanțelor chimice de sinteză. Este accesibilă și biodegradabilă, dar sprijină grădinăritul sustenabil împreună cu alte practici, nu înlocuiește complet orice intervenție chimică.",
+      explanation: "Combaterea naturală, preparată în casă, folosește preparate din plante și ingrediente naturale precum usturoiul, urzicile și soluțiile de săpun în locul substanțelor chimice de sinteză. Este accesibilă și biodegradabilă, dar sprijină grădinăritul sustenabil împreună cu alte practici, nu înlocuiește complet orice intervenție chimică.",
     },
     3: {
       text: "Ce plante însoțitoare contribuie și la îmbunătățirea gustului plantelor pe care le însoțesc?",
@@ -187,12 +187,12 @@ export default {
       explanation: "O singură pungă de plastic poate avea nevoie de până la 1.000 de ani ca să se descompună într-un depozit de deșeuri.",
     },
     15: {
-      text: "Transformarea materialelor textile vechi în sacoșe noi este un exemplu de ce?",
-      options: ["Transformare în deșeu", "Upcycling și reutilizare creativă", "Incinerare", "Depozitare la groapa de gunoi"],
+      text: "Transformarea materialelor textile vechi în sacoșe noi este un exemplu de...",
+      options: ["Transformare în deșeu", "Reutilizare creativă (upcycling)", "Incinerare", "Depozitare la groapa de gunoi"],
       explanation: "Coaserea sacoșelor reutilizabile transformă hainele uzate, resturile de in și textilele rămase în sacoșe rezistente pentru cumpărături, legume, fructe și pâine. Acest meșteșug simplu de upcycling readuce la viață tehnicile tradiționale de cusut și înlocuiește pungile de plastic de unică folosință cu sacoșe textile lavabile și durabile.",
     },
     8: {
-      text: "Care dintre acestea este o metodă tradițională de conservare a alimentelor fără frigider?",
+      text: "Care dintre următoarele este o metodă tradițională de conservare a alimentelor fără frigider?",
       options: ["Uscarea la soare", "Cuptorul cu microunde", "Congelarea în vid", "Împachetarea în plastic"],
       explanation: "Uscarea la soare folosește energie solară gratuită în locul uscătoarelor electrice sau al congelatoarelor, evitând emisiile inutile din combustibili fosili.",
     },
@@ -264,9 +264,9 @@ export default {
       options: [
         "Smulgerea întregii plante din rădăcină (de la mai multe plante)",
         "Tăierea tuturor tulpinilor înflorite dintr-un pâlc (nu mai rămâne nimic să crească din nou)",
-        "Culegerea atentă a unei cantități mici dintr-o populație bogată",
+        "Culegerea atentă a unei cantități mici dintr-o zonă cu vegetație abundentă",
       ],
-      explanation: "Culegerea doar a unor cantități mici din populații bogate de plante le permite să continue să crească și să se înmulțească. Astfel se protejează biodiversitatea și plantele rămân disponibile pentru generațiile viitoare.",
+      explanation: "Culegerea doar a unor cantități mici din zone cu vegetație abundentă le permite plantelor să continue să crească și să se înmulțească. Astfel se protejează biodiversitatea și plantele rămân disponibile pentru generațiile viitoare.",
     },
     41: {
       text: "Care este unul dintre principalele beneficii ale folosirii plantelor în medicina tradițională?",

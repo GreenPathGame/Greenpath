@@ -70,7 +70,7 @@ export default {
     },
     6: {
       title: "Imballaggi sostenibili e riutilizzo dell'acqua",
-      info: "Gli imballaggi sostenibili proteggono il cibo, riducono i rifiuti e limitano l'impatto ambientale, ma non tutte le dichiarazioni «verdi» sono affidabili: le certificazioni ufficiali contano più del marketing colorato. Riutilizzare le acque grigie trattate in modo adeguato (da docce, lavandini, vasche e lavatrice) per usi non potabili, come lo scarico del WC, è un altro modo semplice per ridurre l'impronta ambientale di una famiglia.",
+      info: "Gli imballaggi sostenibili proteggono il cibo, riducono i rifiuti e limitano l'impatto ambientale, ma non tutte le dichiarazioni «verdi» sono affidabili. Il greenwashing è quando un'azienda fa sembrare un prodotto più rispettoso dell'ambiente di quanto sia davvero, usando parole vaghe come «eco» o «naturale», colori verdi o immagini della natura senza prove concrete: le certificazioni ufficiali contano più del marketing colorato. Riutilizzare le acque grigie trattate in modo adeguato (da docce, lavandini, vasche e lavatrice) per usi non potabili, come lo scarico del WC, è un altro modo semplice per ridurre l'impronta ambientale di una famiglia.",
       facts: [
         "Non tutte le dichiarazioni «verdi» sono vere.",
         "Le certificazioni ufficiali sono più affidabili delle parole del marketing.",
