@@ -2327,8 +2327,15 @@ function handleNext() {
                     <img src={img} alt="" draggable={false} style={{
                       width:"100%",aspectRatio:"4 / 3",objectFit:"cover",display:"block" }}/>
                     <div style={{ fontSize:"clamp(11px, 0.95vw, 15px)",fontWeight:700,color:"#e2e8f0",
-                      textAlign:"center",padding:"4px 5px",lineHeight:1.25 }}>
-                      {q.options[i]}
+                      textAlign:"left",padding:"5px 6px",lineHeight:1.25,
+                      display:"flex",alignItems:"center",gap:6 }}>
+                      <span aria-hidden="true" style={{ width:20,height:20,borderRadius:"50%",flexShrink:0,
+                        background:"rgba(74,222,128,0.12)",border:"1.5px solid rgba(74,222,128,0.3)",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:10,fontWeight:900,color:"#4ade80" }}>
+                        {OPTION_LETTERS[i]}
+                      </span>
+                      <span style={{ flex:1,minWidth:0 }}>{q.options[i]}</span>
                     </div>
                   </button>
                 ))}

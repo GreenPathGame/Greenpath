@@ -3,13 +3,13 @@
 export default {
   modules: {
     1: {
-      title: "Zahrady pro divokou přírodu",
-      info: "Zahrady pro divokou přírodu jsou přírodní nebo polopřírodní prostory, kde jedlé rostliny rostou v souladu s místními ekosystémy. Napodobují patra a biodiverzitu lesa a vyžadují jen minimální lidské zásahy. Skrytou silou těchto zahrad jsou tradiční semena: uchovávání, výměna a pěstování rozmanitých místních odrůd chrání kulturní dědictví a posiluje odolnost vůči změně klimatu pro další generace.",
+      title: "Přírodní zahrady",
+      info: "Přírodní zahrady jsou přírodní nebo polopřírodní prostory, ve kterých se pěstují jedlé rostliny v souladu s místními ekosystémy. Svou strukturou a biologickou rozmanitostí napodobují jednotlivá patra lesa a vyžadují jen minimální zásahy člověka. Tradiční osiva představují skrytý poklad těchto zahrad. Uchovávání, výměna a pěstování rozmanitých místních odrůd pomáhá zachovávat kulturní dědictví a zvyšuje odolnost vůči změně klimatu pro budoucí generace.",
       facts: [
-        "Místní potraviny výrazně snižují emise z dopravy.",
-        "Stromy, keře a trvalky pomáhají zadržovat vodu a zmírňují dopady sucha.",
-        "Z jediného semínka mohou během jedné sezony vzniknout stovky nových semen.",
-        "Pěstování rozmanitých místních rostlin podporuje opylovače, jako jsou včely, motýli a další užitečný hmyz.",
+        "Místní potraviny výrazně snižují emise spojené s dopravou.",
+        "Stromy, keře a vytrvalé rostliny pomáhají zadržovat vodu a zmírňovat dopady sucha.",
+        "Z jediného semínka mohou během jedné vegetační sezóny vzniknout stovky nových semen.",
+        "Pěstování rozmanitých místních druhů rostlin podporuje opylovače, jako jsou včely, motýli a další užitečný hmyz.",
         "Rozmanité zahrady s místními stromy, keři a trvalkami jsou odolnější vůči změně klimatu.",
         "Tradiční semena pomáhají chránit biodiverzitu a místní potravinové dědictví.",
         "Uchovávání místních semen podporuje zemědělství odolné vůči klimatu a budoucí potravinovou bezpečnost.",
@@ -112,24 +112,24 @@ export default {
 
   questions: {
     5: {
-      text: "Co dělá zahradu odolnější vůči změně klimatu?",
-      options: ["Jeden druh rostliny pěstovaný v řadách.", "Rozmanitá zahrada se stromy, keři, květinami, bylinkami a půdopokryvnými rostlinami.", "Betonový dvůr s okrasnými rostlinami v květináčích."],
-      explanation: "Rozmanité zahrady jsou odolnější, protože zadržují vodu, podporují divokou přírodu a lépe se přizpůsobují změně klimatu.",
+      text: "Co zvyšuje odolnost zahrady vůči změně klimatu?",
+      options: ["Pěstování jednoho druhu rostlin v řádcích.", "Druhově rozmanitá zahrada se stromy, keři, květinami, bylinkami a půdopokryvnými rostlinami.", "Betonový dvůr s okrasnými rostlinami v květináčích."],
+      explanation: "Druhově rozmanité zahrady jsou odolnější, protože lépe zadržují vodu, poskytují životní prostor různým živočichům a dokážou se lépe přizpůsobovat změně klimatu.",
     },
     6: {
-      text: "Která volba pomáhá snižovat emise z přepravy potravin?",
-      options: ["Dovážené balené potraviny", "Potraviny vypěstované v místní jedlé zahradě pro divokou přírodu"],
-      explanation: "Místní potraviny cestují kratší vzdálenosti, a tím snižují emise, odpad z obalů i spotřebu energie. Místní potravinové systémy navíc podporují biodiverzitu a udržitelné komunity.",
+      text: "Která možnost pomáhá snižovat emise spojené s přepravou potravin?",
+      options: ["Dovážené balené potraviny.", "Potraviny vypěstované v místní přírodní zahradě s jedlými rostlinami."],
+      explanation: "Místní potraviny se přepravují na kratší vzdálenosti, čímž se snižují emise, množství obalového odpadu a spotřeba energie. Místní potravinové systémy navíc podporují biologickou rozmanitost a udržitelné komunity.",
     },
     7: {
-      text: "Která rostlina nejspíš přirozeně zlepší půdu tím, že váže dusík?",
+      text: "Která rostlina s největší pravděpodobností přirozeně obohacuje půdu tím, že váže dusík?",
       options: ["Třešeň", "Jabloň", "Hrách"],
-      explanation: "Hrách patří mezi luštěniny a přirozeně obohacuje půdu dusíkem díky užitečným bakteriím, které žijí v jeho kořenech. To zlepšuje úrodnost půdy, podporuje růst dalších rostlin a snižuje potřebu chemických hnojiv.",
+      explanation: "Hrách patří do čeledi bobovitých a díky prospěšným bakteriím žijícím v jeho kořenových hlízkách přirozeně obohacuje půdu o dusík. Tím zlepšuje úrodnost půdy, podporuje růst dalších rostlin a snižuje potřebu používání průmyslových hnojiv.",
     },
     16: {
       text: "Která zahrada má největší rozmanitost semen?",
-      options: ["Barevná zahrada s mnoha různými rostlinami", "Velké pole s jedinou plodinou", "Okrasný trávník bez jedlých rostlin."],
-      explanation: "Rozmanitá zahrada poskytuje širokou škálu potravin a semen, chrání biodiverzitu, podporuje opylovače a divokou přírodu a pomáhá zahradě lépe zvládat sucho, škůdce a změnu klimatu.",
+      options: ["Pestrá zahrada s mnoha různými druhy rostlin.", "Rozlehlé pole, na kterém se pěstuje pouze jedna plodina.", "Okrasný trávník bez jedlých rostlin."],
+      explanation: "Druhově rozmanitá zahrada poskytuje širokou škálu potravin a semen, pomáhá zachovávat biologickou rozmanitost, podporuje opylovače a další volně žijící živočichy. Zároveň se lépe přizpůsobuje suchu, škůdcům a změně klimatu.",
     },
     23: {
       text: "Ve kterém miniskleníku se rostliny pěstují bez půdy?",
