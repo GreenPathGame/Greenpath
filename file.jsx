@@ -158,8 +158,28 @@ async function fetchUserRecord(uid) {
 }
 
 async function saveProgress(uid, progress) {
-  await setDoc(doc(db, "users", uid), { progress }, { merge: true });
+  try {
+    await setDoc(doc(db, "users", uid), { progress }, { merge: true });
+  } catch (err) {
+    // Older database rules don't know the per-module coin list yet:
+    // save everything else so progress is never lost.
+    if (err?.code === "permission-denied" && "coins" in progress) {
+      const { coins, ...rest } = progress;
+      await setDoc(doc(db, "users", uid), { progress: rest }, { merge: true });
+      return;
+    }
+    throw err;
+  }
 }
+
+// Coins earned per module (index 0 = module 1). One entry per completed module;
+// null where a module was finished before coins were saved.
+function normalizeCoins(list, completed) {
+  const src = Array.isArray(list) ? list : [];
+  return Array.from({ length: Math.max(0, completed|0) }, (_, i) =>
+    Number.isInteger(src[i]) && src[i] >= 0 && src[i] <= 4 ? src[i] : null);
+}
+function sumCoins(list) { return (list||[]).reduce((a, c) => a + (Number.isInteger(c) ? c : 0), 0); }
 
 function logoutUser() { return signOut(auth); }
 
@@ -2521,7 +2541,7 @@ function handleNext() {
 /* ═══════════════════════════════════════════════════
    RESULTS SCREEN
 ═══════════════════════════════════════════════════ */
-function ResultsScreen({ mod, character, score, total, onContinue, saveError }) {
+function ResultsScreen({ mod, character, score, total, onContinue, saveError, totalCoins, gained, modulesDone, moduleCount }) {
   const t = useT();
   const pass  = score >= total - 1;
   const [factIdx] = useState(()=>Math.floor(Math.random()*Math.max(mod.facts?.length||0,1)));
@@ -2552,6 +2572,28 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError }) 
           borderRadius:18, padding:"14px 32px", marginBottom:20 }}>
           <div style={{ fontSize:42, fontWeight:900, color:pass?"#22c55e":"#f59e0b" }}>{score}/{total}</div>
           <div style={{ color:"#94a3b8", fontSize:13 }}>{t("results.correct")}</div>
+        </div>
+
+        <div role="status" aria-label={`${t("results.totalCoins")}: ${totalCoins}`} style={{
+          display:"flex", alignItems:"center", justifyContent:"center", gap:12,
+          background:"linear-gradient(135deg, rgba(251,191,36,0.16), rgba(251,191,36,0.06))",
+          border:"1.5px solid rgba(251,191,36,0.45)", borderRadius:18,
+          padding:"12px 18px", marginBottom:20, animation:"popIn 0.5s 0.2s ease both" }}>
+          <CoinIcon size={40} style={{ filter:"drop-shadow(0 0 8px rgba(251,191,36,0.6))" }}/>
+          <div style={{ textAlign:"left" }}>
+            <div style={{ color:"#fde68a", fontSize:12, fontWeight:900, letterSpacing:0.6, textTransform:"uppercase" }}>
+              {t("results.totalCoins")}
+            </div>
+            <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+              <span style={{ color:"#fbbf24", fontSize:32, fontWeight:900, lineHeight:1.1 }}>{totalCoins}</span>
+              {gained>0&&(
+                <span style={{ color:"#4ade80", fontSize:15, fontWeight:900 }}>+{gained}</span>
+              )}
+            </div>
+            <div style={{ color:"#94a3b8", fontSize:12 }}>
+              {t("results.modulesDone", { n: modulesDone, total: moduleCount })}
+            </div>
+          </div>
         </div>
 
         <div style={{ display:"flex", gap:12, alignItems:"center",
@@ -2892,6 +2934,8 @@ export default function App() {
   const [prevCompleted,    setPrevCompleted]    = useState(0);
   const [activeModule,     setActiveModule]     = useState(null);
   const [lastScore,        setLastScore]        = useState(null);
+  const [lastGained,       setLastGained]       = useState(0);
+  const [moduleCoins,      setModuleCoins]      = useState([]);
   const [saveError,        setSaveError]        = useState(false);
   const [langReturnTo,     setLangReturnTo]     = useState(null);
 
@@ -2931,6 +2975,7 @@ export default function App() {
       languageId: language?.id,
       characterId: character?.id,
       completedModules,
+      coins: normalizeCoins(moduleCoins, patch.completedModules ?? completedModules),
       ...patch,
     };
     setSaveError(false);
@@ -2947,6 +2992,7 @@ export default function App() {
         setCharacter(char);
         setCompletedModules(u.progress.completedModules);
         setPrevCompleted(u.progress.completedModules);
+        setModuleCoins(normalizeCoins(u.progress.coins, u.progress.completedModules));
         setScreen("map");
         return;
       }
@@ -2974,6 +3020,7 @@ export default function App() {
           setCharacter(char);
           setCompletedModules(progress.completedModules);
           setPrevCompleted(progress.completedModules);
+          setModuleCoins(normalizeCoins(progress.coins, progress.completedModules));
           setDestination("map");
         } else {
           setDestination("language");
@@ -2990,7 +3037,22 @@ export default function App() {
   const currentScreen = (screen==="loading" && loadingDone && authChecked && destination) ? destination : screen;
   function go(next) { setScreen(next); }
 
-  function handleFinish(score) { setLastScore(score); go("results"); }
+  function handleFinish(score) {
+    const pass = score >= moduleQuestions.length-1;
+    const idx = activeModule.id - 1;
+    const isNext = activeModule.id === completedModules+1;
+    let gained = 0;
+    if (pass && (isNext || idx < moduleCoins.length)) {
+      const next = normalizeCoins(moduleCoins, Math.max(completedModules + (isNext ? 1 : 0), moduleCoins.length));
+      const before = next[idx] ?? 0;
+      next[idx] = isNext ? score : Math.max(before, score);
+      gained = isNext ? score : next[idx] - before;
+      setModuleCoins(next);
+    }
+    setLastGained(gained);
+    setLastScore(score);
+    go("results");
+  }
 
   function handleContinue() {
     const isNextModule = activeModule.id === completedModules+1;
@@ -3001,7 +3063,7 @@ export default function App() {
 
     setPrevCompleted(completedModules);
     setCompletedModules(newCompleted);
-    persistProgress({ completedModules: newCompleted });
+    persistProgress({ completedModules: newCompleted, coins: normalizeCoins(moduleCoins, newCompleted) });
     // Failed attempts go straight back to the module so the "Try Again" button means what it says.
     if (!pass) { go("intro"); return; }
     go("map");
@@ -3010,7 +3072,8 @@ export default function App() {
   function handlePlayAgain() {
     setPrevCompleted(0);
     setCompletedModules(0);
-    persistProgress({ completedModules: 0 });
+    setModuleCoins([]);
+    persistProgress({ completedModules: 0, coins: [] });
     go("map");
   }
 
@@ -3036,6 +3099,7 @@ export default function App() {
     setPrevCompleted(0);
     setActiveModule(null);
     setLastScore(null);
+    setModuleCoins([]);
     setSaveError(false);
     go("auth");
   }
@@ -3089,6 +3153,9 @@ export default function App() {
       {currentScreen==="results"&&localizedModule&&(
         <ResultsScreen mod={localizedModule} character={localChar}
           score={lastScore} total={moduleQuestions.length} saveError={saveError}
+          totalCoins={sumCoins(moduleCoins)} gained={lastGained}
+          modulesDone={Math.min(completedModules + ((activeModule.id===completedModules+1 && lastScore>=moduleQuestions.length-1)?1:0), MODULES.length)}
+          moduleCount={MODULES.length}
           onContinue={handleContinue}/>
       )}
       {currentScreen==="certificate"&&user&&language&&(

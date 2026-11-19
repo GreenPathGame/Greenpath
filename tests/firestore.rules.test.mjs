@@ -101,6 +101,27 @@ test("cannot add unknown fields or huge names", async () => {
   await assertFails(setDoc(doc(alice(), "users/alice"), { ...newUser, fullName: "" }));
   await assertFails(setDoc(doc(alice(), "users/alice"), { ...newUser, username: "Alice!" }));
 });
+test("save coins per module (total coins on the results screen)", async () => {
+  await seedAlice(prog(0));
+  const ref = doc(alice(), "users/alice");
+  await assertSucceeds(setDoc(ref, { progress: prog(1, { coins: [4] }) }, { merge: true }));
+  await assertSucceeds(setDoc(ref, { progress: prog(2, { coins: [4, 3] }) }, { merge: true }));
+  await assertSucceeds(setDoc(ref, { progress: prog(0, { coins: [] }) }, { merge: true }));
+});
+test("players from before coins were saved keep working", async () => {
+  await seedAlice(prog(3));
+  const ref = doc(alice(), "users/alice");
+  await assertSucceeds(setDoc(ref, { progress: prog(4, { coins: [null, null, null, 3] }) }, { merge: true }));
+});
+test("cannot store invalid coins", async () => {
+  await seedAlice(prog(1));
+  const ref = doc(alice(), "users/alice");
+  await assertFails(setDoc(ref, { progress: prog(2, { coins: [4, 5] }) }, { merge: true }));
+  await assertFails(setDoc(ref, { progress: prog(2, { coins: [4, -1] }) }, { merge: true }));
+  await assertFails(setDoc(ref, { progress: prog(2, { coins: [4, "lots"] }) }, { merge: true }));
+  await assertFails(setDoc(ref, { progress: prog(2, { coins: 99 }) }, { merge: true }));
+  await assertFails(setDoc(ref, { progress: prog(2, { coins: [1,1,1,1,1,1,1,1,1,1] }) }, { merge: true }));
+});
 test("cannot write anywhere else in the database", async () => {
   await assertFails(setDoc(doc(alice(), "scores/alice"), { score: 999 }));
   await assertFails(setDoc(doc(alice(), "users/alice/secret/x"), { a: 1 }));

@@ -3,7 +3,7 @@ rules_version = '2';
 // GreenPath – Firestore security rules
 //
 // The game stores one document per player: users/{uid}
-//   { username, fullName, progress: null | { languageId, characterId, completedModules } }
+//   { username, fullName, progress: null | { languageId, characterId, completedModules, coins? } }
 //
 // What these rules guarantee:
 //  - Nobody can read or change another player's data (only the signed-in owner).
@@ -24,16 +24,32 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // One coin count per module (0-4 correct answers), or null for modules
+    // finished before coins were saved.
+    function validCoin(c, i) {
+      return c.size() <= i || c[i] == null || (c[i] is int && c[i] >= 0 && c[i] <= 4);
+    }
+
+    function validCoins(p) {
+      let c = p.get('coins', []);
+      return c is list
+        && c.size() <= 9
+        && validCoin(c, 0) && validCoin(c, 1) && validCoin(c, 2)
+        && validCoin(c, 3) && validCoin(c, 4) && validCoin(c, 5)
+        && validCoin(c, 6) && validCoin(c, 7) && validCoin(c, 8);
+    }
+
     function validProgress(p) {
       return p == null || (
         p is map
-        && p.keys().hasOnly(['languageId', 'characterId', 'completedModules'])
+        && p.keys().hasOnly(['languageId', 'characterId', 'completedModules', 'coins'])
         && p.keys().hasAll(['languageId', 'characterId', 'completedModules'])
         && p.languageId in ['en', 'gr', 'it', 'ro', 'cz']
         && p.characterId in ['Manos', 'Roxana', 'Rino', 'Jana']
         && p.completedModules is int
         && p.completedModules >= 0
         && p.completedModules <= 9
+        && (!('coins' in p) || validCoins(p))
       );
     }
 
