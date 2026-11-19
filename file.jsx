@@ -1737,7 +1737,7 @@ function MapSVG({ completedModules }) {
 /* ═══════════════════════════════════════════════════
    MAP SCREEN
 ═══════════════════════════════════════════════════ */
-function MapScreen({ language, character, modules = MODULES, completedModules, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout, onChangeLanguage }) {
+function MapScreen({ language, character, modules = MODULES, completedModules, totalCoins = 0, prevCompleted, onStartModule, onBack, onViewCertificate, onPlayAgain, onLogout, onChangeLanguage }) {
   const t = useT();
   const [charPos,         setCharPos]         = useState(PATH_NODES[prevCompleted]);
   const [isWalking,       setIsWalking]       = useState(false);
@@ -1881,6 +1881,13 @@ function MapScreen({ language, character, modules = MODULES, completedModules, p
               <div style={{ color:"#86efac", fontSize:12 }}>
                 {language.flag} {language.label} · {t("map.completed", { done: completedModules, total: MODULES.length })}
               </div>
+            </div>
+            <div role="status" aria-label={`${t("results.totalCoins")}: ${totalCoins}`} title={t("results.totalCoins")}
+              style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0,
+                background:"linear-gradient(135deg, rgba(251,191,36,0.18), rgba(251,191,36,0.07))",
+                border:"1.5px solid rgba(251,191,36,0.45)", borderRadius:999, padding:"4px 11px 4px 5px" }}>
+              <CoinIcon size={24} style={{ filter:"drop-shadow(0 0 5px rgba(251,191,36,0.55))" }}/>
+              <span style={{ color:"#fbbf24", fontWeight:900, fontSize:17, lineHeight:1 }}>{totalCoins}</span>
             </div>
             <div style={{ width:80 }}>
               <div style={{ height:7, borderRadius:999, background:"#0f2a0f", overflow:"hidden" }}>
@@ -2546,7 +2553,6 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError, to
   const pass  = score >= total - 1;
   const [factIdx] = useState(()=>Math.floor(Math.random()*Math.max(mod.facts?.length||0,1)));
   const fact = mod.facts?.[factIdx];
-  const coins = score===total?3:pass?2:score>0?1:0;
 
   return (
     <GardenWrap>
@@ -2560,10 +2566,10 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError, to
         <p style={{ color:"#86efac", fontSize:13, marginBottom:20 }}>{mod.title}</p>
 
         <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:20 }}>
-          {[1,2,3].map(s=>(
-            <span key={s} style={{ display:"inline-flex", opacity:s<=coins?1:0.18,
-              filter:s<=coins?"drop-shadow(0 0 8px #fbbf24)":"grayscale(1)",
-              animation:s<=coins?`bounceIn 0.4s ${s*0.1}s ease both`:"none" }}><CoinIcon size={36}/></span>
+          {Array.from({ length: total }, (_, k) => k + 1).map(s=>(
+            <span key={s} style={{ display:"inline-flex", opacity:s<=score?1:0.18,
+              filter:s<=score?"drop-shadow(0 0 8px #fbbf24)":"grayscale(1)",
+              animation:s<=score?`bounceIn 0.4s ${s*0.1}s ease both`:"none" }}><CoinIcon size={36}/></span>
           ))}
         </div>
 
@@ -3132,6 +3138,7 @@ export default function App() {
       {currentScreen==="map"&&language&&character&&(
         <MapScreen language={language} character={localChar} modules={mapModules}
           completedModules={completedModules} prevCompleted={prevCompleted}
+          totalCoins={sumCoins(moduleCoins)}
           onStartModule={mod=>{ setActiveModule(mod); go("intro"); }}
           onBack={()=>go("character")}
           onChangeLanguage={()=>{ setLangReturnTo("map"); go("language"); }}
