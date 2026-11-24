@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect, useRef, useContext, useCallback, createContext } from "react";
 import { translate, LANGUAGE_META } from "./i18n.js";
 import NatureScene, { NATURE_SCENE_CSS } from "./NatureScene.jsx";
+import "@fontsource/caveat/600.css";
+import "@fontsource/noto-sans/400.css";
 import trGr from "./translations/gr.js";
 import trIt from "./translations/it.js";
 import trRo from "./translations/ro.js";
@@ -2655,266 +2657,157 @@ function ResultsScreen({ mod, character, score, total, onContinue, saveError, to
 /* ═══════════════════════════════════════════════════
    CERTIFICATE SCREEN
 ═══════════════════════════════════════════════════ */
+/* ── Partner certificate designs (A4, 300 dpi). The name goes on the printed line. ── */
+const CERT_W = 3508, CERT_H = 2480;
+const CERT_NAME = { cx: 1771, maxW: 1480 };            // line runs x 961–2582, y 1284
+const CERT_LANGS = ["en", "gr", "it", "ro", "cz"];
+
+const GREEK_RE = /[\u0370-\u03FF\u1F00-\u1FFF]/;
+// Handwriting (as in the partners' designs) for Latin names; the Greek design's plain
+// style for Greek certificates and for any name written in Greek letters.
+function certNameStyle(lang, name) {
+  return lang === "gr" || GREEK_RE.test(name)
+    ? { size: 205, oneLineMin: 118, twoLineMax: 120, min: 80, baseline: 1215, lineGap: 1.2,
+        font: px => `400 ${px}px "Noto Sans", sans-serif` }
+    : { size: 270, oneLineMin: 170, twoLineMax: 200, min: 90, baseline: 1236, lineGap: 1.0,
+        font: px => `600 ${px}px Caveat, "Noto Sans", cursive` };
+}
+
+// Fit the name on the line: shrink it, and if it is still too long, split it into two lines.
+function layoutCertName(ctx, name, style, maxW) {
+  const fits = (lines, px) => { ctx.font = style.font(px); return lines.every(l => ctx.measureText(l).width <= maxW); };
+  for (let px = style.size; px >= style.oneLineMin; px -= 4) if (fits([name], px)) return { px, lines: [name] };
+  const words = name.split(/\s+/);
+  if (words.length > 1) {
+    let best = null;
+    for (let i = 1; i < words.length; i++) {
+      const lines = [words.slice(0, i).join(" "), words.slice(i).join(" ")];
+      ctx.font = style.font(100);
+      const w = Math.max(...lines.map(l => ctx.measureText(l).width));
+      if (!best || w < best.w) best = { w, lines };
+    }
+    for (let px = style.twoLineMax; px >= style.min; px -= 4) if (fits(best.lines, px)) return { px, lines: best.lines };
+    return { px: style.min, lines: best.lines };
+  }
+  let px = style.oneLineMin;
+  while (px > style.min && !fits([name], px)) px -= 4;
+  return { px, lines: [name] };
+}
+
+// Minimal one-page A4 landscape PDF that embeds the certificate as a JPEG.
+function certificatePdf(jpegBytes, imgW, imgH, title) {
+  const enc = new TextEncoder();
+  const parts = []; const offsets = []; let length = 0;
+  const push = chunk => { const b = typeof chunk === "string" ? enc.encode(chunk) : chunk; parts.push(b); length += b.length; };
+  const obj = (n, body) => { offsets[n] = length; push(`${n} 0 obj\n`); body(); push("\nendobj\n"); };
+  // Title as UTF-16BE hex so Greek, Czech and Romanian names survive.
+  const titleHex = "FEFF" + Array.from(title).map(ch => {
+    const cp = ch.codePointAt(0);
+    const units = cp > 0xffff ? [0xd800 + ((cp - 0x10000) >> 10), 0xdc00 + ((cp - 0x10000) & 0x3ff)] : [cp];
+    return units.map(u => u.toString(16).padStart(4, "0")).join("");
+  }).join("").toUpperCase();
+  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  obj(1, () => push("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, () => push("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+  obj(3, () => push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.92 595.2] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>"));
+  obj(4, () => { push(`<< /Type /XObject /Subtype /Image /Width ${imgW} /Height ${imgH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`); push(jpegBytes); push("\nendstream"); });
+  const content = "q 841.92 0 0 595.2 0 0 cm /Im0 Do Q";
+  obj(5, () => push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));
+  obj(6, () => push(`<< /Title <${titleHex}> /Producer (GreenPath) >>`));
+  const xref = length;
+  push(`xref\n0 7\n0000000000 65535 f \n${[1,2,3,4,5,6].map(n => String(offsets[n]).padStart(10, "0") + " 00000 n \n").join("")}`);
+  push(`trailer\n<< /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts, { type: "application/pdf" });
+}
+
 function CertificateScreen({ user, language, onBack }) {
   const t = useT();
   const canvasRef = useRef(null);
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const lang = CERT_LANGS.includes(language?.id) ? language.id : "en";
+  const name = (user?.fullName || user?.username || "").trim();
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const W = 1200, H = 850, cx = W/2;
-    const SCALE = 2; // render at 2x for a crisp download
-    canvas.width = W*SCALE; canvas.height = H*SCALE;
-    ctx.scale(SCALE, SCALE);
-
-    const GREEN = "#166534", GREEN_LIGHT = "#4ade80";
-    const GOLD = "#c9a227", GOLD_LIGHT = "#f4d160", GOLD_DARK = "#8a6d1a";
-    const INK = "#1f2937", GRAY = "#57606f";
-    const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
-
-    // Arcs text along a circle, centred on the current (translated) origin.
-    function arcText(text, radius, font, color, stepDeg) {
-      ctx.save();
-      ctx.font = font; ctx.fillStyle = color;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      const step = stepDeg*Math.PI/180;
-      ctx.rotate(-step*(text.length-1)/2);
-      for (let i=0;i<text.length;i++) {
-        ctx.save(); ctx.translate(0,-radius); ctx.fillText(text[i],0,0); ctx.restore();
-        ctx.rotate(step);
-      }
-      ctx.restore();
-    }
-    // Draws letter-spaced small-caps-style text centred at x; returns its total width.
-    // Saves/restores canvas state so callers' font/align/baseline are untouched.
-    function spacedText(text, x, y, font, color, spacing) {
-      ctx.save();
-      ctx.font = font; ctx.fillStyle = color;
-      ctx.textAlign = "left"; ctx.textBaseline = "middle";
-      const chars = text.split("");
-      const widths = chars.map(c=>ctx.measureText(c).width);
-      const total = widths.reduce((a,b)=>a+b,0) + spacing*(chars.length-1);
-      let px = x - total/2;
-      chars.forEach((c,i)=>{ ctx.fillText(c,px,y); px += widths[i]+spacing; });
-      ctx.restore();
-      return total;
-    }
-    function ribbonTail(x, y, angleDeg, color) {
-      ctx.save();
-      ctx.translate(x,y); ctx.rotate(angleDeg*Math.PI/180);
-      const w=24, len=78, notch=18;
-      ctx.beginPath();
-      ctx.moveTo(-w/2,0); ctx.lineTo(w/2,0); ctx.lineTo(w/2,len);
-      ctx.lineTo(0,len-notch); ctx.lineTo(-w/2,len); ctx.closePath();
-      ctx.fillStyle = color; ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,0.14)";
-      ctx.fillRect(-3,4,6,len-notch-8);
-      ctx.restore();
-    }
-    // A single laurel leaf, used to build sprigs and the small wordmark flourish.
-    function leaf(x, y, angleDeg, size, color) {
-      ctx.save();
-      ctx.translate(x,y); ctx.rotate(angleDeg*Math.PI/180);
-      ctx.beginPath(); ctx.ellipse(0,0,size,size*0.4,0,0,Math.PI*2);
-      ctx.fillStyle = color; ctx.fill();
-      ctx.restore();
-    }
-    // A laurel branch curling up one side of a circle of the given radius, centred
-    // at (x,y). mirror=+1 hugs the right side, -1 the left — call both to wrap a
-    // medallion in a wreath that converges at the bottom, open at the top.
-    function laurelSprig(x, y, mirror, radius, count=9) {
-      ctx.save();
-      ctx.translate(x,y);
-      for (let i=0;i<count;i++) {
-        const t = i/(count-1);
-        const beta = t*2.36; // 0 = bottom, sweeping up to ~135°
-        const r = radius*0.3 + t*radius*1.05;
-        const lx = mirror * r*Math.sin(beta);
-        const ly = r*Math.cos(beta);
-        leaf(lx, ly, mirror*(beta*180/Math.PI+90), 11-t*4, i%2===0?GREEN_LIGHT:GREEN);
-      }
-      ctx.restore();
-    }
-    // Five-point star, used for the medallion emblem instead of an emoji glyph.
-    function star(x, y, outerR, innerR, color) {
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.beginPath();
-      ctx.moveTo(0,-outerR);
-      for (let i=0;i<5;i++) {
-        ctx.rotate(Math.PI/5); ctx.lineTo(0,-innerR);
-        ctx.rotate(Math.PI/5); ctx.lineTo(0,-outerR);
-      }
-      ctx.closePath();
-      ctx.fillStyle = color; ctx.fill();
-      ctx.restore();
-    }
-    function cornerFlourish(x, y, rotDeg) {
-      ctx.save();
-      ctx.translate(x,y); ctx.rotate(rotDeg*Math.PI/180);
-      ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0,30); ctx.quadraticCurveTo(0,0,30,0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0,18); ctx.quadraticCurveTo(0,0,18,0); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0,0,3.2,0,Math.PI*2); ctx.fillStyle = GOLD; ctx.fill();
-      ctx.restore();
-    }
-    function divider(y, w) {
-      ctx.strokeStyle = GOLD; ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.moveTo(cx-w/2,y); ctx.lineTo(cx-9,y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx+9,y); ctx.lineTo(cx+w/2,y); ctx.stroke();
-      ctx.save(); ctx.translate(cx,y); ctx.rotate(Math.PI/4);
-      ctx.fillStyle = GOLD; ctx.fillRect(-4,-4,8,8); ctx.restore();
-    }
-    // A signature block: a value (signature or date) above a hairline rule, with a
-    // small-caps caption below it — the classic bottom-of-diploma layout.
-    function signatureBlock(x, valueText, valueFont, caption, align) {
-      ctx.save();
-      const lineW = 230;
-      const lineX0 = align==="left" ? x : x - lineW;
-      const lineX1 = align==="left" ? x + lineW : x;
-      const textX  = (lineX0+lineX1)/2;
+    let cancelled = false;
+    setReady(false); setFailed(false);
+    const style = certNameStyle(lang, name);
+    const img = new Image();
+    img.src = asset(`cert/${lang}.jpg`);
+    const fontsReady = (document.fonts?.load
+      ? document.fonts.load(style.font(100), name || "A").catch(() => null)
+      : Promise.resolve());
+    Promise.all([img.decode(), fontsReady]).then(() => {
+      if (cancelled) return;
+      const canvas = canvasRef.current; if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, CERT_W, CERT_H);
+      const { px, lines } = layoutCertName(ctx, name, style, CERT_NAME.maxW);
+      ctx.font = style.font(px);
+      ctx.fillStyle = "#262626";
       ctx.textAlign = "center";
-      ctx.fillStyle = INK; ctx.font = valueFont;
-      ctx.fillText(valueText, textX, 704);
-      ctx.strokeStyle = "rgba(201,162,39,0.55)"; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(lineX0,720); ctx.lineTo(lineX1,720); ctx.stroke();
-      ctx.restore();
-      spacedText(caption, textX, 738, "700 11px Georgia", GOLD_DARK, 1.6);
-    }
+      ctx.textBaseline = "alphabetic";
+      lines.forEach((line, i) => {
+        const y = style.baseline - (lines.length - 1 - i) * px * style.lineGap;
+        ctx.fillText(line, CERT_NAME.cx, y);
+      });
+      setReady(true);
+    }).catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [lang, name]);
 
-    /* ── Background ── */
-    const grad = ctx.createLinearGradient(0,0,W,H);
-    grad.addColorStop(0, "#fdfaf0");
-    grad.addColorStop(1, "#f2ead4");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,W,H);
-    // faint diagonal paper texture
-    ctx.save();
-    ctx.globalAlpha = 0.03; ctx.strokeStyle = GREEN; ctx.lineWidth = 1;
-    for (let x=-H;x<W;x+=16) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+H,H); ctx.stroke(); }
-    ctx.restore();
-    // soft vignette
-    const vg = ctx.createRadialGradient(cx,H/2,H*0.25,cx,H/2,H*0.75);
-    vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(60,40,10,0.10)");
-    ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+  const fileBase = `${(name || "GreenPath").replace(/[^\p{L}\p{N}]+/gu, "_")}_GreenPath_Certificate`;
 
-    /* ── Borders ── */
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 10;
-    ctx.strokeRect(30,30,W-60,H-60);
-    ctx.strokeStyle = GOLD; ctx.lineWidth = 3;
-    ctx.strokeRect(48,48,W-96,H-96);
-    ctx.strokeStyle = "rgba(201,162,39,0.45)"; ctx.lineWidth = 1;
-    ctx.strokeRect(58,58,W-116,H-116);
-    [[60,60,0],[W-60,60,90],[W-60,H-60,180],[60,H-60,270]].forEach(([x,y,r])=>cornerFlourish(x,y,r));
-
-    ctx.textAlign = "center";
-
-    /* ── Wordmark ── */
-    const wmWidth = spacedText("GREENPATH", cx, 96, "700 22px Georgia", GREEN, 4);
-    leaf(cx-wmWidth/2-22, 94, 200, 8, GREEN_LIGHT);
-    leaf(cx-wmWidth/2-34, 98, 195, 6, GREEN);
-    leaf(cx+wmWidth/2+22, 94, 20, 8, GREEN_LIGHT);
-    leaf(cx+wmWidth/2+34, 98, 15, 6, GREEN);
-    divider(122, 170);
-
-    /* ── Title ── */
-    const MAXW = W - 220; // keeps longer translations inside the border
-    ctx.fillStyle = "rgba(15,23,42,0.12)"; ctx.font = "700 46px Georgia";
-    ctx.fillText(t("cert.heading"), cx+2, 192, MAXW);
-    ctx.fillStyle = INK;
-    ctx.fillText(t("cert.heading"), cx, 190, MAXW);
-
-    ctx.fillStyle = GRAY; ctx.font = "italic 20px Georgia";
-    ctx.fillText(t("cert.certifies"), cx, 236, MAXW);
-
-    /* ── Name ── */
-    ctx.fillStyle = GREEN; ctx.font = "italic 700 50px Georgia";
-    ctx.fillText(user.fullName, cx, 306, MAXW);
-    const nameWidth = Math.min(ctx.measureText(user.fullName).width, MAXW);
-    divider(328, Math.min(Math.max(nameWidth+70,260),520));
-
-    /* ── Body ── */
-    ctx.fillStyle = GRAY; ctx.font = "21px Georgia";
-    ctx.fillText(t("cert.completed", { n: MODULES.length }), cx, 374, MAXW);
-    ctx.font = "italic 21px Georgia";
-    ctx.fillText(t("cert.inLang", { lang: language.label }), cx, 402, MAXW);
-
-    /* ── Module badges ── */
-    spacedText(t("cert.modules"), cx, 440, "700 12px Georgia", GOLD_DARK, 2);
-    const R = 19, GAP = 13;
-    const total = MODULES.length*(2*R) + (MODULES.length-1)*GAP;
-    const startX = cx - total/2 + R;
-    ctx.save();
-    ctx.textBaseline = "middle";
-    MODULES.forEach((m,i)=>{
-      const x = startX + i*(2*R+GAP), y = 472;
-      ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2);
-      ctx.fillStyle = `${m.color}18`; ctx.fill();
-      ctx.strokeStyle = m.color; ctx.lineWidth = 1.6; ctx.stroke();
-      ctx.font = "700 13px Georgia"; ctx.fillStyle = INK;
-      ctx.fillText(ROMAN[i]||String(i+1), x, y+1);
-    });
-    ctx.restore();
-
-    /* ── Seal ── */
-    const sealY = 578, sealR = 48;
-    ribbonTail(cx-12, sealY, -9, GREEN);
-    ribbonTail(cx+12, sealY, 9, "#15803d");
-    laurelSprig(cx, sealY, -1, sealR);
-    laurelSprig(cx, sealY, 1, sealR);
-
-    const sealGrad = ctx.createRadialGradient(cx-14,sealY-14,4,cx,sealY,sealR);
-    sealGrad.addColorStop(0, GOLD_LIGHT); sealGrad.addColorStop(0.55, GOLD); sealGrad.addColorStop(1, GOLD_DARK);
-    ctx.beginPath(); ctx.arc(cx,sealY,sealR,0,Math.PI*2);
-    ctx.fillStyle = sealGrad; ctx.fill();
-    ctx.strokeStyle = GOLD_DARK; ctx.lineWidth = 3; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx,sealY,sealR-8,0,Math.PI*2);
-    ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
-
-    ctx.save(); ctx.translate(cx,sealY);
-    arcText("GREENPATH", sealR-13, "700 10px Georgia", "#5c3d0a", 18);
-    ctx.restore();
-    star(cx, sealY+3, 15, 6.5, "#5c3d0a");
-
-    /* ── Footer ── */
-    const dateStr = new Date().toLocaleDateString(LANGUAGE_META[language.id]?.locale, {
-      year:"numeric", month:"long", day:"numeric"
-    });
-    signatureBlock(90, "GreenPath", "italic 26px Georgia", t("cert.director"), "left");
-    signatureBlock(W-90, dateStr, "italic 20px Georgia", t("cert.date"), "right");
-    ctx.textAlign = "center";
-  }, [user, language, t]);
-
-  function download() {
-    const canvas = canvasRef.current;
+  function save(blob, filename) {
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.download = `${user.fullName.replace(/\s+/g,"_")}_GreenPath_Certificate.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    link.href = url; link.download = filename;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+  function downloadImage() {
+    canvasRef.current?.toBlob(b => b && save(b, `${fileBase}.jpg`), "image/jpeg", 0.92);
+  }
+  function downloadPdf() {
+    canvasRef.current?.toBlob(async b => {
+      if (!b) return;
+      const bytes = new Uint8Array(await b.arrayBuffer());
+      save(certificatePdf(bytes, CERT_W, CERT_H, `${t("cert.heading")} - ${name}`), `${fileBase}.pdf`);
+    }, "image/jpeg", 0.92);
   }
 
   return (
     <GardenWrap>
-      <Panel style={{ maxWidth: 620 }}>
+      <Panel style={{ maxWidth: 760 }}>
         <div style={{ textAlign:"center", marginBottom:16 }}>
           <div style={{ fontSize:44, marginBottom:4 }}>🏆</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f0fdf4" }}>
             {t("cert.heading")}
           </h1>
           <p style={{ color:"#86efac", fontSize:13 }}>
-            {t("cert.sub", { name: user.fullName })}
+            {t("cert.sub", { name })}
           </p>
         </div>
 
-        <div style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(74,222,128,0.25)", marginBottom:18 }}>
-          <canvas ref={canvasRef} role="img" aria-label={`${t("cert.heading")}: ${user.fullName}`}
-            style={{ width:"100%", display:"block" }} />
+        <div style={{ position:"relative", borderRadius:14, overflow:"hidden", border:"1px solid rgba(74,222,128,0.25)",
+          marginBottom:18, background:"#f7fbef" }}>
+          <canvas ref={canvasRef} width={CERT_W} height={CERT_H} role="img"
+            aria-label={`${t("cert.heading")}: ${name}`}
+            style={{ width:"100%", height:"auto", display:"block", opacity: ready ? 1 : 0, transition:"opacity 0.4s" }} />
+          {!ready && (
+            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center",
+              color:"#166534", fontWeight:800, fontSize:14 }}>
+              {failed ? t("cert.loadError") : t("cert.preparing")}
+            </div>
+          )}
         </div>
 
         <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-          <Btn onClick={download} style={{ flex:"1 1 180px" }} color="#fbbf24">
+          <Btn onClick={downloadPdf} disabled={!ready} style={{ flex:"1 1 180px" }} color="#fbbf24">
             {t("cert.download")}
+          </Btn>
+          <Btn onClick={downloadImage} disabled={!ready} style={{ flex:"1 1 180px" }} color="#38bdf8">
+            {t("cert.downloadImg")}
           </Btn>
           <Btn onClick={onBack} style={{ flex:"1 1 180px" }} color="#22c55e">
             {t("cert.backMap")}

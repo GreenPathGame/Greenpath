@@ -42,6 +42,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     // No source maps in the published site (keeps the original source out of the download).
     sourcemap: false,
+    // Fonts must be real files: the security policy (font-src 'self') blocks inlined data: fonts.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/i.test(file) ? false : undefined),
     rolldownOptions: {
       output: {
         // Keep the big, rarely-changing libraries in their own cached chunks.
