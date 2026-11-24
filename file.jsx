@@ -1005,12 +1005,18 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
 
         <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:12 }}>
           {mode==="register" && (
-            <input
-              type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
-              autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
-              value={fullName} onChange={e=>setFullName(e.target.value)}
-              style={inputStyle}
-            />
+            <div>
+              <input
+                type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
+                aria-describedby="fullname-hint"
+                autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
+                value={fullName} onChange={e=>setFullName(e.target.value)}
+                style={inputStyle}
+              />
+              <div id="fullname-hint" style={{ color:"#86efac", fontSize:12, lineHeight:1.35, margin:"5px 4px 0", textAlign:"left" }}>
+                {t("auth.fullNameHint")}
+              </div>
+            </div>
           )}
           <input
             type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
