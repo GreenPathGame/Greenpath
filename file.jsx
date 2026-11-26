@@ -115,10 +115,8 @@ function cleanFullName(raw) {
 }
 function usernameToEmail(username) { return `${username}@gardenquest.local`; }
 
-// Players sign up and log in with their "Name Surname" only. Firebase needs an
-// email-like login, so the name is turned into a short private code: case, accents
-// and extra spaces are ignored ("jiri novak" logs in to "Jiří Novák"). The code fits
-// the existing username format, so the database rules don't change.
+// For a few days sign-up used "Name Surname" only, turned into a private login code.
+// Those players log in by typing their name in the username field.
 function nameKey(name) {
   return cleanFullName(name).normalize("NFD").replace(/\p{M}+/gu, "")
     .toLowerCase().replace(/ς/g, "σ").normalize("NFC");
@@ -139,13 +137,12 @@ function friendlyAuthError(err) {
     case "auth/weak-password": return "auth.errPassword";
     case "auth/network-request-failed": return "auth.errNetwork";
     case "auth/too-many-requests": return "auth.errTooMany";
-    case "auth/invalid-email": return "auth.errIncorrect";
+    case "auth/invalid-email": return "auth.errUsername";
     default: return "auth.errGeneric";
   }
 }
 
-async function registerUser(fullName, password) {
-  const username = await nameToId(fullName);
+async function registerUser(username, password, fullName) {
   const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
   try {
     await updateProfile(cred.user, { displayName: fullName });
@@ -158,17 +155,16 @@ async function registerUser(fullName, password) {
   return { uid: cred.user.uid, username, fullName, progress: null };
 }
 
-async function loginUser(nameOrUsername, password) {
-  let username = await nameToId(nameOrUsername);
+async function loginUser(input, password) {
+  let username = input.trim().toLowerCase();
   let cred;
   try {
+    if (!USERNAME_RE.test(username)) { const e = new Error("not a username"); e.code = "auth/invalid-credential"; throw e; }
     cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
   } catch (err) {
-    // Players who signed up before names were used can still log in with their old username.
-    const legacy = nameOrUsername.trim().toLowerCase();
     const notFound = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password"].includes(err?.code);
-    if (!notFound || !USERNAME_RE.test(legacy)) throw err;
-    username = legacy;
+    if (!notFound || cleanFullName(input).length < 2) throw err;
+    username = await nameToId(input);
     cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
   }
   const record = await fetchUserRecord(cred.user.uid);
@@ -957,6 +953,7 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
   const [showPw, setShowPw] = useState(false);
   const [mode, setMode] = useState("register"); // "register" | "login"
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -964,15 +961,20 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    const name = cleanFullName(fullName);
+    const uname = username.trim().toLowerCase();
 
     if (mode === "register") {
-      if (!name || !password) {
+      const name = cleanFullName(fullName);
+      if (!name || !uname || !password) {
         setError("auth.errFill");
         return;
       }
-      if (name.length < 2 || name.length > FULLNAME_MAX) {
+      if (name.length > FULLNAME_MAX) {
         setError("auth.errName");
+        return;
+      }
+      if (!USERNAME_RE.test(uname)) {
+        setError("auth.errUsername");
         return;
       }
       if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
@@ -981,7 +983,7 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
       }
       setBusy(true);
       try {
-        const u = await registerUser(name, password);
+        const u = await registerUser(uname, password, name);
         onAuth(u);
       } catch (err) {
         setError(friendlyAuthError(err));
@@ -989,17 +991,17 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
         setBusy(false);
       }
     } else {
-      if (!name || !password) {
+      if (!username.trim() || !password) {
         setError("auth.errFill");
         return;
       }
-      if (name.length > FULLNAME_MAX || password.length > PASSWORD_MAX) {
+      if (username.length > FULLNAME_MAX + 10 || password.length > PASSWORD_MAX) {
         setError("auth.errIncorrect");
         return;
       }
       setBusy(true);
       try {
-        const u = await loginUser(name, password);
+        const u = await loginUser(username, password);
         onAuth(u);
       } catch (err) {
         setError(friendlyAuthError(err));
@@ -1024,19 +1026,27 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
         </div>
 
         <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          <div>
-            <input
-              type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
-              aria-describedby="fullname-hint"
-              autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
-              autoCapitalize="words" spellCheck={false}
-              value={fullName} onChange={e=>setFullName(e.target.value)}
-              style={inputStyle}
-            />
-            <div id="fullname-hint" style={{ color:"#86efac", fontSize:12, lineHeight:1.35, margin:"5px 4px 0", textAlign:"left" }}>
-              {mode==="register" ? t("auth.fullNameHint") : t("auth.loginHint")}
+          {mode==="register" && (
+            <div>
+              <input
+                type="text" placeholder={t("auth.fullName")} aria-label={t("auth.fullName")}
+                aria-describedby="fullname-hint"
+                autoComplete="name" className="gp-input" maxLength={FULLNAME_MAX + 10}
+                value={fullName} onChange={e=>setFullName(e.target.value)}
+                style={inputStyle}
+              />
+              <div id="fullname-hint" style={{ color:"#86efac", fontSize:12, lineHeight:1.35, margin:"5px 4px 0", textAlign:"left" }}>
+                {t("auth.fullNameHint")}
+              </div>
             </div>
-          </div>
+          )}
+          <input
+            type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
+            autoComplete="username" className="gp-input" spellCheck={false}
+            maxLength={mode==="register" ? 20 : FULLNAME_MAX + 10}
+            value={username} onChange={e=>setUsername(e.target.value)}
+            style={inputStyle} autoCapitalize="none"
+          />
           <div style={{ position:"relative" }}>
             <input
               type={showPw ? "text" : "password"} placeholder={t("auth.password")} aria-label={t("auth.password")}
@@ -2745,7 +2755,7 @@ function CertificateScreen({ user, language, onBack }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const lang = CERT_LANGS.includes(language?.id) ? language.id : "en";
-  const name = (user?.fullName || "").trim();
+  const name = (user?.fullName || user?.username || "").trim();
 
   useEffect(() => {
     let cancelled = false;
