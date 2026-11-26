@@ -57,7 +57,7 @@ service cloud.firestore {
       return d.keys().hasOnly(['username', 'fullName', 'progress'])
         && d.keys().hasAll(['username', 'fullName'])
         && d.username is string
-        && d.username.matches('^[a-z0-9_.-]{3,20}$')
+        && d.username.matches('^[a-z0-9_.-]{3,40}$')
         && d.fullName is string
         && d.fullName.size() >= 1
         && d.fullName.size() <= 60

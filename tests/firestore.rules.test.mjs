@@ -122,6 +122,13 @@ test("cannot store invalid coins", async () => {
   await assertFails(setDoc(ref, { progress: prog(2, { coins: 99 }) }, { merge: true }));
   await assertFails(setDoc(ref, { progress: prog(2, { coins: [1,1,1,1,1,1,1,1,1,1] }) }, { merge: true }));
 });
+test("usernames up to 40 characters", async () => {
+  const name40 = "a".repeat(40), name41 = "b".repeat(41);
+  const ctx40 = env.authenticatedContext("u40", { email: EMAIL(name40) }).firestore();
+  const ctx41 = env.authenticatedContext("u41", { email: EMAIL(name41) }).firestore();
+  await assertSucceeds(setDoc(doc(ctx40, "users/u40"), { username: name40, fullName: "Long Name", progress: null }));
+  await assertFails(setDoc(doc(ctx41, "users/u41"), { username: name41, fullName: "Too Long", progress: null }));
+});
 test("cannot write anywhere else in the database", async () => {
   await assertFails(setDoc(doc(alice(), "scores/alice"), { score: 999 }));
   await assertFails(setDoc(doc(alice(), "users/alice/secret/x"), { a: 1 }));

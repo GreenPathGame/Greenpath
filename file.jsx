@@ -104,7 +104,7 @@ function rememberLanguage(id) {
    "@gardenquest.local" address under the hood; the UI
    only ever shows the username.
 ═══════════════════════════════════════════════════ */
-const USERNAME_RE = /^[a-z0-9_.-]{3,20}$/;
+const USERNAME_RE = /^[a-z0-9_.-]{3,40}$/;
 // Limits match firestore.rules, so nothing the form accepts is refused by the database.
 const FULLNAME_MAX = 60;
 const PASSWORD_MIN = 6, PASSWORD_MAX = 128;
@@ -1043,7 +1043,7 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
           <input
             type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
             autoComplete="username" className="gp-input" spellCheck={false}
-            maxLength={mode==="register" ? 20 : FULLNAME_MAX + 10}
+            maxLength={mode==="register" ? 40 : FULLNAME_MAX + 10}
             value={username} onChange={e=>setUsername(e.target.value)}
             style={inputStyle} autoCapitalize="none"
           />
