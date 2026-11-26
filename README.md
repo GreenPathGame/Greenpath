@@ -10,7 +10,7 @@ A free, browser-based learning game about sustainable food, gardening and food t
 - **4 characters:** Manos (GR), Roxana (RO), Rino (IT), Jana (CZ), each with idle, happy and sad reactions.
 - **Living garden world:** mountains, forests, a waterfall, river, pond and flower meadows with butterflies, birds and a duck, drawn in `NatureScene.jsx` behind every screen.
 - **9 modules, 36 questions** (all from the partners' info papers): multiple choice, true/false and picture questions, each with an explanation. You need all answers but one correct to unlock the next module.
-- **Accounts:** username + password (Firebase Auth). Progress, language and character sync across devices.
+- **Accounts:** Name Surname + password (Firebase Auth); the name is also printed on the certificate. Earlier players can still log in with their old username. Progress, language and character sync across devices.
 - **Certificate:** generated in the player's language with their full name and the date, downloadable as a PNG.
 - Works on phones, tablets and desktop. Answer buttons and map nodes work with the keyboard, and animations are reduced when the device asks for reduced motion.
 
