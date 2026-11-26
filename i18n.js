@@ -121,6 +121,8 @@ const UI = {
     "cert.downloadImg": "🖼 Download image",
     "cert.preparing": "Preparing your certificate…",
     "cert.loadError": "The certificate could not be loaded. Please refresh the page.",
+    "cert.saveTip": "Tip: you can also long-press the certificate (phone) or right-click it (computer) and choose “Save image”.",
+    "cert.inAppTip": "You are in another app's built-in browser, where downloads often don't work. Long-press the certificate to save it, or open this page in Chrome or Safari (menu ⋯ → Open in browser).",
     "cert.backMap": "Back to Map",
 
     "char.Manos.idle": "Let's learn together!", "char.Manos.happy": "Yay! Correct!", "char.Manos.sad": "Try again!",
@@ -243,6 +245,8 @@ const UI = {
     "cert.downloadImg": "🖼 Λήψη εικόνας",
     "cert.preparing": "Ετοιμάζεται το πιστοποιητικό σου…",
     "cert.loadError": "Δεν ήταν δυνατή η φόρτωση του πιστοποιητικού. Ανανέωσε τη σελίδα.",
+    "cert.saveTip": "Συμβουλή: μπορείς επίσης να πατήσεις παρατεταμένα το πιστοποιητικό (κινητό) ή να κάνεις δεξί κλικ (υπολογιστής) και να επιλέξεις «Αποθήκευση εικόνας».",
+    "cert.inAppTip": "Βρίσκεσαι στον ενσωματωμένο browser άλλης εφαρμογής, όπου οι λήψεις συχνά δεν λειτουργούν. Πάτησε παρατεταμένα το πιστοποιητικό για να το αποθηκεύσεις ή άνοιξε τη σελίδα σε Chrome ή Safari (μενού ⋯ → Άνοιγμα σε πρόγραμμα περιήγησης).",
     "cert.backMap": "Πίσω στον χάρτη",
 
     "char.Manos.idle": "Ας μάθουμε μαζί!", "char.Manos.happy": "Ναι! Σωστό!", "char.Manos.sad": "Ξαναδοκίμασε!",
@@ -365,6 +369,8 @@ const UI = {
     "cert.downloadImg": "🖼 Scarica immagine",
     "cert.preparing": "Stiamo preparando il tuo attestato…",
     "cert.loadError": "Impossibile caricare l'attestato. Aggiorna la pagina.",
+    "cert.saveTip": "Suggerimento: puoi anche tenere premuto sull'attestato (telefono) o cliccarci con il tasto destro (computer) e scegliere «Salva immagine».",
+    "cert.inAppTip": "Sei nel browser interno di un'altra app, dove i download spesso non funzionano. Tieni premuto sull'attestato per salvarlo, oppure apri questa pagina in Chrome o Safari (menu ⋯ → Apri nel browser).",
     "cert.backMap": "Torna alla mappa",
 
     "char.Manos.idle": "Impariamo insieme!", "char.Manos.happy": "Evviva! Giusto!", "char.Manos.sad": "Riprova!",
@@ -487,6 +493,8 @@ const UI = {
     "cert.downloadImg": "🖼 Descarcă imaginea",
     "cert.preparing": "Se pregătește certificatul tău…",
     "cert.loadError": "Certificatul nu a putut fi încărcat. Reîmprospătează pagina.",
+    "cert.saveTip": "Sfat: poți ține apăsat pe certificat (telefon) sau poți da clic dreapta pe el (computer) și alege „Salvează imaginea”.",
+    "cert.inAppTip": "Ești în browserul integrat al altei aplicații, unde descărcările adesea nu funcționează. Ține apăsat pe certificat ca să-l salvezi sau deschide pagina în Chrome ori Safari (meniul ⋯ → Deschide în browser).",
     "cert.backMap": "Înapoi la hartă",
 
     "char.Manos.idle": "Hai să învățăm împreună!", "char.Manos.happy": "Ura! Corect!", "char.Manos.sad": "Mai încearcă!",
@@ -609,6 +617,8 @@ const UI = {
     "cert.downloadImg": "🖼 Stáhnout obrázek",
     "cert.preparing": "Připravujeme tvé osvědčení…",
     "cert.loadError": "Osvědčení se nepodařilo načíst. Obnov prosím stránku.",
+    "cert.saveTip": "Tip: osvědčení můžeš také podržet prstem (telefon) nebo na něj kliknout pravým tlačítkem (počítač) a zvolit „Uložit obrázek“.",
+    "cert.inAppTip": "Jsi ve vestavěném prohlížeči jiné aplikace, kde stahování často nefunguje. Podrž prst na osvědčení a ulož ho, nebo otevři stránku v Chrome či Safari (nabídka ⋯ → Otevřít v prohlížeči).",
     "cert.backMap": "Zpět na mapu",
 
     "char.Manos.idle": "Pojďme se učit spolu!", "char.Manos.happy": "Jupí! Správně!", "char.Manos.sad": "Zkus to znovu!",

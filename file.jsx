@@ -2749,25 +2749,67 @@ function certificatePdf(jpegBytes, imgW, imgH, title) {
   return new Blob(parts, { type: "application/pdf" });
 }
 
+// Download support differs a lot between devices, so the certificate is prepared once
+// (JPG + PDF) and offered in the way each device handles best.
+const UA = typeof navigator !== "undefined" ? navigator.userAgent : "";
+const IS_IOS = /iPad|iPhone|iPod/.test(UA) || (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+// Browsers built into other apps often ignore downloads entirely.
+const IN_APP_BROWSER = /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter|TikTok|BytedanceWebview|musical_ly|Snapchat|Pinterest|LinkedInApp|GSA\//.test(UA);
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(b => (b ? resolve(b) : reject(new Error("toBlob failed"))), type, quality));
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  if (!("download" in HTMLAnchorElement.prototype)) {
+    // Very old browsers: open the file so it can be saved from there.
+    window.open(url, "_blank", "noopener");
+  } else {
+    const link = document.createElement("a");
+    link.href = url; link.download = filename; link.rel = "noopener";
+    document.body.appendChild(link); link.click(); link.remove();
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// iPhone/iPad: the share sheet offers "Save Image" (Photos) and "Save to Files".
+// Must run straight from the tap, so nothing is awaited before share().
+function deliverFile(blob, filename) {
+  if (IS_IOS && typeof File !== "undefined" && navigator.canShare) {
+    const file = new File([blob], filename, { type: blob.type });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(err => {
+        if (err?.name !== "AbortError") downloadBlob(blob, filename);
+      });
+      return;
+    }
+  }
+  downloadBlob(blob, filename);
+}
+
 function CertificateScreen({ user, language, onBack }) {
   const t = useT();
-  const canvasRef = useRef(null);
-  const [ready, setReady] = useState(false);
+  const [files, setFiles] = useState(null);      // { jpg, pdf, url }
   const [failed, setFailed] = useState(false);
   const lang = CERT_LANGS.includes(language?.id) ? language.id : "en";
   const name = (user?.fullName || user?.username || "").trim();
+  const pdfTitle = `${t("cert.heading")} - ${name}`;
 
   useEffect(() => {
     let cancelled = false;
+    let url = null;
     const style = certNameStyle(lang, name);
     const img = new Image();
     img.src = asset(`cert/${lang}.jpg`);
     const fontsReady = (document.fonts?.load
       ? document.fonts.load(style.font(100), name || "A").catch(() => null)
       : Promise.resolve());
-    Promise.all([img.decode(), fontsReady]).then(() => {
+    Promise.all([img.decode(), fontsReady]).then(async () => {
       if (cancelled) return;
-      const canvas = canvasRef.current; if (!canvas) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = CERT_W; canvas.height = CERT_H;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, CERT_W, CERT_H);
       const { px, lines } = layoutCertName(ctx, name, style, CERT_NAME.maxW);
@@ -2779,30 +2821,18 @@ function CertificateScreen({ user, language, onBack }) {
         const y = style.baseline - (lines.length - 1 - i) * px * style.lineGap;
         ctx.fillText(line, CERT_NAME.cx, y);
       });
-      setReady(true);
+      const jpg = await canvasToBlob(canvas, "image/jpeg", 0.92);
+      canvas.width = canvas.height = 0;               // free the memory (matters on phones)
+      const pdf = certificatePdf(new Uint8Array(await jpg.arrayBuffer()), CERT_W, CERT_H, pdfTitle);
+      if (cancelled) return;
+      url = URL.createObjectURL(jpg);
+      setFiles({ jpg, pdf, url });
     }).catch(() => { if (!cancelled) setFailed(true); });
-    return () => { cancelled = true; };
-  }, [lang, name]);
+    return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
+  }, [lang, name, pdfTitle]);
 
   const fileBase = `${(name || "GreenPath").replace(/[^\p{L}\p{N}]+/gu, "_")}_GreenPath_Certificate`;
-
-  function save(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url; link.download = filename;
-    document.body.appendChild(link); link.click(); link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-  }
-  function downloadImage() {
-    canvasRef.current?.toBlob(b => b && save(b, `${fileBase}.jpg`), "image/jpeg", 0.92);
-  }
-  function downloadPdf() {
-    canvasRef.current?.toBlob(async b => {
-      if (!b) return;
-      const bytes = new Uint8Array(await b.arrayBuffer());
-      save(certificatePdf(bytes, CERT_W, CERT_H, `${t("cert.heading")} - ${name}`), `${fileBase}.pdf`);
-    }, "image/jpeg", 0.92);
-  }
+  const ready = !!files;
 
   return (
     <GardenWrap>
@@ -2817,24 +2847,35 @@ function CertificateScreen({ user, language, onBack }) {
           </p>
         </div>
 
+        {IN_APP_BROWSER && (
+          <div role="note" style={{ background:"rgba(251,191,36,0.12)", border:"1px solid rgba(251,191,36,0.45)",
+            color:"#fde68a", borderRadius:12, padding:"10px 12px", fontSize:13, lineHeight:1.4, marginBottom:14 }}>
+            ⚠️ {t("cert.inAppTip")}
+          </div>
+        )}
+
         <div style={{ position:"relative", borderRadius:14, overflow:"hidden", border:"1px solid rgba(74,222,128,0.25)",
-          marginBottom:18, background:"#f7fbef" }}>
-          <canvas ref={canvasRef} width={CERT_W} height={CERT_H} role="img"
-            aria-label={`${t("cert.heading")}: ${name}`}
-            style={{ width:"100%", height:"auto", display:"block", opacity: ready ? 1 : 0, transition:"opacity 0.4s" }} />
+          marginBottom:8, background:"#f7fbef", aspectRatio:`${CERT_W} / ${CERT_H}` }}>
+          {ready && (
+            <img src={files.url} alt={`${t("cert.heading")}: ${name}`} data-cert-ready="1"
+              style={{ width:"100%", height:"100%", display:"block" }}/>
+          )}
           {!ready && (
             <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center",
-              color:"#166534", fontWeight:800, fontSize:14 }}>
+              color:"#166534", fontWeight:800, fontSize:14, padding:12, textAlign:"center" }}>
               {failed ? t("cert.loadError") : t("cert.preparing")}
             </div>
           )}
         </div>
+        <p style={{ color:"#94a3b8", fontSize:12, textAlign:"center", margin:"0 0 16px", lineHeight:1.4 }}>
+          {t("cert.saveTip")}
+        </p>
 
         <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-          <Btn onClick={downloadPdf} disabled={!ready} style={{ flex:"1 1 180px" }} color="#fbbf24">
+          <Btn onClick={()=>deliverFile(files.pdf, `${fileBase}.pdf`)} disabled={!ready} style={{ flex:"1 1 180px" }} color="#fbbf24">
             {t("cert.download")}
           </Btn>
-          <Btn onClick={downloadImage} disabled={!ready} style={{ flex:"1 1 180px" }} color="#38bdf8">
+          <Btn onClick={()=>deliverFile(files.jpg, `${fileBase}.jpg`)} disabled={!ready} style={{ flex:"1 1 180px" }} color="#38bdf8">
             {t("cert.downloadImg")}
           </Btn>
           <Btn onClick={onBack} style={{ flex:"1 1 180px" }} color="#22c55e">
