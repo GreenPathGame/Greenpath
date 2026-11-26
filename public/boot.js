@@ -10,10 +10,10 @@
     try {
       if (sessionStorage.getItem(KEY)) return; // already tried once in this tab
       sessionStorage.setItem(KEY, "1");
-    } catch (err) { /* storage blocked: still try once */ }
+    } catch { /* storage blocked: still try once */ }
     location.reload();
   }, true);
   window.addEventListener("load", function () {
-    try { sessionStorage.removeItem(KEY); } catch (err) { /* ignore */ }
+    try { sessionStorage.removeItem(KEY); } catch { /* ignore */ }
   });
 })();
