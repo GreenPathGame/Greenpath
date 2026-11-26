@@ -115,6 +115,18 @@ function cleanFullName(raw) {
 }
 function usernameToEmail(username) { return `${username}@gardenquest.local`; }
 
+// For a few days sign-up used "Name Surname" only, turned into a private login code.
+// Those players log in by typing their name in the username field.
+function nameKey(name) {
+  return cleanFullName(name).normalize("NFD").replace(/\p{M}+/gu, "")
+    .toLowerCase().replace(/ς/g, "σ").normalize("NFC");
+}
+async function nameToId(name) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nameKey(name)));
+  const hex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+  return "n" + hex.slice(0, 19);
+}
+
 // Returns an i18n key (see i18n.js), translated where it's shown.
 function friendlyAuthError(err) {
   switch (err?.code) {
@@ -143,8 +155,18 @@ async function registerUser(username, password, fullName) {
   return { uid: cred.user.uid, username, fullName, progress: null };
 }
 
-async function loginUser(username, password) {
-  const cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
+async function loginUser(input, password) {
+  let username = input.trim().toLowerCase();
+  let cred;
+  try {
+    if (!USERNAME_RE.test(username)) { const e = new Error("not a username"); e.code = "auth/invalid-credential"; throw e; }
+    cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
+  } catch (err) {
+    const notFound = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password"].includes(err?.code);
+    if (!notFound || cleanFullName(input).length < 2) throw err;
+    username = await nameToId(input);
+    cred = await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
+  }
   const record = await fetchUserRecord(cred.user.uid);
   return {
     uid: cred.user.uid,
@@ -166,7 +188,7 @@ async function saveProgress(uid, progress) {
     // Older database rules don't know the per-module coin list yet:
     // save everything else so progress is never lost.
     if (err?.code === "permission-denied" && "coins" in progress) {
-      const { coins, ...rest } = progress;
+      const { coins: _coins, ...rest } = progress;
       await setDoc(doc(db, "users", uid), { progress: rest }, { merge: true });
       return;
     }
@@ -969,17 +991,17 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
         setBusy(false);
       }
     } else {
-      if (!uname || !password) {
+      if (!username.trim() || !password) {
         setError("auth.errFill");
         return;
       }
-      if (!USERNAME_RE.test(uname) || password.length > PASSWORD_MAX) {
+      if (username.length > FULLNAME_MAX + 10 || password.length > PASSWORD_MAX) {
         setError("auth.errIncorrect");
         return;
       }
       setBusy(true);
       try {
-        const u = await loginUser(uname, password);
+        const u = await loginUser(username, password);
         onAuth(u);
       } catch (err) {
         setError(friendlyAuthError(err));
@@ -1020,7 +1042,8 @@ function AuthScreen({ onAuth, languageId, onLanguageChange }) {
           )}
           <input
             type="text" placeholder={t("auth.username")} aria-label={t("auth.username")}
-            autoComplete="username" className="gp-input" spellCheck={false} maxLength={20}
+            autoComplete="username" className="gp-input" spellCheck={false}
+            maxLength={mode==="register" ? 20 : FULLNAME_MAX + 10}
             value={username} onChange={e=>setUsername(e.target.value)}
             style={inputStyle} autoCapitalize="none"
           />
@@ -2736,7 +2759,6 @@ function CertificateScreen({ user, language, onBack }) {
 
   useEffect(() => {
     let cancelled = false;
-    setReady(false); setFailed(false);
     const style = certNameStyle(lang, name);
     const img = new Image();
     img.src = asset(`cert/${lang}.jpg`);
